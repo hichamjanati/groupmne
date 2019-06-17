@@ -7,14 +7,29 @@ cache:
   directories:
   - $HOME/.cache/pip
 
+sudo: false
+cache:
+  apt: true
+  pip: true
+env:
+    # TRAVIS_PYTHON_VERSION is only needed for neo's setup.py
+    # OPENBLAS_NUM_THREADS=1 avoid slowdowns:
+    # https://github.com/xianyi/OpenBLAS/issues/731
+    global: PYTHON_VERSION=3.6 DISPLAY=:99.0 MNE_LOGGING_LEVEL=warning TEST_LOCATION=src
+            PIP_DEPENDENCIES="codecov nitime"
+            TRAVIS_PYTHON_VERSION=3.6 CONDA_VERSION=">=4.3.27"
+            OPENBLAS_NUM_THREADS=1
 matrix:
-  include:
-    - env: PYTHON_VERSION="3.5" NUMPY_VERSION="1.13.1" SCIPY_VERSION="0.19.1"
-           SKLEARN_VERSION="0.19.1"
-    - env: PYTHON_VERSION="3.6" NUMPY_VERSION="1.13.1" SCIPY_VERSION="0.19.1"
-           SKLEARN_VERSION="0.19.1"
-    - env: PYTHON_VERSION="3.7" NUMPY_VERSION="*" SCIPY_VERSION="*"
-           SKLEARN_VERSION="*"
+    include:
+
+        # Linux
+        - os: linux
+          env: CONDA_ENVIRONMENT="environment.yml"
+
+        # OSX conda
+        - os: osx
+          env: CONDA_ENVIRONMENT="environment.yml"
+
 
 before_install:
   # install miniconda
@@ -32,6 +47,42 @@ before_install:
   - pip install flake8 check-manifest
   - pip install codecov
 
+- if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
+  fi;
+- if [ -z "$CONDA_ENVIRONMENT" ] && [ -z "$CONDA_DEPENDENCIES" ]; then
+    pip uninstall -y numpy;
+    pip install -f "https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com" --pre numpy scipy;
+    pip install vtk;
+    pip install $PIP_DEPENDENCIES;
+    pip install --upgrade -r requirements.txt;
+  else
+    git clone https://github.com/astropy/ci-helpers.git;
+    source ci-helpers/travis/setup_conda.sh;
+    if [ ! -z "$CONDA_ENVIRONMENT" ]; then
+      pip uninstall --yes mne;
+    fi;
+    if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+      pip install --upgrade pyqt5>=5.10 pylsl;
+    else
+      conda install -c tstenner pylsl;
+    fi;
+  fi
+# Don't source mne_setup_sh here because changing PATH etc. can't be done in a script
+- if [ "${DEPS}" == "" ]; then
+    export MNE_ROOT="${PWD}/minimal_cmds";
+    export PATH=${MNE_ROOT}/bin:$PATH;
+    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+      curl https://staff.washington.edu/larsoner/minimal_cmds.tar.gz | tar xz;
+      export LD_LIBRARY_PATH=${MNE_ROOT}/lib:$LD_LIBRARY_PATH;
+      export NEUROMAG2FT_ROOT="${PWD}/minimal_cmds/bin";
+    else
+      curl https://staff.washington.edu/larsoner/minimal_cmds_osx.tar.gz | tar xz;
+      export DYLD_LIBRARY_PATH=${MNE_ROOT}/lib:$DYLD_LIBRARY_PATH;
+    fi;
+    mne_surf2bem --version;
+  fi;
+ 
 install:
   - python setup.py build_ext --inplace
   - pip install -e .

@@ -18,9 +18,8 @@
 
 
 
-=============================================
-** Group source localization with MNE **
-=============================================
+multi-subject source localization with MNE
+==========================================
 *version 0.0.1*
 
 Description:
