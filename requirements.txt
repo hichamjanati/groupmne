@@ -1,4 +1,0 @@
-mne
-numpy
-joblib
-numba
