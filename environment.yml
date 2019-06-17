@@ -1,12 +1,13 @@
 name: groupmne
 
 dependencies:
-- python<3.7
-- pip
-- numpy
-- scipy
-- matplotlib
-- pytest
-- pip:
-    - mne
-    - pysurfer
+    - pip
+    - numpy
+    - scipy
+    - matplotlib
+    - joblib
+    - numba
+    - pytest
+    - pip:
+        - mne
+        - pysurfer
