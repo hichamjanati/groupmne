@@ -9,5 +9,7 @@ dependencies:
     - numba
     - pytest
     - pip:
+        - vtk
+        - https://api.github.com/repos/enthought/mayavi/zipball/e2569be1096be3deecb15f8fa8581a3ae3fb77d3
         - mne
-        - pysurfer
+        - PySurfer[save_movie]
