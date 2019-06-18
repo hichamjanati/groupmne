@@ -4,16 +4,15 @@
 API Documentation
 =================
 
-.. currentmodule:: mnegroup
+.. currentmodule:: groupmne
 
-code
-====
+groupmne
+========
 
 Functions
 
 .. autosummary::
    :toctree: generated/
 
-   compute_gains
    compute_inv_data
    compute_group_inverse

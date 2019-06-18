@@ -1,12 +1,11 @@
-
 .. project-template documentation master file, created by
    sphinx-quickstart on Mon Jan 18 14:44:12 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 
-Group source localization with MNE
-==================================
+multi-subject source localization with MNE
+==========================================
 *version 0.0.1*
 
 Description:
@@ -39,10 +38,10 @@ Otherwise, we recommend creating this minimal `conda env <https://raw.githubuser
    python setup.py develop
 
 
-Examples
+Documentation
 -------------
 
-For examples, see the `tutorials <auto_examples/index.html>`_
+For examples, see the `User Guide <auto_examples/index.html>`_.
 
 Contact:
 --------

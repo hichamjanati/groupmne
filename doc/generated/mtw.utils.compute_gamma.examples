@@ -1,0 +1,40 @@
+
+
+Examples using ``mtw.utils.compute_gamma``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example generates 3 synthetic sparse images (as regression coefficients) which are fed to ...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_simulation2d_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_simulation2d.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_simulation2d.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example performs classification of Handwritten digits using MTW. Each digit recognition is...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_digits_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_digits.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_digits.py`

@@ -1,0 +1,22 @@
+
+
+Examples using ``mtw.examples_utils.generate_dirac_images``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example generates 3 synthetic sparse images (as regression coefficients) which are fed to ...">
+
+.. only:: html
+
+    .. figure:: /auto_examples/images/thumb/sphx_glr_plot_simulation2d_thumb.png
+
+        :ref:`sphx_glr_auto_examples_plot_simulation2d.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+    * :ref:`sphx_glr_auto_examples_plot_simulation2d.py`
