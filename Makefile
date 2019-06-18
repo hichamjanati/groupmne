@@ -39,7 +39,7 @@ test-coverage:
 	rm -rf coverage .coverage
 	$(PYTESTS) groupmne --cov=groupmne --cov-report html:coverage
 
-test: test-code test-doc test-manifest
+test: test-code test-manifest
 
 trailing-spaces:
 	find . -name "*.py" | xargs perl -pi -e 's/[ \t]*$$//'
