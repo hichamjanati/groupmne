@@ -1,11 +1,11 @@
-# simple makefile to simplify repetetive build env management tasks under posix
-
+# # simple makefile to simplify repetetive build env management tasks under posix
+#
 PYTHON ?= python
 CYTHON ?= cython
 PYTESTS ?= pytest
-
+#
 CTAGS ?= ctags
-
+#
 all: clean inplace test
 
 clean-pyc:
@@ -32,15 +32,18 @@ inplace:
 test-code:
 	$(PYTESTS) groupmne
 
-# test-doc:
-# 	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
+test-doc:
+	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
 
 test-coverage:
 	rm -rf coverage .coverage
 	$(PYTESTS) groupmne --cov=groupmne --cov-report html:coverage
 
-test: test-code test-doc test-manifest
-
+test:
+	test-code
+	# test-doc
+	test-manifest
+#
 trailing-spaces:
 	find . -name "*.py" | xargs perl -pi -e 's/[ \t]*$$//'
 
