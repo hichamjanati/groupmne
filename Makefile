@@ -30,14 +30,14 @@ inplace:
 	$(PYTHON) setup.py build_ext -i
 
 test-code:
-	$(PYTESTS) mtw
+	$(PYTESTS) groupmne
 
 test-doc:
 	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
 
 test-coverage:
 	rm -rf coverage .coverage
-	$(PYTESTS) mtw --cov=mtw --cov-report html:coverage
+	$(PYTESTS) groupmne --cov=groupmne --cov-report html:coverage
 
 test: test-code test-manifest
 
@@ -61,4 +61,4 @@ doc:
 	make -C doc html-noplot
 
 test-manifest:
-	check-manifest --ignore doc,mtw/*/tests,.circleci*,*.c;
+	check-manifest --ignore doc,groupmne/*/tests,.circleci*,*.c;
