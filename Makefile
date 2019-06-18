@@ -32,8 +32,8 @@ inplace:
 test-code:
 	$(PYTESTS) groupmne
 
-test-doc:
-	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
+# test-doc:
+# 	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
 
 test-coverage:
 	rm -rf coverage .coverage
