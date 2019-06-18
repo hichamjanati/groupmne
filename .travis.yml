@@ -35,6 +35,8 @@ before_install:
     else
         conda install -c tstenner pylsl;
     fi
+  - pip install flake8 check-manifest
+  - pip install codecov
 
 install:
   - python setup.py build_ext --inplace
