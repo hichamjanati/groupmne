@@ -18,7 +18,6 @@ import os
 import sphinx_gallery
 import sphinx_rtd_theme
 import matplotlib
-import mne
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -315,7 +314,6 @@ intersphinx_mapping = {
     'mayavi': ('http://docs.enthought.com/mayavi/mayavi', None),
     'joblib': ('https://joblib.readthedocs.io/en/latest', None),
     'surfer': ('https://pysurfer.github.io/', None),
-
 }
 
 ##############################################################################
@@ -323,6 +321,8 @@ intersphinx_mapping = {
 
 examples_dirs = ['../examples']
 gallery_dirs = ['auto_examples']
+import mne
+
 try:
     mlab = mne.utils._import_mlab()
     # Do not pop up any mayavi windows while running the
