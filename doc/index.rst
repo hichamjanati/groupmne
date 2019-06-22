@@ -1,20 +1,25 @@
-<<<<<<< HEAD
 
-=======
->>>>>>> c7d337f77c85135937b91b9ee115cde51c750a92
 .. project-template documentation master file, created by
    sphinx-quickstart on Mon Jan 18 14:44:12 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. toctree::
+  :maxdepth: 2
+  :hidden:
+  :caption: Documentation
 
-<<<<<<< HEAD
+  api
+
+.. toctree::
+  :maxdepth: 2
+  :hidden:
+  :caption: Tutorial - Examples
+
+  auto_examples/index
+
 Group source localization with MNE
 ==================================
-=======
-multi-subject source localization with MNE
-==========================================
->>>>>>> c7d337f77c85135937b91b9ee115cde51c750a92
 *version 0.0.1*
 
 Description:
@@ -47,17 +52,10 @@ Otherwise, we recommend creating this minimal `conda env <https://raw.githubuser
    python setup.py develop
 
 
-<<<<<<< HEAD
 Examples
 -------------
 
 For examples, see the `tutorials <auto_examples/index.html>`_
-=======
-Documentation
--------------
-
-For examples, see the `User Guide <auto_examples/index.html>`_.
->>>>>>> c7d337f77c85135937b91b9ee115cde51c750a92
 
 Contact:
 --------
