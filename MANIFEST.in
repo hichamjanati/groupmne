@@ -13,10 +13,3 @@ recursive-include doc Makefile
 recursive-include examples *.py
 recursive-include examples *.txt
 recursive-include groupmne *.DS_Store
-recursive-include groupmne *.pyx
-
-# added by check_manifest.py
-recursive-include groupmne *.py
-
-# added by check_manifest.py
-recursive-include examples *.jpg
