@@ -1,5 +1,5 @@
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_
+|Travis|_ |AppVeyor|_ |Codecov|_ |ReadTheDocs|_
 
 .. |Travis| image:: https://travis-ci.com/hichamjanati/groupmne.svg?branch=master
 .. _Travis: https://travis-ci.com/hichamjanati/groupmne
@@ -9,9 +9,6 @@
 
 .. |Codecov| image:: https://codecov.io/gh/hichamjanati/groupmne/branch/master/graph/badge.svg
 .. _Codecov: https://codecov.io/gh/hichamjanati/groupmne
-
-.. |CircleCI| image:: https://circleci.com/gh/hichamjanati/groupmne.svg?style=svg
-.. _CircleCI: https://circleci.com/gh/hichamjanati/groupmne/tree/master
 
 .. |ReadTheDocs| image:: https://readthedocs.org/projects/groupmne/badge/?version=latest
 .. _ReadTheDocs: https://groupmne.readthedocs.io/en/latest/
