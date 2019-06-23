@@ -48,7 +48,7 @@ def process_meg(raw_name):
     raw = read_raw_fif(raw_name)
     events = find_events(raw)
     # we keep only
-    events = events[:3]
+    events = events[:200]
     event_id = dict(hf=1)  # event trigger and conditions
     tmin = -0.05  # start of each epoch (50ms before the trigger)
     tmax = 0.3  # end of each epoch (300ms after the trigger)
