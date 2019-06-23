@@ -48,7 +48,7 @@ def process_meg(raw_name):
     raw = read_raw_fif(raw_name)
     events = find_events(raw)
     # we keep only
-    events = events[:200]
+    events = events[:500]
     event_id = dict(hf=1)  # event trigger and conditions
     tmin = -0.05  # start of each epoch (50ms before the trigger)
     tmax = 0.3  # end of each epoch (300ms after the trigger)
@@ -67,14 +67,14 @@ for subj, raw_name in zip(["a", "b"], raw_name_s):
     ep = process_meg(raw_name)
     ev = ep.average()
     evoked_s.append(ev)
-    # cov = compute_covariance(ep, tmin=None, tmax=0.)
+    cov = compute_covariance(ep[:50], tmin=None, tmax=0.)
     del ep, ev
-    # noise_cov_s.append(cov)
+    noise_cov_s.append(cov)
 
 f, axes = plt.subplots(1, 2, sharey=True)
-for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+for ax, ev, ll in zip(axes.ravel(), evoked_s, ["a", "b"]):
     picks = pick_types(ev.info, meg="grad")
-    ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+    ev.plot(picks=picks, axes=ax, show=False)
     ax.set_title("Subject %s" % ll, fontsize=15)
 plt.show()
 
