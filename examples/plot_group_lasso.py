@@ -67,9 +67,9 @@ for subj, raw_name in zip(["a", "b"], raw_name_s):
     ep = process_meg(raw_name)
     ev = ep.average()
     evoked_s.append(ev)
-    cov = compute_covariance(ep, tmin=None, tmax=0.)
+    # cov = compute_covariance(ep, tmin=None, tmax=0.)
     del ep, ev
-    noise_cov_s.append(cov)
+    # noise_cov_s.append(cov)
 
 f, axes = plt.subplots(1, 2, sharey=True)
 for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
