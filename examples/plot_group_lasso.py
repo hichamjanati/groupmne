@@ -101,13 +101,20 @@ subjects = ["subject_a", "subject_b"]
 trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
-n_jobs = 2
-parallel, run_func, _ = parallel_func(group_model.compute_fwd,
-                                      n_jobs=n_jobs)
+# n_jobs = 2
+# parallel, run_func, _ = parallel_func(group_model.compute_fwd,
+#                                       n_jobs=n_jobs)
+#
+# fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
+#                 for s, info, trans, bem in zip(subjects, raw_name_s,
+#                                                trans_fname_s, bem_fname_s))
 
-fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
-                for s, info, trans, bem in zip(subjects, raw_name_s,
-                                               trans_fname_s, bem_fname_s))
+fwds = []
+for s, info, trans, bem in zip(subjects, raw_name_s,
+                               trans_fname_s, bem_fname_s):
+    fwd = group_model.compute_fwd(s, src_ref, info, trans, bem,  mindist=3)
+    fwds.appen(fwd)
+    del fwd
 
 ############################################
 # We can now compute the data of the inverse problem.
