@@ -48,7 +48,7 @@ def process_meg(raw_name):
     raw = read_raw_fif(raw_name)
     events = find_events(raw)
     # we keep only
-    events = events[:500]
+    events = events[:300]
     event_id = dict(hf=1)  # event trigger and conditions
     tmin = -0.05  # start of each epoch (50ms before the trigger)
     tmax = 0.3  # end of each epoch (300ms after the trigger)
@@ -67,7 +67,7 @@ for subj, raw_name in zip(["a", "b"], raw_name_s):
     ep = process_meg(raw_name)
     ev = ep.average()
     evoked_s.append(ev)
-    cov = compute_covariance(ep[:50], tmin=None, tmax=0.)
+    cov = compute_covariance(ep[:10], tmin=None, tmax=0.)
     del ep, ev
     noise_cov_s.append(cov)
 
@@ -86,7 +86,7 @@ plt.show()
 # subject of freesurfer `fsaverage`
 # If fsaverage is not available, it will be fetched to the data_path
 
-resolution = 4
+resolution = 3
 spacing = "ico%d" % resolution
 src_ref = group_model.get_src_reference(spacing=spacing,
                                         subjects_dir=subjects_dir)

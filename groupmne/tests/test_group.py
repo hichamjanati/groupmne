@@ -23,7 +23,7 @@ ave_fname = op.join(data_path, 'MEG', 'sample',
 cov_fname = op.join(data_path, 'MEG', 'sample',
                     'sample_audvis_trunc-cov.fif')
 rng = np.random.RandomState(0)
-resolution = 4
+resolution = 3
 spacing = "ico%d" % resolution
 os.environ['SUBJECTS_DIR'] = subjects_dir
 

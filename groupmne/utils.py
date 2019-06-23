@@ -185,3 +185,19 @@ def _filter_channels(info, ch_names, ch_type):
     sel = [all_channels.index(name) for name in ch_names]
     sel = list(set(sel).intersection(sel_type))
     return sel
+
+
+def make_fake_group_info(n_sources=2562, n_subjects=2, hemi="lh"):
+    if hemi == "both":
+        n_sources /= 2
+    group_info = dict(subjects=[str(i) for i in range(n_subjects)])
+    group_info["ch_names"] = [None]
+    group_info["vertno_lh"] = n_subjects * [np.arange(n_sources)]
+    group_info["vertno_rh"] = n_subjects * [np.arange(n_sources)]
+    group_info["vertno_ref"] = np.arange(n_sources)
+    group_info["ch_filter"] = True
+    group_info["n_sources"] = [n_sources, n_sources]
+    group_info["hemi"] = hemi
+    group_info["tmin"] = 0.
+    group_info["tstep"] = 0.1
+    return group_info
