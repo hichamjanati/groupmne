@@ -19,10 +19,29 @@ import sphinx_gallery
 import sphinx_rtd_theme
 import matplotlib
 
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import Mock as MagicMock
+    # check whether in the source directory...
+#
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ["mne", "mayavi"]
+# 'autograd.numpy','pymanopt.manifolds','pymanopt.solvers',
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
 
 
 matplotlib.use('agg')
@@ -321,10 +340,8 @@ intersphinx_mapping = {
 
 examples_dirs = ['../examples']
 gallery_dirs = ['auto_examples']
-import mne
-
 try:
-    mlab = mne.utils._import_mlab()
+    from mayavi import mlab
     # Do not pop up any mayavi windows while running the
     # examples. These are very annoying since they steal the focus.
     mlab.options.offscreen = True
