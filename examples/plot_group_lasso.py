@@ -30,7 +30,6 @@ from groupmne.inverse import compute_group_inverse
 # since only average MEG data (and MRI) are provided in "evoked".
 # The data will be downloaded in the same location
 
-
 _ = hf_sef.data_path("raw")
 data_path = hf_sef.data_path("evoked")
 meg_path = data_path + "/MEG/"
@@ -46,30 +45,34 @@ raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
 def process_meg(raw_name):
     raw = mne.io.read_raw_fif(raw_name)
     events = mne.find_events(raw)
-
+    # we keep only
+    events = events[:300]
     event_id = dict(hf=1)  # event trigger and conditions
     tmin = -0.05  # start of each epoch (50ms before the trigger)
     tmax = 0.3  # end of each epoch (300ms after the trigger)
     baseline = (None, 0)  # means from the first instant to t = 0
     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True,
                         baseline=baseline)
+    del raw, events
     return epochs
 
 
-epochs_s = [process_meg(raw_name) for raw_name in raw_name_s]
-evoked_s = [ep.average() for ep in epochs_s]
+evoked_s = []
 
 # compute noise covariance (takes a few minutes)
 noise_cov_s = []
-for subj, ep in zip(["a", "b"], epochs_s):
+for subj, raw_name in zip(["a", "b"], raw_name_s):
     cov_fname = meg_path + f"subject_{subj}/sef-cov.fif"
     if os.path.exists(cov_fname):
         cov = mne.read_cov(cov_fname)
     else:
+        ep = process_meg(raw_name)
+        ev = ep.average()
+        evoked_s.append(ev)
         cov = mne.compute_covariance(ep, tmin=None, tmax=0.)
+        del ep, ev
         mne.write_cov(cov_fname, cov)
     noise_cov_s.append(cov)
-
 
 f, axes = plt.subplots(1, 2, sharey=True)
 for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
@@ -86,7 +89,6 @@ plt.show()
 # subject of freesurfer `fsaverage`
 # If fsaverage is not available, it will be fetched to the data_path
 
-
 resolution = 4
 spacing = "ico%d" % resolution
 src_ref = group_model.get_src_reference(spacing=spacing,
@@ -94,8 +96,8 @@ src_ref = group_model.get_src_reference(spacing=spacing,
 
 ###################################################################
 
-# the function group_model.compute_fwd morphs the source space src_ref to the
-# surface of each subject by mapping the sulci and gyri patterns
+# the function group_model.compute_fwd morphs the source space src_ref to
+# the surface of each subject by mapping the sulci and gyri patterns
 # and computes their forward operators
 
 subjects = ["subject_a", "subject_b"]
@@ -103,7 +105,8 @@ trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
 n_jobs = 2
-parallel, run_func, _ = parallel_func(group_model.compute_fwd, n_jobs=n_jobs)
+parallel, run_func, _ = parallel_func(group_model.compute_fwd,
+                                      n_jobs=n_jobs)
 
 fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
                 for s, info, trans, bem in zip(subjects, raw_name_s,
@@ -121,12 +124,12 @@ gains, M, group_info = \
 print("(# subjects, # channels, # sources) = ", gains.shape)
 print("(# subjects, # channels, # time points) = ", M.shape)
 
-
 ############################################
 # Solve the inverse problems
 # --------------------------
 #
-stcs, log = compute_group_inverse(gains, M, group_info, method="grouplasso",
+stcs, log = compute_group_inverse(gains, M, group_info,
+                                  method="grouplasso",
                                   depth=0.9, alpha=0.1, return_stc=True,
                                   n_jobs=4)
 t = 0.025
