@@ -46,7 +46,7 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
 
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 mindist=2, subjects_dir=None):
-    """Morph source space of fsaverage to subject."""
+    """Morph the source space of fsaverage to a subject."""
     print("Processing subject %s" % subject)
 
     src = mne.morph_source_spaces(src_ref, subject_to=subject,

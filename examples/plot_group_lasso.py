@@ -41,43 +41,43 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
               "subject_b/hf_sef_15min_raw.fif"]]
 
-#
-# def process_meg(raw_name):
-#     from mne.io import read_raw_fif
-#     from mne import find_events, Epochs
-#     raw = read_raw_fif(raw_name)
-#     events = find_events(raw)
-#     # we keep only
-#     events = events[:300]
-#     event_id = dict(hf=1)  # event trigger and conditions
-#     tmin = -0.05  # start of each epoch (50ms before the trigger)
-#     tmax = 0.3  # end of each epoch (300ms after the trigger)
-#     baseline = (None, 0)  # means from the first instant to t = 0
-#     epochs = Epochs(raw, events, event_id, tmin, tmax, proj=True,
-#                     baseline=baseline)
-#     del raw, events
-#     return epochs
-#
-#
-# evoked_s = []
-#
-# # compute noise covariance (takes a few minutes)
-# noise_cov_s = []
-# for subj, raw_name in zip(["a", "b"], raw_name_s):
-#     ep = process_meg(raw_name)
-#     ev = ep.average()
-#     evoked_s.append(ev)
-#     cov = compute_covariance(ep, tmin=None, tmax=0.)
-#     del ep, ev
-#     noise_cov_s.append(cov)
-#
-# f, axes = plt.subplots(1, 2, sharey=True)
-# for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
-#     picks = pick_types(ev.info, meg="grad")
-#     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
-#     ax.set_title("Subject %s" % ll, fontsize=15)
-# plt.show()
-#
+
+def process_meg(raw_name):
+    from mne.io import read_raw_fif
+    from mne import find_events, Epochs
+    raw = read_raw_fif(raw_name)
+    events = find_events(raw)
+    # we keep only
+    events = events[:300]
+    event_id = dict(hf=1)  # event trigger and conditions
+    tmin = -0.05  # start of each epoch (50ms before the trigger)
+    tmax = 0.3  # end of each epoch (300ms after the trigger)
+    baseline = (None, 0)  # means from the first instant to t = 0
+    epochs = Epochs(raw, events, event_id, tmin, tmax, proj=True,
+                    baseline=baseline)
+    del raw, events
+    return epochs
+
+
+evoked_s = []
+
+# compute noise covariance (takes a few minutes)
+noise_cov_s = []
+for subj, raw_name in zip(["a", "b"], raw_name_s):
+    ep = process_meg(raw_name)
+    ev = ep.average()
+    evoked_s.append(ev)
+    cov = compute_covariance(ep, tmin=None, tmax=0.)
+    del ep, ev
+    noise_cov_s.append(cov)
+
+f, axes = plt.subplots(1, 2, sharey=True)
+for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+    picks = pick_types(ev.info, meg="grad")
+    ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+    ax.set_title("Subject %s" % ll, fontsize=15)
+plt.show()
+
 # #########################################################
 # # Source and forward modeling
 # # ---------------------------
