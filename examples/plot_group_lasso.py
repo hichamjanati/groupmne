@@ -30,16 +30,16 @@ from groupmne.inverse import compute_group_inverse
 # since only average MEG data (and MRI) are provided in "evoked".
 # The data will be downloaded in the same location
 
-# _ = hf_sef.data_path("raw")
-# data_path = hf_sef.data_path("evoked")
-# meg_path = data_path + "/MEG/"
-#
-# data_path = op.expanduser(data_path)
-# subjects_dir = data_path + "/subjects/"
-# os.environ['SUBJECTS_DIR'] = subjects_dir
-#
-# raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
-#               "subject_b/hf_sef_15min_raw.fif"]]
+_ = hf_sef.data_path("raw")
+data_path = hf_sef.data_path("evoked")
+meg_path = data_path + "/MEG/"
+
+data_path = op.expanduser(data_path)
+subjects_dir = data_path + "/subjects/"
+os.environ['SUBJECTS_DIR'] = subjects_dir
+
+raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
+              "subject_b/hf_sef_15min_raw.fif"]]
 
 #
 # def process_meg(raw_name):
