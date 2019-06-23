@@ -113,7 +113,7 @@ fwds = []
 for s, info, trans, bem in zip(subjects, raw_name_s,
                                trans_fname_s, bem_fname_s):
     fwd = group_model.compute_fwd(s, src_ref, info, trans, bem,  mindist=3)
-    fwds.appen(fwd)
+    fwds.append(fwd)
     del fwd
 
 ############################################
