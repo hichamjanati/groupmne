@@ -1,7 +1,7 @@
 doc/_build
 doc/auto_examples
 doc/generated
-
+.makedoc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
