@@ -78,65 +78,65 @@ for ax, ev, ll in zip(axes.ravel(), evoked_s, ["a", "b"]):
     ax.set_title("Subject %s" % ll, fontsize=15)
 plt.show()
 
-# #########################################################
-# # Source and forward modeling
-# # ---------------------------
-# # To guarantee an alignment across subjects, we start by
-# # computing (or reading if available) the source space of the average
-# # subject of freesurfer `fsaverage`
-# # If fsaverage is not available, it will be fetched to the data_path
+#########################################################
+# Source and forward modeling
+# ---------------------------
+# To guarantee an alignment across subjects, we start by
+# computing (or reading if available) the source space of the average
+# subject of freesurfer `fsaverage`
+# If fsaverage is not available, it will be fetched to the data_path
+
+resolution = 4
+spacing = "ico%d" % resolution
+src_ref = group_model.get_src_reference(spacing=spacing,
+                                        subjects_dir=subjects_dir)
+
+###################################################################
+
+# the function group_model.compute_fwd morphs the source space src_ref to
+# the surface of each subject by mapping the sulci and gyri patterns
+# and computes their forward operators
+
+subjects = ["subject_a", "subject_b"]
+trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
+bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
+               for s in subjects]
+n_jobs = 2
+parallel, run_func, _ = parallel_func(group_model.compute_fwd,
+                                      n_jobs=n_jobs)
+
+fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
+                for s, info, trans, bem in zip(subjects, raw_name_s,
+                                               trans_fname_s, bem_fname_s))
+
+############################################
+# We can now compute the data of the inverse problem.
+# `group_info` is a dictionary that contains the selected channels and the
+# alignment maps between src_ref and the subjects which are required if you
+# want to plot source estimates on the brain surface of each subject.
+
+gains, M, group_info = \
+    group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
+                                 ch_type="grad", tmin=0.02, tmax=0.04)
+print("(# subjects, # channels, # sources) = ", gains.shape)
+print("(# subjects, # channels, # time points) = ", M.shape)
+
+############################################
+# Solve the inverse problems
+# --------------------------
 #
-# resolution = 4
-# spacing = "ico%d" % resolution
-# src_ref = group_model.get_src_reference(spacing=spacing,
-#                                         subjects_dir=subjects_dir)
-#
-# ###################################################################
-#
-# # the function group_model.compute_fwd morphs the source space src_ref to
-# # the surface of each subject by mapping the sulci and gyri patterns
-# # and computes their forward operators
-#
-# subjects = ["subject_a", "subject_b"]
-# trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
-# bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
-#                for s in subjects]
-# n_jobs = 2
-# parallel, run_func, _ = parallel_func(group_model.compute_fwd,
-#                                       n_jobs=n_jobs)
-#
-# fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
-#                 for s, info, trans, bem in zip(subjects, raw_name_s,
-#                                                trans_fname_s, bem_fname_s))
-#
-# ############################################
-# # We can now compute the data of the inverse problem.
-# # `group_info` is a dictionary that contains the selected channels and the
-# # alignment maps between src_ref and the subjects which are required if you
-# # want to plot source estimates on the brain surface of each subject.
-#
-# gains, M, group_info = \
-#     group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
-#                                  ch_type="grad", tmin=0.02, tmax=0.04)
-# print("(# subjects, # channels, # sources) = ", gains.shape)
-# print("(# subjects, # channels, # time points) = ", M.shape)
-#
-# ############################################
-# # Solve the inverse problems
-# # --------------------------
-# #
-# stcs, log = compute_group_inverse(gains, M, group_info,
-#                                   method="grouplasso",
-#                                   depth=0.9, alpha=0.1, return_stc=True,
-#                                   n_jobs=4)
-# t = 0.025
-# t_idx = stcs[0].time_as_index(t)
-# for stc, subject in zip(stcs, subjects):
-#     m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-#     surfer_kwargs = dict(
-#         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-#         hemi='lh', subjects_dir=subjects_dir, views='lateral',
-#         initial_time=t, time_unit='s', size=(800, 800),
-#         smoothing_steps=5)
-#     brain = stc.plot(**surfer_kwargs)
-#     brain.add_text(0.1, 0.9, subject, "title")
+stcs, log = compute_group_inverse(gains, M, group_info,
+                                  method="grouplasso",
+                                  depth=0.9, alpha=0.1, return_stc=True,
+                                  n_jobs=4)
+t = 0.025
+t_idx = stcs[0].time_as_index(t)
+for stc, subject in zip(stcs, subjects):
+    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    surfer_kwargs = dict(
+        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+        hemi='lh', subjects_dir=subjects_dir, views='lateral',
+        initial_time=t, time_unit='s', size=(800, 800),
+        smoothing_steps=5)
+    brain = stc.plot(**surfer_kwargs)
+    brain.add_text(0.1, 0.9, subject, "title")
