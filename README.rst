@@ -1,5 +1,5 @@
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |ReadTheDocs|_
+|Travis|_ |AppVeyor|_ |Codecov|_
 
 .. |Travis| image:: https://travis-ci.com/hichamjanati/groupmne.svg?branch=master
 .. _Travis: https://travis-ci.com/hichamjanati/groupmne
@@ -9,10 +9,6 @@
 
 .. |Codecov| image:: https://codecov.io/gh/hichamjanati/groupmne/branch/master/graph/badge.svg
 .. _Codecov: https://codecov.io/gh/hichamjanati/groupmne
-
-.. |ReadTheDocs| image:: https://readthedocs.org/projects/groupmne/badge/?version=latest
-.. _ReadTheDocs: https://groupmne.readthedocs.io/en/latest/
-
 
 
 multi-subject source localization with MNE
@@ -52,7 +48,7 @@ Otherwise, we recommend creating this minimal `conda env <https://raw.githubuser
 Documentation
 -------------
 
-For examples, see `the groupmne webpage <https://groupmne.readthedocs.io/en/latest/>`_.
+For examples, see `the groupmne webpage <https://hichamjanati.github.io/groupmne>`_.
 
 Contact:
 --------

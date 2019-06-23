@@ -1,5 +1,0 @@
-numpy
-numba
-joblib
-mne
-memory_profiler

@@ -315,7 +315,6 @@ intersphinx_mapping = {
     'mayavi': ('http://docs.enthought.com/mayavi/mayavi', None),
     'joblib': ('https://joblib.readthedocs.io/en/latest', None),
     'surfer': ('https://pysurfer.github.io/', None),
-
 }
 
 ##############################################################################

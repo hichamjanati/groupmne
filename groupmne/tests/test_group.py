@@ -1,5 +1,5 @@
 from groupmne import (compute_fwd, get_src_reference, compute_gains,
-                      compute_inv_data, compute_group_inverse)
+                      compute_inv_data)
 import mne
 from mne.datasets import testing
 import numpy as np
@@ -69,29 +69,3 @@ def test_inverse_data():
     n_t = ev.crop(0.02, 0.04).times.shape[0]
     assert gains.shape == (2, n_ch, n_s)
     assert M.shape == (2, n_ch, n_t)
-
-
-@testing.requires_testing_data
-def test_inverse():
-    src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
-    fwd0 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=5)
-    fwd1 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=10)
-    fwds = [fwd0, fwd1]
-    ev = mne.read_evokeds(ave_fname)[0]
-    cov = mne.read_cov(cov_fname)
-    evoked_s = [ev, ev]
-    covs = [cov, cov]
-    gains, M, group_info = \
-        compute_inv_data(fwds, src_ref, evoked_s, covs,
-                         ch_type="grad", tmin=0.02, tmax=0.04)
-
-    stcs, log = compute_group_inverse(gains, M, group_info,
-                                      method="grouplasso", depth=0.9,
-                                      alpha=0.1, return_stc=True,
-                                      n_jobs=-1)
-    assert len(stcs) == len(fwds)
-    n_s = gains.shape[-1]
-    n_t = M.shape[-1]
-    assert stcs[0].data.shape == (n_s, n_t)
