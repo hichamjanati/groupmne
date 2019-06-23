@@ -16,6 +16,7 @@ import sys
 import os
 
 import sphinx_gallery
+from sphinx_gallery.sorting import ExplicitOrder
 import sphinx_rtd_theme
 import matplotlib
 
@@ -339,6 +340,8 @@ sphinx_gallery_conf = {
     'doc_module': 'groupmne',
     'reference_url': dict(groupmne=None),
     'examples_dirs': examples_dirs,
+    'subsection_order': ExplicitOrder(['../examples/plot_process_meg.py',
+                                       '../examples/plot_group_lasso.py']),
     'gallery_dirs': gallery_dirs,
     'backreferences_dir': os.path.join('generated'),
     'plot_gallery': 'True',  # Avoid annoying Unicode/bool default warning

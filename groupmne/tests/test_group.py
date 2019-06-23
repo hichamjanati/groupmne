@@ -5,6 +5,7 @@ from mne.datasets import testing
 import numpy as np
 import os.path as op
 import os
+import pytest
 
 
 data_path = testing.data_path(download=True)
@@ -29,7 +30,8 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
 @testing.requires_testing_data
-def test_gains():
+@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
+def test_gains(hemi):
     src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
     fwd0 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
                        mindist=5)
@@ -37,9 +39,13 @@ def test_gains():
                        mindist=10)
     fwds = [fwd0, fwd1]
     gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
-                                      hemi="lh")
+                                      hemi=hemi)
     n_ch = len(group_info["sel"])
-    n_s = group_info["n_sources"][0]
+    if hemi == "both":
+        n_s = sum(group_info["n_sources"])
+    else:
+        i = int(hemi == "rh")
+        n_s = group_info["n_sources"][i]
     assert gains.shape == (2, n_ch, n_s)
 
 

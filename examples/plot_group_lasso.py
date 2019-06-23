@@ -14,8 +14,7 @@ MEG and MRI data for two subjects.
 
 import os
 import os.path as op
-from mne import compute_covariance, pick_types
-from mne.parallel import parallel_func
+import mne
 from mne.datasets import hf_sef
 from matplotlib import pyplot as plt
 
@@ -26,11 +25,11 @@ from groupmne.inverse import compute_group_inverse
 # Download and process MEG data
 # -----------------------------
 #
-# We need the raw data to estimate the noise covariance
-# since only average MEG data (and MRI) are provided in "evoked".
-# The data will be downloaded in the same location
+# Averaged MEG data (and MRI) are provided in "evoked".
+# We assume that the noise covariance matrices have been computed
+# using the raw data as shown in example plot_process_meg.
 
-_ = hf_sef.data_path("raw")
+
 data_path = hf_sef.data_path("evoked")
 meg_path = data_path + "/MEG/"
 
@@ -38,42 +37,17 @@ data_path = op.expanduser(data_path)
 subjects_dir = data_path + "/subjects/"
 os.environ['SUBJECTS_DIR'] = subjects_dir
 
-raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
-              "subject_b/hf_sef_15min_raw.fif"]]
-
-
-def process_meg(raw_name):
-    from mne.io import read_raw_fif
-    from mne import find_events, Epochs
-    raw = read_raw_fif(raw_name)
-    events = find_events(raw)
-    # we keep only
-    events = events[:300]
-    event_id = dict(hf=1)  # event trigger and conditions
-    tmin = -0.05  # start of each epoch (50ms before the trigger)
-    tmax = 0.3  # end of each epoch (300ms after the trigger)
-    baseline = (None, 0)  # means from the first instant to t = 0
-    epochs = Epochs(raw, events, event_id, tmin, tmax, proj=True,
-                    baseline=baseline)
-    del raw, events
-    return epochs
-
+ev_name_s = [meg_path + s for s in ["subject_a/sef_right-ave.fif",
+             "subject_b/hf_sef_15min-ave.fif"]]
+cov_name_s = [meg_path + s for s in ["subject_a/sef-cov.fif",
+              "subject_b/sef-cov.fif"]]
 
 evoked_s = []
-
-# compute noise covariance (takes a few minutes)
-noise_cov_s = []
-for subj, raw_name in zip(["a", "b"], raw_name_s):
-    ep = process_meg(raw_name)
-    ev = ep.average()
-    evoked_s.append(ev)
-    cov = compute_covariance(ep[:10], tmin=None, tmax=0.)
-    del ep, ev
-    noise_cov_s.append(cov)
-
 f, axes = plt.subplots(1, 2, sharey=True)
-for ax, ev, ll in zip(axes.ravel(), evoked_s, ["a", "b"]):
-    picks = pick_types(ev.info, meg="grad")
+for ax, ev_name, ll in zip(axes.ravel(), ev_name_s, ["a", "b"]):
+    ev = mne.read_evokeds(ev_name)[0]
+    evoked_s.append(ev)
+    picks = mne.pick_types(ev.info, meg="grad")
     ev.plot(picks=picks, axes=ax, show=False)
     ax.set_title("Subject %s" % ll, fontsize=15)
 plt.show()
@@ -110,11 +84,15 @@ bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
 #                                                trans_fname_s, bem_fname_s))
 
 fwds = []
-for s, info, trans, bem in zip(subjects, raw_name_s,
-                               trans_fname_s, bem_fname_s):
+noise_cov_s = []
+for s, info, trans, bem, cov_name in zip(subjects, ev_name_s,
+                                         trans_fname_s, bem_fname_s,
+                                         cov_name_s):
     fwd = group_model.compute_fwd(s, src_ref, info, trans, bem,  mindist=3)
     fwds.append(fwd)
-    del fwd
+    cov = mne.read_cov(cov_name)
+    noise_cov_s.append(cov)
+    del fwd, cov
 
 ############################################
 # We can now compute the data of the inverse problem.

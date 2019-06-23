@@ -1,9 +1,11 @@
 import numpy as np
 from groupmne.inverse import compute_group_inverse
 from groupmne import utils
+import pytest
 
 
-def test_inverse(hemi="lh"):
+@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
+def test_inverse(hemi):
     seed = 42
     rnd = np.random.RandomState(seed)
     n_features = 10
