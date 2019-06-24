@@ -13,6 +13,7 @@
 
 multi-subject source localization with MNE
 ==========================================
+
 *version 0.0.1*
 
 Description:
@@ -48,7 +49,7 @@ Otherwise, we recommend creating this minimal `conda env <https://raw.githubuser
 Documentation
 -------------
 
-For examples, see `the groupmne webpage <https://hichamjanati.github.io/groupmne>`_.
+For examples, see `the groupmne webpage <https://hichamjanati.github.io/groupmne/>`_.
 
 Contact:
 --------

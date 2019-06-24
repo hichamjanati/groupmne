@@ -76,7 +76,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         group_info["subjects"].append(subject)
         ch_names.append(utils._get_channels(fwd, cov))
         # find removed vertices
-        mapping = utils.get_morph_src_mapping(src_ref, src, indices=False)
+        mapping = utils.get_morph_src_mapping(src_ref, src)
         gain = []
         for i in range(2):
             pos = list(mapping[0][i].keys())

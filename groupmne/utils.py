@@ -4,44 +4,8 @@ from mne.source_space import (_ensure_src, _get_morph_src_reordering,
                               _ensure_src_subject, SourceSpaces)
 
 
-def _find_indices_1d(haystack, needles, check_needles=True):
-    """Find the indices of multiple values in an 1D array.
-    Parameters
-    ----------
-    haystack : ndarray, shape (n,)
-        The array in which to find the indices of the needles.
-    needles : ndarray, shape (m,)
-        The values to find the index of in the haystack.
-    check_needles : bool
-        Whether to check that all needles are present in the haystack and raise
-        an IndexError if this is not the case. Defaults to True. If all needles
-        are guaranteed to be present in the haystack, you can disable this
-        check for avoid unnecessary computation.
-    Returns
-    -------
-    needle_inds : ndarray, shape (m,)
-        The indices of the needles in the haystack.
-    Raises
-    ------
-    IndexError
-        If one or more needles could not be found in the haystack.
-    """
-    haystack = np.asarray(haystack)
-    needles = np.asarray(needles)
-    if haystack.ndim != 1 or needles.ndim != 1:
-        raise ValueError('Both the haystack and the needles arrays should be '
-                         '1D.')
-
-    if check_needles and len(np.setdiff1d(needles, haystack)) > 0:
-        raise IndexError('One or more values where not present in the given '
-                         'haystack array.')
-
-    sorted_ind = np.argsort(haystack)
-    return sorted_ind[np.searchsorted(haystack[sorted_ind], needles)]
-
-
 def get_morph_src_mapping(src_from, src_to, subject_from=None,
-                          subject_to=None, subjects_dir=None, indices=False):
+                          subject_to=None, subjects_dir=None):
     """Get a mapping between an original source space and its morphed version.
     It is assumed that the number of vertices and their positions match between
     the source spaces, only the ordering is different. This is commonly the
@@ -61,18 +25,13 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
         default, the value stored in the SourceSpaces object is used.
     subjects_dir : str | None
         Path to SUBJECTS_DIR if it is not set in the environment.
-    indices : bool
-        Whether to return mapping between vertex numbers (``False``, the
-        default) or vertex indices (``True``).
     Returns
     -------
     from_to : dict | pair of dicts
-        If ``indices=True``, a dictionary mapping vertex indices from
-        src_from -> src_to. If ``indices=False``, for each hemisphere, a
+        For each hemisphere, a
         dictionary mapping vertex numbers from src_from -> src_to.
     to_from : dict | pair of dicts
-        If ``indices=True``, a dictionary mapping vertex indices from
-        src_to -> src_from. If ``indices=False``, for each hemisphere, a
+        For each hemisphere, a
         dictionary mapping vertex numbers from src_to -> src_from.
     See also
     --------
@@ -102,38 +61,22 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
     )
     from_vert_lh, from_vert_rh = from_vert
 
-    if indices:
-        # Find vertex indices corresponding to the vertex numbers for src_from
-        from_n_lh = src_from[0]['nuse']
-        from_ind_lh = _find_indices_1d(src_from[0]['vertno'], from_vert_lh)
-        from_ind_rh = _find_indices_1d(src_from[1]['vertno'], from_vert_rh)
-        from_ind = np.hstack((from_ind_lh, from_ind_rh + from_n_lh))
+    # Re-order the vertices of src_to to match the ordering of src_from
+    to_n_lh = len(to_vert_lh)
+    to_vert_lh = to_vert_lh[order[:to_n_lh]]
+    to_vert_rh = to_vert_rh[order[to_n_lh:] - to_n_lh]
 
-        # The indices for src_to are easy
-        to_ind = order
-
-        # Create the mappings
-        from_to = dict(zip(from_ind, to_ind))
-        to_from = dict(zip(to_ind, from_ind))
-    else:
-        # Re-order the vertices of src_to to match the ordering of src_from
-        to_n_lh = len(to_vert_lh)
-        to_vert_lh = to_vert_lh[order[:to_n_lh]]
-        to_vert_rh = to_vert_rh[order[to_n_lh:] - to_n_lh]
-
-        # Create the mappings
-        from_to = [dict(zip(from_vert_lh, to_vert_lh)),
-                   dict(zip(from_vert_rh, to_vert_rh))]
-        to_from = [dict(zip(to_vert_lh, from_vert_lh)),
-                   dict(zip(to_vert_rh, from_vert_rh))]
+    # Create the mappings
+    from_to = [dict(zip(from_vert_lh, to_vert_lh)),
+               dict(zip(from_vert_rh, to_vert_rh))]
+    to_from = [dict(zip(to_vert_lh, from_vert_lh)),
+               dict(zip(to_vert_rh, from_vert_rh))]
 
     return from_to, to_from
 
 
 def make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
     """Create stc from data."""
-    if not isinstance(vertices, list):
-        vertices = [vertices, []]
     n_sources_l, n_sources_r = [len(v) for v in vertices]
     assert data.shape[0] == n_sources_l + n_sources_r
     data_l = data[:n_sources_l]
