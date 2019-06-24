@@ -136,7 +136,7 @@ for view in ["lateral", "dorsal"]:
         surfer_kwargs = dict(
             clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
             hemi='lh', subjects_dir=subjects_dir,
-            initial_time=t, time_unit='s', size=(400, 400),
+            initial_time=t, time_unit='s', size=(350, 350),
             smoothing_steps=5)
         brain = stc.plot(**surfer_kwargs, views=view)
         brain.add_text(0.1, 0.9, subject, "title")
