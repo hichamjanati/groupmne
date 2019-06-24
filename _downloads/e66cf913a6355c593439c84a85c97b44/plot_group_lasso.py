@@ -130,7 +130,7 @@ stcs, log = compute_group_inverse(gains, M, group_info,
 
 t = 0.025
 t_idx = stcs[0].time_as_index(t)
-for view in ["lateral", "dorsal"]:
+for view in ["lateral", "medial"]:
     for stc, subject in zip(stcs, subjects):
         m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
         surfer_kwargs = dict(

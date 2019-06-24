@@ -353,7 +353,7 @@ Solve the inverse problems
 
     t = 0.025
     t_idx = stcs[0].time_as_index(t)
-    for view in ["lateral", "dorsal"]:
+    for view in ["lateral", "medial"]:
         for stc, subject in zip(stcs, subjects):
             m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
             surfer_kwargs = dict(
@@ -395,7 +395,7 @@ Solve the inverse problems
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  53.833 seconds)
+   **Total running time of the script:** ( 3 minutes  7.395 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:
