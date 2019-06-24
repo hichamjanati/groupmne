@@ -18,7 +18,7 @@
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Multi-subject MEG processing" href="plot_process_meg.html" />
+    <link rel="prev" title="General examples" href="index.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -79,6 +79,7 @@
 <li><a class="reference internal" href="#">Multi-subject joint source localization with multi-task models</a><ul>
 <li><a class="reference internal" href="#download-and-process-meg-data">Download and process MEG data</a></li>
 <li><a class="reference internal" href="#source-and-forward-modeling">Source and forward modeling</a></li>
+<li><a class="reference internal" href="#solve-the-inverse-problems">Solve the inverse problems</a></li>
 </ul>
 </li>
 </ul>
@@ -130,60 +131,172 @@ MEG and MRI data for two subjects.</p>
 <span class="c1">#</span>
 <span class="c1"># License: BSD (3-clause)</span>
 
+<span class="kn">import</span> <span class="nn">mne</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
-<span class="kn">import</span> <span class="nn">mne</span>
+<span class="kn">from</span> <span class="nn">mne.parallel</span> <span class="k">import</span> <span class="n">parallel_func</span>
 <span class="kn">from</span> <span class="nn">mne.datasets</span> <span class="k">import</span> <span class="n">hf_sef</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="kn">from</span> <span class="nn">groupmne</span> <span class="k">import</span> <span class="n">group_model</span>
-<span class="kn">from</span> <span class="nn">groupmne.inverse</span> <span class="k">import</span> <span class="n">compute_group_inverse</span>
+<span class="kn">from</span> <span class="nn">groupmne.inverse</span> <span class="k">import</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="View documentation for groupmne.inverse.compute_group_inverse"><span class="n">compute_group_inverse</span></a>
 </pre></div>
 </div>
 <div class="section" id="download-and-process-meg-data">
 <h2>Download and process MEG data<a class="headerlink" href="#download-and-process-meg-data" title="Permalink to this headline">¶</a></h2>
-<p>Averaged MEG data (and MRI) are provided in “evoked”.
-We assume that the noise covariance matrices have been computed
-using the raw data as shown in example plot_process_meg.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><span class="n">data_path</span><span class="p">(</span><span class="s2">&quot;evoked&quot;</span><span class="p">)</span>
+<p>We need the raw data to estimate the noise covariance
+since only average MEG data (and MRI) are provided in “evoked”.
+The data will be downloaded in the same location</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><span class="n">data_path</span><span class="p">(</span><span class="s2">&quot;raw&quot;</span><span class="p">)</span>
+<span class="n">data_path</span> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><span class="n">data_path</span><span class="p">(</span><span class="s2">&quot;evoked&quot;</span><span class="p">)</span>
 <span class="n">meg_path</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;/MEG/&quot;</span>
 
 <span class="n">data_path</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
 <span class="n">subjects_dir</span> <span class="o">=</span> <span class="n">data_path</span> <span class="o">+</span> <span class="s2">&quot;/subjects/&quot;</span>
 <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SUBJECTS_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subjects_dir</span>
 
-<span class="n">ev_name_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">meg_path</span> <span class="o">+</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;subject_a/sef_right-ave.fif&quot;</span><span class="p">,</span>
-             <span class="s2">&quot;subject_b/hf_sef_15min-ave.fif&quot;</span><span class="p">]]</span>
-<span class="n">cov_name_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">meg_path</span> <span class="o">+</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;subject_a/sef-cov.fif&quot;</span><span class="p">,</span>
-              <span class="s2">&quot;subject_b/sef-cov.fif&quot;</span><span class="p">]]</span>
+<span class="n">raw_name_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">meg_path</span> <span class="o">+</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;subject_a/sef_right_raw.fif&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;subject_b/hf_sef_15min_raw.fif&quot;</span><span class="p">]]</span>
 
-<span class="n">evoked_s</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">def</span> <span class="nf">process_meg</span><span class="p">(</span><span class="n">raw_name</span><span class="p">):</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span><span class="p">(</span><span class="n">raw_name</span><span class="p">)</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">find_events</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+
+    <span class="n">event_id</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hf</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># event trigger and conditions</span>
+    <span class="n">tmin</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.05</span>  <span class="c1"># start of each epoch (50ms before the trigger)</span>
+    <span class="n">tmax</span> <span class="o">=</span> <span class="mf">0.3</span>  <span class="c1"># end of each epoch (300ms after the trigger)</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># means from the first instant to t = 0</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">Epochs</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">events</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">baseline</span><span class="o">=</span><span class="n">baseline</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">epochs</span>
+
+
+<span class="n">epochs_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">process_meg</span><span class="p">(</span><span class="n">raw_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">raw_name</span> <span class="ow">in</span> <span class="n">raw_name_s</span><span class="p">]</span>
+<span class="n">evoked_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">ep</span><span class="o">.</span><span class="n">average</span><span class="p">()</span> <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">epochs_s</span><span class="p">]</span>
+
+<span class="c1"># compute noise covariance (takes a few minutes)</span>
+<span class="n">noise_cov_s</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">subj</span><span class="p">,</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="n">epochs_s</span><span class="p">):</span>
+    <span class="n">cov_fname</span> <span class="o">=</span> <span class="n">meg_path</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;subject_</span><span class="si">{subj}</span><span class="s2">/sef-cov.fif&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cov_fname</span><span class="p">):</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_cov</span><span class="p">(</span><span class="n">cov_fname</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_covariance</span><span class="p">(</span><span class="n">ep</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">mne</span><span class="o">.</span><span class="n">write_cov</span><span class="p">(</span><span class="n">cov_fname</span><span class="p">,</span> <span class="n">cov</span><span class="p">)</span>
+    <span class="n">noise_cov_s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+
+
 <span class="n">f</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="View documentation for matplotlib.pyplot.subplots"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ev_name</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">ev_name_s</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]):</span>
-    <span class="n">ev</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_evokeds</span><span class="p">(</span><span class="n">ev_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">evoked_s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">evoked_s</span><span class="p">,</span> <span class="n">noise_cov_s</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]):</span>
     <span class="n">picks</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">pick_types</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">meg</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">)</span>
-    <span class="n">ev</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">noise_cov</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Subject </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ll</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="View documentation for matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
 </pre></div>
 </div>
 <img alt="../_images/sphx_glr_plot_group_lasso_001.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_group_lasso_001.png" />
 <p class="sphx-glr-script-out">Out:</p>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Reading /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_a/sef_right-ave.fif ...
-    Found the data of interest:
-        t =     -50.00 ...     300.00 ms (Category # 1)
-        0 CTF compensation matrices available
-        nave = 2514 - aspect type = 100
-No projector specified for this dataset. Please consider the method self.add_proj.
-No baseline correction applied
-Reading /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min-ave.fif ...
-    Found the data of interest:
-        t =     -50.00 ...     250.00 ms (SEF)
-        0 CTF compensation matrices available
-        nave = 2790 - aspect type = 100
-No projector specified for this dataset. Please consider the method self.add_proj.
-No baseline correction applied
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Opening raw data file /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_a/sef_right_raw.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 26000 ... 1735999 =      8.667 ...   578.666 secs
+Ready.
+Opening raw data file /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_a/sef_right_raw-1.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 1736000 ... 2482999 =    578.667 ...   827.666 secs
+Ready.
+Current compensation grade : 0
+2527 events found
+Event IDs: [1]
+2527 matching events found
+Applying baseline correction (mode: mean)
+Not setting metadata
+Created an SSP operator (subspace dimension = 8)
+8 projection items activated
+Opening raw data file /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 169000 ... 1878999 =     56.333 ...   626.333 secs
+Ready.
+Opening raw data file /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw-1.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 1879000 ... 2892999 =    626.333 ...   964.333 secs
+Ready.
+Current compensation grade : 0
+2792 events found
+Event IDs: [1]
+2792 matching events found
+Applying baseline correction (mode: mean)
+Not setting metadata
+Created an SSP operator (subspace dimension = 8)
+8 projection items activated
+    306 x 306 full covariance (kind = 1) found.
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+    306 x 306 full covariance (kind = 1) found.
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+        generated with autossp-1.0.1 (1 x 306) active
+Computing data rank from covariance with rank=None
+    Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 1.1e-14 (2.2e-16 eps * 102 dim * 0.48  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 5.2e-15 (2.2e-16 eps * 102 dim * 0.23  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
 </pre></div>
 </div>
 </div>
@@ -193,75 +306,125 @@ No baseline correction applied
 computing (or reading if available) the source space of the average
 subject of freesurfer <cite>fsaverage</cite>
 If fsaverage is not available, it will be fetched to the data_path</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># resolution = 3</span>
-<span class="c1"># spacing = &quot;ico%d&quot; % resolution</span>
-<span class="c1"># src_ref = group_model.get_src_reference(spacing=spacing,</span>
-<span class="c1">#                                         subjects_dir=subjects_dir)</span>
-<span class="c1">#</span>
-<span class="c1"># ###################################################################</span>
-<span class="c1">#</span>
-<span class="c1"># # the function group_model.compute_fwd morphs the source space src_ref to</span>
-<span class="c1"># # the surface of each subject by mapping the sulci and gyri patterns</span>
-<span class="c1"># # and computes their forward operators</span>
-<span class="c1">#</span>
-<span class="c1"># subjects = [&quot;subject_a&quot;, &quot;subject_b&quot;]</span>
-<span class="c1"># trans_fname_s = [meg_path + &quot;%s/sef-trans.fif&quot; % s for s in subjects]</span>
-<span class="c1"># bem_fname_s = [subjects_dir + &quot;%s/bem/%s-5120-bem-sol.fif&quot; % (s, s)</span>
-<span class="c1">#                for s in subjects]</span>
-<span class="c1"># # n_jobs = 2</span>
-<span class="c1"># # parallel, run_func, _ = parallel_func(group_model.compute_fwd,</span>
-<span class="c1"># #                                       n_jobs=n_jobs)</span>
-<span class="c1"># #</span>
-<span class="c1"># # fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)</span>
-<span class="c1"># #                 for s, info, trans, bem in zip(subjects, raw_name_s,</span>
-<span class="c1"># #                                                trans_fname_s, bem_fname_s))</span>
-<span class="c1">#</span>
-<span class="c1"># fwds = []</span>
-<span class="c1"># noise_cov_s = []</span>
-<span class="c1"># for s, info, trans, bem, cov_name in zip(subjects, ev_name_s,</span>
-<span class="c1">#                                          trans_fname_s, bem_fname_s,</span>
-<span class="c1">#                                          cov_name_s):</span>
-<span class="c1">#     fwd = group_model.compute_fwd(s, src_ref, info, trans, bem,  mindist=3)</span>
-<span class="c1">#     fwds.append(fwd)</span>
-<span class="c1">#     cov = mne.read_cov(cov_name)</span>
-<span class="c1">#     noise_cov_s.append(cov)</span>
-<span class="c1">#     del fwd, cov</span>
-<span class="c1">#</span>
-<span class="c1"># ############################################</span>
-<span class="c1"># # We can now compute the data of the inverse problem.</span>
-<span class="c1"># # `group_info` is a dictionary that contains the selected channels and the</span>
-<span class="c1"># # alignment maps between src_ref and the subjects which are required if you</span>
-<span class="c1"># # want to plot source estimates on the brain surface of each subject.</span>
-<span class="c1">#</span>
-<span class="c1"># gains, M, group_info = \</span>
-<span class="c1">#     group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,</span>
-<span class="c1">#                                  ch_type=&quot;grad&quot;, tmin=0.02, tmax=0.04)</span>
-<span class="c1"># print(&quot;(# subjects, # channels, # sources) = &quot;, gains.shape)</span>
-<span class="c1"># print(&quot;(# subjects, # channels, # time points) = &quot;, M.shape)</span>
-<span class="c1">#</span>
-<span class="c1"># ############################################</span>
-<span class="c1"># # Solve the inverse problems</span>
-<span class="c1"># # --------------------------</span>
-<span class="c1"># #</span>
-<span class="c1"># stcs, log = compute_group_inverse(gains, M, group_info,</span>
-<span class="c1">#                                   method=&quot;grouplasso&quot;,</span>
-<span class="c1">#                                   depth=0.9, alpha=0.1, return_stc=True,</span>
-<span class="c1">#                                   n_jobs=4)</span>
-<span class="c1"># t = 0.025</span>
-<span class="c1"># t_idx = stcs[0].time_as_index(t)</span>
-<span class="c1"># for stc, subject in zip(stcs, subjects):</span>
-<span class="c1">#     m = abs(stc.data[:group_info[&quot;n_sources&quot;][0], t_idx]).max()</span>
-<span class="c1">#     surfer_kwargs = dict(</span>
-<span class="c1">#         clim=dict(kind=&#39;value&#39;, pos_lims=[0., 0.1 * m, m]),</span>
-<span class="c1">#         hemi=&#39;lh&#39;, subjects_dir=subjects_dir, views=&#39;lateral&#39;,</span>
-<span class="c1">#         initial_time=t, time_unit=&#39;s&#39;, size=(800, 800),</span>
-<span class="c1">#         smoothing_steps=5)</span>
-<span class="c1">#     brain = stc.plot(**surfer_kwargs)</span>
-<span class="c1">#     brain.add_text(0.1, 0.9, subject, &quot;title&quot;)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resolution</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">spacing</span> <span class="o">=</span> <span class="s2">&quot;ico</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">resolution</span>
+<span class="n">src_ref</span> <span class="o">=</span> <span class="n">group_model</span><span class="o">.</span><span class="n">get_src_reference</span><span class="p">(</span><span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span>
+                                        <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  2.903 seconds)</p>
-<p><strong>Estimated memory usage:</strong>  70 MB</p>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Setting up the source space with the following parameters:
+
+SUBJECTS_DIR = /Users/hichamjanati/mne_data/HF_SEF/subjects/
+Subject      = fsaverage
+Surface      = white
+Icosahedron subdivision grade 4
+
+&gt;&gt;&gt; 1. Creating the source space...
+
+Doing the icosahedral vertex picking...
+Loading /Users/hichamjanati/mne_data/HF_SEF/subjects/fsaverage/surf/lh.white...
+Mapping lh fsaverage -&gt; ico (4) ...
+    Warning: zero size triangles: [3 4]
+    Triangle neighbors and vertex normals...
+Loading geometry from /Users/hichamjanati/mne_data/HF_SEF/subjects/fsaverage/surf/lh.sphere...
+Setting up the triangulation for the decimated surface...
+loaded lh.white 2562/163842 selected to source space (ico = 4)
+
+Loading /Users/hichamjanati/mne_data/HF_SEF/subjects/fsaverage/surf/rh.white...
+Mapping rh fsaverage -&gt; ico (4) ...
+    Warning: zero size triangles: [3 4]
+    Triangle neighbors and vertex normals...
+Loading geometry from /Users/hichamjanati/mne_data/HF_SEF/subjects/fsaverage/surf/rh.sphere...
+Setting up the triangulation for the decimated surface...
+loaded rh.white 2562/163842 selected to source space (ico = 4)
+
+You are now one step closer to computing the gain matrix
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the function group_model.compute_fwd morphs the source space src_ref to the</span>
+<span class="c1"># surface of each subject by mapping the sulci and gyri patterns</span>
+<span class="c1"># and computes their forward operators</span>
+
+<span class="n">subjects</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subject_a&quot;</span><span class="p">,</span> <span class="s2">&quot;subject_b&quot;</span><span class="p">]</span>
+<span class="n">trans_fname_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">meg_path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/sef-trans.fif&quot;</span> <span class="o">%</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">]</span>
+<span class="n">bem_fname_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">subjects_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/bem/</span><span class="si">%s</span><span class="s2">-5120-bem-sol.fif&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">]</span>
+<span class="n">n_jobs</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">parallel</span><span class="p">,</span> <span class="n">run_func</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">parallel_func</span><span class="p">(</span><a href="../generated/groupmne.compute_fwd.html#groupmne.compute_fwd" title="View documentation for groupmne.group_model.compute_fwd"><span class="n">group_model</span><span class="o">.</span><span class="n">compute_fwd</span></a><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+
+<span class="n">fwds</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span><span class="n">run_func</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">bem</span><span class="p">,</span>  <span class="n">mindist</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">bem</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">raw_name_s</span><span class="p">,</span>
+                                               <span class="n">trans_fname_s</span><span class="p">,</span> <span class="n">bem_fname_s</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We can now compute the data of the inverse problem.
+<cite>group_info</cite> is a dictionary that contains the selected channels and the
+alignment maps between src_ref and the subjects which are required if you
+want to plot source estimates on the brain surface of each subject.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span> <span class="o">=</span> \
+    <a href="../generated/groupmne.compute_inv_data.html#groupmne.compute_inv_data" title="View documentation for groupmne.group_model.compute_inv_data"><span class="n">group_model</span><span class="o">.</span><span class="n">compute_inv_data</span></a><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">evoked_s</span><span class="p">,</span> <span class="n">noise_cov_s</span><span class="p">,</span>
+                                 <span class="n">ch_type</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(# subjects, # channels, # sources) = &quot;</span><span class="p">,</span> <span class="n">gains</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(# subjects, # channels, # time points) = &quot;</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Mapping lh fsaverage -&gt; subject_a (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_a (nearest neighbor)...
+Mapping lh fsaverage -&gt; subject_b (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_b (nearest neighbor)...
+    Created an SSP operator (subspace dimension = 3)
+Computing data rank from covariance with rank=None
+    Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Setting small GRAD eigenvalues to zero (without PCA)
+    Created the whitener using a noise covariance matrix with rank 201 (3 small eigenvalues omitted)
+    Created an SSP operator (subspace dimension = 3)
+Computing data rank from covariance with rank=None
+    Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Setting small GRAD eigenvalues to zero (without PCA)
+    Created the whitener using a noise covariance matrix with rank 201 (3 small eigenvalues omitted)
+(# subjects, # channels, # sources) =  (2, 204, 5124)
+(# subjects, # channels, # time points) =  (2, 204, 61)
+</pre></div>
+</div>
+</div>
+<div class="section" id="solve-the-inverse-problems">
+<h2>Solve the inverse problems<a class="headerlink" href="#solve-the-inverse-problems" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stcs</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="View documentation for groupmne.inverse.compute_group_inverse"><span class="n">compute_group_inverse</span></a><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span><span class="p">,</span>
+                                  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grouplasso&quot;</span><span class="p">,</span>
+                                  <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">return_stc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="mf">0.025</span>
+<span class="n">t_idx</span> <span class="o">=</span> <span class="n">stcs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_as_index</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;lateral&quot;</span><span class="p">,</span> <span class="s2">&quot;dorsal&quot;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">stc</span><span class="p">,</span> <span class="n">subject</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stcs</span><span class="p">,</span> <span class="n">subjects</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_idx</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
+            <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
+            <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
+            <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+        <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img alt="../_images/sphx_glr_plot_group_lasso_002.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_002.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_004.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_005.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_005.png" />
+</li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 3 minutes  9.919 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
