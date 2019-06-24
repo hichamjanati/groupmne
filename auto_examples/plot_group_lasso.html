@@ -399,21 +399,19 @@ Computing data rank from covariance with rank=None
                                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grouplasso&quot;</span><span class="p">,</span>
                                   <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">return_stc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                   <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Visualize ventral view</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="mf">0.025</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="mf">0.025</span>
 <span class="n">t_idx</span> <span class="o">=</span> <span class="n">stcs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_as_index</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-<span class="n">view</span> <span class="o">=</span> <span class="s2">&quot;lateral&quot;</span>
-<span class="k">for</span> <span class="n">stc</span><span class="p">,</span> <span class="n">subject</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stcs</span><span class="p">,</span> <span class="n">subjects</span><span class="p">):</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_idx</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
-        <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
-        <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
-        <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
-    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;lateral&quot;</span><span class="p">,</span> <span class="s2">&quot;dorsal&quot;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">stc</span><span class="p">,</span> <span class="n">subject</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stcs</span><span class="p">,</span> <span class="n">subjects</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_idx</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
+            <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
+            <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">350</span><span class="p">,</span> <span class="mi">350</span><span class="p">),</span>
+            <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+        <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="sphx-glr-horizontal">
@@ -421,27 +419,12 @@ Computing data rank from covariance with rank=None
 </li>
 <li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
 </li>
-</ul>
-<p>Visualize dorsal view</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">view</span> <span class="o">=</span> <span class="s2">&quot;dorsal&quot;</span>
-<span class="k">for</span> <span class="n">stc</span><span class="p">,</span> <span class="n">subject</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stcs</span><span class="p">,</span> <span class="n">subjects</span><span class="p">):</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_idx</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
-        <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
-        <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
-        <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
-    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<ul class="sphx-glr-horizontal">
 <li><img alt="../_images/sphx_glr_plot_group_lasso_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_004.png" />
 </li>
 <li><img alt="../_images/sphx_glr_plot_group_lasso_005.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_005.png" />
 </li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 3 minutes  13.628 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  53.833 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
