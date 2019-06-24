@@ -130,13 +130,13 @@ stcs, log = compute_group_inverse(gains, M, group_info,
 
 t = 0.025
 t_idx = stcs[0].time_as_index(t)
-for stc, subject in zip(stcs, subjects):
-    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-    surfer_kwargs = dict(
-        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-        hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t, time_unit='s', size=(300, 300),
-        smoothing_steps=5)
-    for view in ["lateral", "ventral"]:
+for view in ["lateral", "medial"]:
+    for stc, subject in zip(stcs, subjects):
+        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+        surfer_kwargs = dict(
+            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+            hemi='lh', subjects_dir=subjects_dir,
+            initial_time=t, time_unit='s', size=(350, 350),
+            smoothing_steps=5)
         brain = stc.plot(**surfer_kwargs, views=view)
         brain.add_text(0.1, 0.9, subject, "title")

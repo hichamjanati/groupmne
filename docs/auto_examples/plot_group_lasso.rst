@@ -353,14 +353,14 @@ Solve the inverse problems
 
     t = 0.025
     t_idx = stcs[0].time_as_index(t)
-    for stc, subject in zip(stcs, subjects):
-        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-        surfer_kwargs = dict(
-            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-            hemi='lh', subjects_dir=subjects_dir,
-            initial_time=t, time_unit='s', size=(300, 300),
-            smoothing_steps=5)
-        for view in ["lateral", "ventral"]:
+    for view in ["lateral", "medial"]:
+        for stc, subject in zip(stcs, subjects):
+            m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+            surfer_kwargs = dict(
+                clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+                hemi='lh', subjects_dir=subjects_dir,
+                initial_time=t, time_unit='s', size=(350, 350),
+                smoothing_steps=5)
             brain = stc.plot(**surfer_kwargs, views=view)
             brain.add_text(0.1, 0.9, subject, "title")
 
@@ -395,7 +395,7 @@ Solve the inverse problems
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  5.535 seconds)
+   **Total running time of the script:** ( 3 minutes  7.395 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:
