@@ -33,7 +33,7 @@ test-code:
 	$(PYTESTS) groupmne
 
 test-doc:
-	$(PYTESTS) $(shell find doc -name '*.rst' | sort)
+	$(PYTESTS) $(shell find docs -name '*.rst' | sort)
 
 test-coverage:
 	rm -rf coverage .coverage
@@ -54,11 +54,11 @@ ctags:
 
 .PHONY : doc-plot
 doc-plot:
-	make -C doc html
+	make -C docs html
 
 .PHONY : doc
 doc:
-	make -C doc html-noplot
+	make -C docs html-noplot
 
 test-manifest:
-	check-manifest --ignore doc,groupmne/*/tests,.circleci*,*.c;
+	check-manifest --ignore docs,groupmne/*/tests;

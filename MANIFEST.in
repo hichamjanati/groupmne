@@ -1,15 +1,22 @@
-include *.txt
-include *.yml
-include .coveragerc
+include *.rst
+include *.md
+include *.in
 include LICENSE
-include Makefile
-recursive-include doc *.bat
-recursive-include doc *.css
-recursive-include doc *.gif
-recursive-include doc *.js
-recursive-include doc *.py
-recursive-include doc *.rst
-recursive-include doc Makefile
+include groupmne/__init__.py
+
 recursive-include examples *.py
 recursive-include examples *.txt
-recursive-include groupmne *.DS_Store
+
+recursive-include groupmne *.py
+recursive-include groupmne *.pyx
+recursive-include groupmne *.pxd
+
+### Exclude
+
+exclude Makefile
+exclude .coveragerc
+exclude *.yml
+exclude .mailmap
+recursive-exclude groupmne *.pyc
+
+recursive-exclude docs *
