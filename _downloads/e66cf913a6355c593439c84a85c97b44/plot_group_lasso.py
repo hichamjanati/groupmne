@@ -125,18 +125,18 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 #
 stcs, log = compute_group_inverse(gains, M, group_info,
                                   method="grouplasso",
-                                  depth=0.9, alpha=0.1, return_stc=True,
+                                  depth=0.9, alpha=0.3, return_stc=True,
                                   n_jobs=4)
 
 t = 0.025
 t_idx = stcs[0].time_as_index(t)
-for view in ["lateral", "medial"]:
-    for stc, subject in zip(stcs, subjects):
-        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-        surfer_kwargs = dict(
-            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-            hemi='lh', subjects_dir=subjects_dir,
-            initial_time=t, time_unit='s', size=(350, 350),
-            smoothing_steps=5)
-        brain = stc.plot(**surfer_kwargs, views=view)
-        brain.add_text(0.1, 0.9, subject, "title")
+view = "lateral"
+for stc, subject in zip(stcs, subjects):
+    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    surfer_kwargs = dict(
+        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+        hemi='lh', subjects_dir=subjects_dir,
+        initial_time=t, time_unit='s', size=(500, 500),
+        smoothing_steps=5)
+    brain = stc.plot(**surfer_kwargs, views=view)
+    brain.add_text(0.1, 0.9, subject, "title")
