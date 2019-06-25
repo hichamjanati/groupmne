@@ -125,7 +125,7 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 #
 stcs, log = compute_group_inverse(gains, M, group_info,
                                   method="grouplasso",
-                                  depth=0.9, alpha=0.3, return_stc=True,
+                                  depth=0.9, alpha=0.5, return_stc=True,
                                   n_jobs=4)
 
 t = 0.025
