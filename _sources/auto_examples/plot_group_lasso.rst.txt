@@ -267,13 +267,13 @@ If fsaverage is not available, it will be fetched to the data_path
     You are now one step closer to computing the gain matrix
 
 
+the function group_model.compute_fwd morphs the source space src_ref to the
+surface of each subject by mapping the sulci and gyri patterns
+and computes their forward operators.
+
 
 .. code-block:: default
 
-
-    # the function group_model.compute_fwd morphs the source space src_ref to the
-    # surface of each subject by mapping the sulci and gyri patterns
-    # and computes their forward operators
 
     subjects = ["subject_a", "subject_b"]
     trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
@@ -347,10 +347,16 @@ want to plot source estimates on the brain surface of each subject.
 
 Solve the inverse problems
 --------------------------
-
+For now, only the group lasso model is supported.
+It assumes the source locations are the same across subjects at each instant.
+i.e if a source is zero for one subject, it will be zero for all subjects.
+"alpha" is a hyperparameter that controls this structured sparsity prior.
+it must be set as a positive number between 0 and 1. With alpha = 1, all
+the sources are 0.
 
 
 .. code-block:: default
+
 
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
@@ -391,7 +397,7 @@ Solve the inverse problems
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  5.726 seconds)
+   **Total running time of the script:** ( 1 minutes  51.837 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:

@@ -342,11 +342,10 @@ loaded rh.white 2562/163842 selected to source space (ico = 4)
 You are now one step closer to computing the gain matrix
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the function group_model.compute_fwd morphs the source space src_ref to the</span>
-<span class="c1"># surface of each subject by mapping the sulci and gyri patterns</span>
-<span class="c1"># and computes their forward operators</span>
-
-<span class="n">subjects</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subject_a&quot;</span><span class="p">,</span> <span class="s2">&quot;subject_b&quot;</span><span class="p">]</span>
+<p>the function group_model.compute_fwd morphs the source space src_ref to the
+surface of each subject by mapping the sulci and gyri patterns
+and computes their forward operators.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subjects</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subject_a&quot;</span><span class="p">,</span> <span class="s2">&quot;subject_b&quot;</span><span class="p">]</span>
 <span class="n">trans_fname_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">meg_path</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/sef-trans.fif&quot;</span> <span class="o">%</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">]</span>
 <span class="n">bem_fname_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">subjects_dir</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/bem/</span><span class="si">%s</span><span class="s2">-5120-bem-sol.fif&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">]</span>
@@ -401,6 +400,12 @@ Computing data rank from covariance with rank=None
 </div>
 <div class="section" id="solve-the-inverse-problems">
 <h2>Solve the inverse problems<a class="headerlink" href="#solve-the-inverse-problems" title="Permalink to this headline">¶</a></h2>
+<p>For now, only the group lasso model is supported.
+It assumes the source locations are the same across subjects at each instant.
+i.e if a source is zero for one subject, it will be zero for all subjects.
+“alpha” is a hyperparameter that controls this structured sparsity prior.
+it must be set as a positive number between 0 and 1. With alpha = 1, all
+the sources are 0.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stcs</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="View documentation for groupmne.inverse.compute_group_inverse"><span class="n">compute_group_inverse</span></a><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span><span class="p">,</span>
                                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grouplasso&quot;</span><span class="p">,</span>
                                   <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">return_stc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -426,7 +431,7 @@ Computing data rank from covariance with rank=None
 <li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
 </li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  5.726 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  51.837 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
