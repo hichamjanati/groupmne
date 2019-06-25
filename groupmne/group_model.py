@@ -71,6 +71,9 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         noise_covs = len(fwds) * [None]
     # compute gain matrices
     for fwd, cov in zip(fwds, noise_covs):
+        fwd = mne.convert_forward_solution(fwd, surf_ori=True,
+                                           force_fixed=True,
+                                           use_cps=True)
         src = fwd["src"]
         subject = src[0]["subject_his_id"]
         group_info["subjects"].append(subject)

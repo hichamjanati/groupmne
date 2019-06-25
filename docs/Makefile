@@ -26,7 +26,7 @@ latexpdf:
 .PHONY: help Makefile
 
 
-buildandcommithtml: html
+commithtml: html
 	cd $(BUILDDIR)html; git add . ; git commit -m "rebuilt docs"; git push origin gh-pages
 
 # Catch-all target: route all unknown targets to Sphinx using the new
