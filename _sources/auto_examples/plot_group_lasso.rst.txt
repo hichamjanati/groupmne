@@ -329,10 +329,10 @@ the N20 response.
     (# subjects, # channels, # time points) =  (2, 204, 31)
 
 
-Solve the inverse problems
---------------------------
+Solve the inverse problems with groupmne
+----------------------------------------
 For now, only the group lasso model is supported.
-It assumes the source locations are the same across subjects at each instant.
+It assumes the source locations are the same across subjects for all instants
 i.e if a source is zero for one subject, it will be zero for all subjects.
 "alpha" is a hyperparameter that controls this structured sparsity prior.
 it must be set as a positive number between 0 and 1. With alpha = 1, all
@@ -344,7 +344,7 @@ the sources are 0.
 
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
-                                      depth=0.9, alpha=0.5, return_stc=True,
+                                      depth=0.9, alpha=0.6, return_stc=True,
                                       n_jobs=4)
 
 
@@ -354,8 +354,6 @@ the sources are 0.
 
 
 
-Visualization
--------------
 Let's visualize the N20 response. The stimulus was applied on the right
 hand, thus we only show the left hemisphere. The activation is exactly in
 the Primary somatosensory cortex. We highlight the borders of the post
@@ -377,11 +375,12 @@ central gyrus.
         surfer_kwargs = dict(
             clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
             hemi='lh', subjects_dir=subjects_dir,
-            initial_time=t, time_unit='s', size=(500, 500),
+            initial_time=t * 1e3, time_unit='ms', size=(500, 500),
             smoothing_steps=5)
         brain = stc.plot(**surfer_kwargs, views=view)
-        brain.add_text(0.1, 0.9, subject, "title")
+        brain.add_text(0.1, 0.9, subject + "groupmne", "title")
         brain.add_label(g_post_central, borders=True, color="green")
+
 
 
 
@@ -413,10 +412,125 @@ central gyrus.
        read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
 
 
+Group MNE leads to better accuracy
+----------------------------------
+To evaluate the effect of the joint inverse solution, we compute the
+individual solutions using `mne.inverse_sparse.mixed_norm` for each subject.
+The group solutions are better located in S1.
+
+
+.. code-block:: default
+
+
+
+    from mne.inverse_sparse import mixed_norm  # noqa: E402
+
+    t = 0.02
+    t_idx = stcs[0].time_as_index(t)
+    view = "lateral"
+    for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
+        ev = evoked.copy()
+        ev.pick_types(meg="grad")
+        ev.crop(0.015, 0.025)
+        stc = mixed_norm(ev, fwd, cov, alpha=60., loose=0., depth=0.9)
+        stc.subject = subject
+        g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
+                                                    subjects_dir=subjects_dir,
+                                                    regexp="G_postcentral-lh")[0]
+        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+        surfer_kwargs = dict(
+            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+            hemi='lh', subjects_dir=subjects_dir,
+            initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+            smoothing_steps=5)
+        brain = stc.plot(**surfer_kwargs, views=view)
+        brain.add_text(0.1, 0.9, subject + "_mxne", "title")
+        brain.add_label(g_post_central, borders=True, color="green")
+
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_003.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_004.png
+            :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Converting forward solution to fixed orietnation
+        No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+        Changing to fixed-orientation forward solution with surface-based source orientations...
+        [done]
+    Computing inverse operator with 204 channels.
+        204 out of 306 channels remain after picking
+    Selected 204 channels
+    Creating the depth weighting matrix...
+    Whitening the forward solution.
+        Created an SSP operator (subspace dimension = 3)
+    Computing data rank from covariance with rank=None
+        Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+        Estimated rank (grad): 201
+        GRAD: rank 201 computed from 204 data channels with 3 projectors
+        Setting small GRAD eigenvalues to zero (without PCA)
+    Creating the source covariance matrix
+    Adjusting source covariance matrix.
+    Whitening data matrix.
+    -- ALPHA MAX : 100.00000000000001
+    Using coordinate descent
+    Iteration 1 :: p_obj 7.205803 :: dgap 0.000003 ::n_active_start 10 :: n_active_end 4
+    Convergence reached ! (gap: 3.0050716643970077e-06 < 0.0001)
+    Debiasing did not converge after 1000 iterations! max(|D - D0| = 1.391568e-03 >= 1.000000e-06)
+    Final active set size: 4
+    [done]
+    Reading labels from parcellation...
+       read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
+       read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
+    Converting forward solution to fixed orietnation
+        No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+        Changing to fixed-orientation forward solution with surface-based source orientations...
+        [done]
+    Computing inverse operator with 204 channels.
+        204 out of 306 channels remain after picking
+    Selected 204 channels
+    Creating the depth weighting matrix...
+    Whitening the forward solution.
+        Created an SSP operator (subspace dimension = 3)
+    Computing data rank from covariance with rank=None
+        Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+        Estimated rank (grad): 201
+        GRAD: rank 201 computed from 204 data channels with 3 projectors
+        Setting small GRAD eigenvalues to zero (without PCA)
+    Creating the source covariance matrix
+    Adjusting source covariance matrix.
+    Whitening data matrix.
+    -- ALPHA MAX : 99.99999999999999
+    Using coordinate descent
+    Iteration 1 :: p_obj 26.937389 :: dgap 0.000005 ::n_active_start 10 :: n_active_end 3
+    Convergence reached ! (gap: 5.428019701270159e-06 < 0.0001)
+    Debiasing converged after 473 iterations max(|D - D0| = 7.723673e-07 < 1.000000e-06)
+    Final active set size: 3
+    [done]
+    Reading labels from parcellation...
+       read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
+       read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
+
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  11.602 seconds)
+   **Total running time of the script:** ( 1 minutes  55.542 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:

@@ -79,8 +79,8 @@
 <li><a class="reference internal" href="#">Multi-subject joint source localization with multi-task models</a><ul>
 <li><a class="reference internal" href="#download-and-process-meg-data">Download and process MEG data</a></li>
 <li><a class="reference internal" href="#source-and-forward-modeling">Source and forward modeling</a></li>
-<li><a class="reference internal" href="#solve-the-inverse-problems">Solve the inverse problems</a></li>
-<li><a class="reference internal" href="#visualization">Visualization</a></li>
+<li><a class="reference internal" href="#solve-the-inverse-problems-with-groupmne">Solve the inverse problems with groupmne</a></li>
+<li><a class="reference internal" href="#group-mne-leads-to-better-accuracy">Group MNE leads to better accuracy</a></li>
 </ul>
 </li>
 </ul>
@@ -384,23 +384,20 @@ Computing data rank from covariance with rank=None
 </pre></div>
 </div>
 </div>
-<div class="section" id="solve-the-inverse-problems">
-<h2>Solve the inverse problems<a class="headerlink" href="#solve-the-inverse-problems" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="solve-the-inverse-problems-with-groupmne">
+<h2>Solve the inverse problems with groupmne<a class="headerlink" href="#solve-the-inverse-problems-with-groupmne" title="Permalink to this headline">¶</a></h2>
 <p>For now, only the group lasso model is supported.
-It assumes the source locations are the same across subjects at each instant.
+It assumes the source locations are the same across subjects for all instants
 i.e if a source is zero for one subject, it will be zero for all subjects.
 “alpha” is a hyperparameter that controls this structured sparsity prior.
 it must be set as a positive number between 0 and 1. With alpha = 1, all
 the sources are 0.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stcs</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="View documentation for groupmne.inverse.compute_group_inverse"><span class="n">compute_group_inverse</span></a><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span><span class="p">,</span>
                                   <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grouplasso&quot;</span><span class="p">,</span>
-                                  <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">return_stc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">return_stc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                   <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="visualization">
-<h2>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h2>
 <p>Let’s visualize the N20 response. The stimulus was applied on the right
 hand, thus we only show the left hemisphere. The activation is exactly in
 the Primary somatosensory cortex. We highlight the borders of the post
@@ -416,10 +413,10 @@ central gyrus.</p>
     <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
         <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
         <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
-        <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+        <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
         <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
-    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;groupmne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
     <span class="n">brain</span><span class="o">.</span><span class="n">add_label</span><span class="p">(</span><span class="n">g_post_central</span><span class="p">,</span> <span class="n">borders</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -438,7 +435,103 @@ Reading labels from parcellation...
    read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  11.602 seconds)</p>
+</div>
+<div class="section" id="group-mne-leads-to-better-accuracy">
+<h2>Group MNE leads to better accuracy<a class="headerlink" href="#group-mne-leads-to-better-accuracy" title="Permalink to this headline">¶</a></h2>
+<p>To evaluate the effect of the joint inverse solution, we compute the
+individual solutions using <cite>mne.inverse_sparse.mixed_norm</cite> for each subject.
+The group solutions are better located in S1.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mne.inverse_sparse</span> <span class="k">import</span> <span class="n">mixed_norm</span>  <span class="c1"># noqa: E402</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="mf">0.02</span>
+<span class="n">t_idx</span> <span class="o">=</span> <span class="n">stcs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_as_index</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="s2">&quot;lateral&quot;</span>
+<span class="k">for</span> <span class="n">subject</span><span class="p">,</span> <span class="n">evoked</span><span class="p">,</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">cov</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">evoked_s</span><span class="p">,</span> <span class="n">fwds</span><span class="p">,</span> <span class="n">noise_cov_s</span><span class="p">):</span>
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">evoked</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">pick_types</span><span class="p">(</span><span class="n">meg</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">)</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)</span>
+    <span class="n">stc</span> <span class="o">=</span> <span class="n">mixed_norm</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">60.</span><span class="p">,</span> <span class="n">loose</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+    <span class="n">stc</span><span class="o">.</span><span class="n">subject</span> <span class="o">=</span> <span class="n">subject</span>
+    <span class="n">g_post_central</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_labels_from_annot</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="s2">&quot;aparc.a2009s&quot;</span><span class="p">,</span>
+                                                <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
+                                                <span class="n">regexp</span><span class="o">=</span><span class="s2">&quot;G_postcentral-lh&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_idx</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">surfer_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">clim</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">]),</span>
+        <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
+        <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+        <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;_mxne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_label</span><span class="p">(</span><span class="n">g_post_central</span><span class="p">,</span> <span class="n">borders</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_004.png" />
+</li>
+</ul>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Converting forward solution to fixed orietnation
+    No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+    Changing to fixed-orientation forward solution with surface-based source orientations...
+    [done]
+Computing inverse operator with 204 channels.
+    204 out of 306 channels remain after picking
+Selected 204 channels
+Creating the depth weighting matrix...
+Whitening the forward solution.
+    Created an SSP operator (subspace dimension = 3)
+Computing data rank from covariance with rank=None
+    Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Setting small GRAD eigenvalues to zero (without PCA)
+Creating the source covariance matrix
+Adjusting source covariance matrix.
+Whitening data matrix.
+-- ALPHA MAX : 100.00000000000001
+Using coordinate descent
+Iteration 1 :: p_obj 7.205803 :: dgap 0.000003 ::n_active_start 10 :: n_active_end 4
+Convergence reached ! (gap: 3.0050716643970077e-06 &lt; 0.0001)
+Debiasing did not converge after 1000 iterations! max(|D - D0| = 1.391568e-03 &gt;= 1.000000e-06)
+Final active set size: 4
+[done]
+Reading labels from parcellation...
+   read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
+   read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
+Converting forward solution to fixed orietnation
+    No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+    Changing to fixed-orientation forward solution with surface-based source orientations...
+    [done]
+Computing inverse operator with 204 channels.
+    204 out of 306 channels remain after picking
+Selected 204 channels
+Creating the depth weighting matrix...
+Whitening the forward solution.
+    Created an SSP operator (subspace dimension = 3)
+Computing data rank from covariance with rank=None
+    Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Setting small GRAD eigenvalues to zero (without PCA)
+Creating the source covariance matrix
+Adjusting source covariance matrix.
+Whitening data matrix.
+-- ALPHA MAX : 99.99999999999999
+Using coordinate descent
+Iteration 1 :: p_obj 26.937389 :: dgap 0.000005 ::n_active_start 10 :: n_active_end 3
+Convergence reached ! (gap: 5.428019701270159e-06 &lt; 0.0001)
+Debiasing converged after 473 iterations max(|D - D0| = 7.723673e-07 &lt; 1.000000e-06)
+Final active set size: 3
+[done]
+Reading labels from parcellation...
+   read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
+   read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  55.542 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
