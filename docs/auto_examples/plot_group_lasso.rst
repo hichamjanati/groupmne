@@ -90,18 +90,15 @@ The data will be downloaded in the same location
         noise_cov_s.append(cov)
 
 
-    f, axes = plt.subplots(1, 2, sharey=True)
-    for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
-        picks = mne.pick_types(ev.info, meg="grad")
-        ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
-        ax.set_title("Subject %s" % ll, fontsize=15)
-    plt.show()
+    # f, axes = plt.subplots(1, 2, sharey=True)
+    # for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+    #     picks = mne.pick_types(ev.info, meg="grad")
+    #     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+    #     ax.set_title("Subject %s" % ll, fontsize=15)
+    # plt.show()
 
 
 
-
-.. image:: /auto_examples/images/sphx_glr_plot_group_lasso_001.png
-    :class: sphx-glr-single-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -194,22 +191,6 @@ The data will be downloaded in the same location
             generated with autossp-1.0.1 (1 x 306) active
             generated with autossp-1.0.1 (1 x 306) active
             generated with autossp-1.0.1 (1 x 306) active
-    Computing data rank from covariance with rank=None
-        Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
-        Estimated rank (grad): 201
-        GRAD: rank 201 computed from 204 data channels with 3 projectors
-    Computing data rank from covariance with rank=None
-        Using tolerance 1.1e-14 (2.2e-16 eps * 102 dim * 0.48  max singular value)
-        Estimated rank (mag): 97
-        MAG: rank 97 computed from 102 data channels with 5 projectors
-    Computing data rank from covariance with rank=None
-        Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
-        Estimated rank (grad): 201
-        GRAD: rank 201 computed from 204 data channels with 3 projectors
-    Computing data rank from covariance with rank=None
-        Using tolerance 5.2e-15 (2.2e-16 eps * 102 dim * 0.23  max singular value)
-        Estimated rank (mag): 97
-        MAG: rank 97 computed from 102 data channels with 5 projectors
 
 
 Source and forward modeling
@@ -276,7 +257,7 @@ and computes their forward operators.
 
 
     subjects = ["subject_a", "subject_b"]
-    trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
+    trans_fname_s = [meg_path + "%s/%s-trans.fif" % (s, s) for s in subjects]
     bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                    for s in subjects]
     n_jobs = 2
@@ -286,9 +267,7 @@ and computes their forward operators.
                     for s, info, trans, bem in zip(subjects, raw_name_s,
                                                    trans_fname_s, bem_fname_s))
 
-    fwds = 2 * [fwds[1]]
-    evoked_s = 2 * [evoked_s[1]]
-    noise_cov_s = 2 * [noise_cov_s[1]]
+
 
 
 
@@ -299,6 +278,8 @@ We can now compute the data of the inverse problem.
 `group_info` is a dictionary that contains the selected channels and the
 alignment maps between src_ref and the subjects which are required if you
 want to plot source estimates on the brain surface of each subject.
+We restric the time points around 20ms in order to reconstruct the sources of
+the N20 response.
 
 
 .. code-block:: default
@@ -306,7 +287,7 @@ want to plot source estimates on the brain surface of each subject.
 
     gains, M, group_info = \
         group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
-                                     ch_type="grad", tmin=0.02, tmax=0.04)
+                                     ch_type="grad", tmin=0.015, tmax=0.025)
     print("(# subjects, # channels, # sources) = ", gains.shape)
     print("(# subjects, # channels, # time points) = ", M.shape)
 
@@ -323,8 +304,8 @@ want to plot source estimates on the brain surface of each subject.
     No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
         Changing to fixed-orientation forward solution with surface-based source orientations...
         [done]
-    Mapping lh fsaverage -> subject_b (nearest neighbor)...
-    Mapping rh fsaverage -> subject_b (nearest neighbor)...
+    Mapping lh fsaverage -> subject_a (nearest neighbor)...
+    Mapping rh fsaverage -> subject_a (nearest neighbor)...
         No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
         Changing to fixed-orientation forward solution with surface-based source orientations...
         [done]
@@ -332,7 +313,7 @@ want to plot source estimates on the brain surface of each subject.
     Mapping rh fsaverage -> subject_b (nearest neighbor)...
         Created an SSP operator (subspace dimension = 3)
     Computing data rank from covariance with rank=None
-        Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+        Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
         Estimated rank (grad): 201
         GRAD: rank 201 computed from 204 data channels with 3 projectors
         Setting small GRAD eigenvalues to zero (without PCA)
@@ -345,7 +326,7 @@ want to plot source estimates on the brain surface of each subject.
         Setting small GRAD eigenvalues to zero (without PCA)
         Created the whitener using a noise covariance matrix with rank 201 (3 small eigenvalues omitted)
     (# subjects, # channels, # sources) =  (2, 204, 5124)
-    (# subjects, # channels, # time points) =  (2, 204, 61)
+    (# subjects, # channels, # time points) =  (2, 204, 31)
 
 
 Solve the inverse problems
@@ -366,10 +347,32 @@ the sources are 0.
                                       depth=0.9, alpha=0.5, return_stc=True,
                                       n_jobs=4)
 
-    t = 0.025
+
+
+
+
+
+
+
+Visualization
+-------------
+Let's visualize the N20 response. The stimulus was applied on the right
+hand, thus we only show the left hemisphere. The activation is exactly in
+the Primary somatosensory cortex. We highlight the borders of the post
+central gyrus.
+
+
+.. code-block:: default
+
+
+
+    t = 0.02
     t_idx = stcs[0].time_as_index(t)
     view = "lateral"
     for stc, subject in zip(stcs, subjects):
+        g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
+                                                    subjects_dir=subjects_dir,
+                                                    regexp="G_postcentral-lh")[0]
         m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
         surfer_kwargs = dict(
             clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
@@ -378,6 +381,7 @@ the sources are 0.
             smoothing_steps=5)
         brain = stc.plot(**surfer_kwargs, views=view)
         brain.add_text(0.1, 0.9, subject, "title")
+        brain.add_label(g_post_central, borders=True, color="green")
 
 
 
@@ -386,21 +390,33 @@ the sources are 0.
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_002.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_001.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_003.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_002.png
             :class: sphx-glr-multi-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Reading labels from parcellation...
+       read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
+       read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
+    Reading labels from parcellation...
+       read 1 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
+       read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  3.400 seconds)
+   **Total running time of the script:** ( 2 minutes  11.602 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:

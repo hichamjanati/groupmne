@@ -70,12 +70,12 @@ for subj, ep in zip(["a", "b"], epochs_s):
     noise_cov_s.append(cov)
 
 
-f, axes = plt.subplots(1, 2, sharey=True)
-for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
-    picks = mne.pick_types(ev.info, meg="grad")
-    ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
-    ax.set_title("Subject %s" % ll, fontsize=15)
-plt.show()
+# f, axes = plt.subplots(1, 2, sharey=True)
+# for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+#     picks = mne.pick_types(ev.info, meg="grad")
+#     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+#     ax.set_title("Subject %s" % ll, fontsize=15)
+# plt.show()
 
 #########################################################
 # Source and forward modeling
@@ -96,7 +96,7 @@ src_ref = group_model.get_src_reference(spacing=spacing,
 # and computes their forward operators.
 
 subjects = ["subject_a", "subject_b"]
-trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
+trans_fname_s = [meg_path + "%s/%s-trans.fif" % (s, s) for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
 n_jobs = 2
@@ -106,18 +106,18 @@ fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
                 for s, info, trans, bem in zip(subjects, raw_name_s,
                                                trans_fname_s, bem_fname_s))
 
-fwds = 2 * [fwds[1]]
-evoked_s = 2 * [evoked_s[1]]
-noise_cov_s = 2 * [noise_cov_s[1]]
+
 ###################################################
 # We can now compute the data of the inverse problem.
 # `group_info` is a dictionary that contains the selected channels and the
 # alignment maps between src_ref and the subjects which are required if you
 # want to plot source estimates on the brain surface of each subject.
+# We restric the time points around 20ms in order to reconstruct the sources of
+# the N20 response.
 
 gains, M, group_info = \
     group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
-                                 ch_type="grad", tmin=0.02, tmax=0.04)
+                                 ch_type="grad", tmin=0.015, tmax=0.025)
 print("(# subjects, # channels, # sources) = ", gains.shape)
 print("(# subjects, # channels, # time points) = ", M.shape)
 
@@ -136,10 +136,23 @@ stcs, log = compute_group_inverse(gains, M, group_info,
                                   depth=0.9, alpha=0.5, return_stc=True,
                                   n_jobs=4)
 
-t = 0.025
+
+############################################
+# Visualization
+# -------------
+# Let's visualize the N20 response. The stimulus was applied on the right
+# hand, thus we only show the left hemisphere. The activation is exactly in
+# the Primary somatosensory cortex. We highlight the borders of the post
+# central gyrus.
+
+
+t = 0.02
 t_idx = stcs[0].time_as_index(t)
 view = "lateral"
 for stc, subject in zip(stcs, subjects):
+    g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
+                                                subjects_dir=subjects_dir,
+                                                regexp="G_postcentral-lh")[0]
     m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
     surfer_kwargs = dict(
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
@@ -148,3 +161,4 @@ for stc, subject in zip(stcs, subjects):
         smoothing_steps=5)
     brain = stc.plot(**surfer_kwargs, views=view)
     brain.add_text(0.1, 0.9, subject, "title")
+    brain.add_label(g_post_central, borders=True, color="green")

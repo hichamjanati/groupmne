@@ -5,9 +5,9 @@ import pytest
 from itertools import product
 
 
-@pytest.mark.parametrize("hemi time_independent",
+@pytest.mark.parametrize("hemi, time_independent",
                          product(["lh", "rh", "both"], [False, True]))
-def test_inverse(hemi):
+def test_inverse(hemi, time_independent):
     seed = 42
     rnd = np.random.RandomState(seed)
     n_features = 10
@@ -29,5 +29,5 @@ def test_inverse(hemi):
     coefs, log = compute_group_inverse(gains, M, group_info,
                                        method="grouplasso",
                                        depth=0.9, alpha=0.1, return_stc=False,
-                                       time_independent=time_independent
+                                       time_independent=time_independent,
                                        n_jobs=4)
