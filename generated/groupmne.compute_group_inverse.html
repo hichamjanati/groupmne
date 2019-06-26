@@ -117,7 +117,7 @@
 <h1>groupmne.compute_group_inverse<a class="headerlink" href="#groupmne-compute-group-inverse" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="groupmne.compute_group_inverse">
-<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_group_inverse</code><span class="sig-paren">(</span><em class="sig-param">gains</em>, <em class="sig-param">M</em>, <em class="sig-param">group_info</em>, <em class="sig-param">method='grouplasso'</em>, <em class="sig-param">depth=0.9</em>, <em class="sig-param">alpha=0.1</em>, <em class="sig-param">return_stc=True</em>, <em class="sig-param">n_jobs=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/inverse.html#compute_group_inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_group_inverse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_group_inverse</code><span class="sig-paren">(</span><em class="sig-param">gains</em>, <em class="sig-param">M</em>, <em class="sig-param">group_info</em>, <em class="sig-param">method='grouplasso'</em>, <em class="sig-param">depth=0.9</em>, <em class="sig-param">alpha=0.1</em>, <em class="sig-param">return_stc=True</em>, <em class="sig-param">n_jobs=1</em>, <em class="sig-param">time_independent=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/inverse.html#compute_group_inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_group_inverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solves the joint inverse problem for source localization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -134,6 +134,9 @@ treated independently.</p>
 <dt><strong>alpha: float in (0, 1). regularization hyperparameter set as a fraction of</strong></dt><dd><p>alpha_max for which all sources are 0.</p>
 </dd>
 <dt><strong>return_stc: bool, (optional, default True). If true, source estimates are</strong></dt><dd><p>returned as stc objects, array otherwise.</p>
+</dd>
+<dt><strong>time_independent: bool, (optional, default false). If True, each time point</strong></dt><dd><p>is solved independently. By default, the group lasso is applied on the
+time and subjects axes.</p>
 </dd>
 <dt><strong>n_jobs: int (default 1).</strong></dt><dd></dd>
 <dt><strong>kwargs: additional arguments passed to the solver.</strong></dt><dd></dd>
