@@ -2,9 +2,11 @@ import numpy as np
 from groupmne.inverse import compute_group_inverse
 from groupmne import utils
 import pytest
+from itertools import product
 
 
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
+@pytest.mark.parametrize("hemi time_independent",
+                         product(["lh", "rh", "both"], [False, True]))
 def test_inverse(hemi):
     seed = 42
     rnd = np.random.RandomState(seed)
@@ -21,9 +23,11 @@ def test_inverse(hemi):
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
                                       depth=0.9, alpha=0.1, return_stc=True,
+                                      time_independent=time_independent,
                                       n_jobs=4)
 
     coefs, log = compute_group_inverse(gains, M, group_info,
                                        method="grouplasso",
                                        depth=0.9, alpha=0.1, return_stc=False,
+                                       time_independent=time_independent
                                        n_jobs=4)
