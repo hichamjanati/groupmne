@@ -267,13 +267,13 @@ If fsaverage is not available, it will be fetched to the data_path
     You are now one step closer to computing the gain matrix
 
 
+the function group_model.compute_fwd morphs the source space src_ref to the
+surface of each subject by mapping the sulci and gyri patterns
+and computes their forward operators.
+
 
 .. code-block:: default
 
-
-    # the function group_model.compute_fwd morphs the source space src_ref to the
-    # surface of each subject by mapping the sulci and gyri patterns
-    # and computes their forward operators
 
     subjects = ["subject_a", "subject_b"]
     trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
@@ -286,6 +286,9 @@ If fsaverage is not available, it will be fetched to the data_path
                     for s, info, trans, bem in zip(subjects, raw_name_s,
                                                    trans_fname_s, bem_fname_s))
 
+    fwds = 2 * [fwds[1]]
+    evoked_s = 2 * [evoked_s[1]]
+    noise_cov_s = 2 * [noise_cov_s[1]]
 
 
 
@@ -317,13 +320,19 @@ want to plot source estimates on the brain surface of each subject.
 
  .. code-block:: none
 
-    Mapping lh fsaverage -> subject_a (nearest neighbor)...
-    Mapping rh fsaverage -> subject_a (nearest neighbor)...
+    No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+        Changing to fixed-orientation forward solution with surface-based source orientations...
+        [done]
+    Mapping lh fsaverage -> subject_b (nearest neighbor)...
+    Mapping rh fsaverage -> subject_b (nearest neighbor)...
+        No patch info available. The standard source space normals will be employed in the rotation to the local surface coordinates....
+        Changing to fixed-orientation forward solution with surface-based source orientations...
+        [done]
     Mapping lh fsaverage -> subject_b (nearest neighbor)...
     Mapping rh fsaverage -> subject_b (nearest neighbor)...
         Created an SSP operator (subspace dimension = 3)
     Computing data rank from covariance with rank=None
-        Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+        Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
         Estimated rank (grad): 201
         GRAD: rank 201 computed from 204 data channels with 3 projectors
         Setting small GRAD eigenvalues to zero (without PCA)
@@ -341,28 +350,34 @@ want to plot source estimates on the brain surface of each subject.
 
 Solve the inverse problems
 --------------------------
-
+For now, only the group lasso model is supported.
+It assumes the source locations are the same across subjects at each instant.
+i.e if a source is zero for one subject, it will be zero for all subjects.
+"alpha" is a hyperparameter that controls this structured sparsity prior.
+it must be set as a positive number between 0 and 1. With alpha = 1, all
+the sources are 0.
 
 
 .. code-block:: default
 
+
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
-                                      depth=0.9, alpha=0.1, return_stc=True,
+                                      depth=0.9, alpha=0.5, return_stc=True,
                                       n_jobs=4)
 
     t = 0.025
     t_idx = stcs[0].time_as_index(t)
-    for view in ["lateral", "medial"]:
-        for stc, subject in zip(stcs, subjects):
-            m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-            surfer_kwargs = dict(
-                clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-                hemi='lh', subjects_dir=subjects_dir,
-                initial_time=t, time_unit='s', size=(350, 350),
-                smoothing_steps=5)
-            brain = stc.plot(**surfer_kwargs, views=view)
-            brain.add_text(0.1, 0.9, subject, "title")
+    view = "lateral"
+    for stc, subject in zip(stcs, subjects):
+        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+        surfer_kwargs = dict(
+            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+            hemi='lh', subjects_dir=subjects_dir,
+            initial_time=t, time_unit='s', size=(500, 500),
+            smoothing_steps=5)
+        brain = stc.plot(**surfer_kwargs, views=view)
+        brain.add_text(0.1, 0.9, subject, "title")
 
 
 
@@ -379,23 +394,13 @@ Solve the inverse problems
       .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_003.png
             :class: sphx-glr-multi-img
 
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_004.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_005.png
-            :class: sphx-glr-multi-img
-
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  7.395 seconds)
+   **Total running time of the script:** ( 2 minutes  3.400 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:

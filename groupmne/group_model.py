@@ -201,8 +201,9 @@ def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
     M = []
     for i, (noise_cov, evoked, gain) \
             in enumerate(zip(noise_cov_s, evokeds, gains)):
-        ev = evoked.crop(tmin, tmax)
-        whitener, _ = mne.cov.compute_whitener(noise_cov, evoked.info,
+        ev = evoked.copy()
+        ev.crop(tmin, tmax)
+        whitener, _ = mne.cov.compute_whitener(noise_cov, ev.info,
                                                sel, pca=False)
         gains[i] = (ev.nave) ** 0.5 * whitener.dot(gain)
         M.append((ev.nave) ** 0.5 * whitener.dot(ev.data[sel]))

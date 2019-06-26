@@ -91,10 +91,9 @@ src_ref = group_model.get_src_reference(spacing=spacing,
                                         subjects_dir=subjects_dir)
 
 ###################################################################
-
 # the function group_model.compute_fwd morphs the source space src_ref to the
 # surface of each subject by mapping the sulci and gyri patterns
-# and computes their forward operators
+# and computes their forward operators.
 
 subjects = ["subject_a", "subject_b"]
 trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
@@ -107,7 +106,10 @@ fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
                 for s, info, trans, bem in zip(subjects, raw_name_s,
                                                trans_fname_s, bem_fname_s))
 
-############################################
+fwds = 2 * [fwds[1]]
+evoked_s = 2 * [evoked_s[1]]
+noise_cov_s = 2 * [noise_cov_s[1]]
+###################################################
 # We can now compute the data of the inverse problem.
 # `group_info` is a dictionary that contains the selected channels and the
 # alignment maps between src_ref and the subjects which are required if you
@@ -122,21 +124,27 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 ############################################
 # Solve the inverse problems
 # --------------------------
-#
+# For now, only the group lasso model is supported.
+# It assumes the source locations are the same across subjects at each instant.
+# i.e if a source is zero for one subject, it will be zero for all subjects.
+# "alpha" is a hyperparameter that controls this structured sparsity prior.
+# it must be set as a positive number between 0 and 1. With alpha = 1, all
+# the sources are 0.
+
 stcs, log = compute_group_inverse(gains, M, group_info,
                                   method="grouplasso",
-                                  depth=0.9, alpha=0.1, return_stc=True,
+                                  depth=0.9, alpha=0.5, return_stc=True,
                                   n_jobs=4)
 
 t = 0.025
 t_idx = stcs[0].time_as_index(t)
-for view in ["lateral", "medial"]:
-    for stc, subject in zip(stcs, subjects):
-        m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-        surfer_kwargs = dict(
-            clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-            hemi='lh', subjects_dir=subjects_dir,
-            initial_time=t, time_unit='s', size=(350, 350),
-            smoothing_steps=5)
-        brain = stc.plot(**surfer_kwargs, views=view)
-        brain.add_text(0.1, 0.9, subject, "title")
+view = "lateral"
+for stc, subject in zip(stcs, subjects):
+    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    surfer_kwargs = dict(
+        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+        hemi='lh', subjects_dir=subjects_dir,
+        initial_time=t, time_unit='s', size=(500, 500),
+        smoothing_steps=5)
+    brain = stc.plot(**surfer_kwargs, views=view)
+    brain.add_text(0.1, 0.9, subject, "title")

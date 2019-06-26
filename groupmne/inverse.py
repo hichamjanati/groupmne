@@ -7,6 +7,7 @@ from .solvers import gl_wrapper
 
 def compute_group_inverse(gains, M, group_info, method="grouplasso",
                           depth=0.9, alpha=0.1, return_stc=True, n_jobs=1,
+                          time_independent=False,
                           **kwargs):
     """Solves the joint inverse problem for source localization.
 
@@ -25,6 +26,9 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         alpha_max for which all sources are 0.
     return_stc: bool, (optional, default True). If true, source estimates are
         returned as stc objects, array otherwise.
+    time_independent: bool, (optional, default false). If True, each time point
+        is solved independently. By default, the group lasso is applied on the
+        time and subjects axes.
     n_jobs: int (default 1).
     kwargs: additional arguments passed to the solver.
 
@@ -35,12 +39,22 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
     n_subjects, n_channels, n_times = M.shape
     norms = np.linalg.norm(gains, axis=1) ** depth
     gains_scaled = gains / norms[:, None, :]
-    gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
-    alphamax_s = np.linalg.norm(gty, axis=0).max(axis=0)
-    alpha_s = alpha * alphamax_s
-    it = (delayed(gl_wrapper)(gains_scaled, M[:, :, i], alpha=alpha_s[i],
-                              **kwargs) for i in range(n_times))
-    coefs, residuals, loss, dg = list(zip(*Parallel(n_jobs=n_jobs)(it)))
+    if time_independent:
+        gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
+        alphamax_s = np.linalg.norm(gty, axis=0).max(axis=0)
+        alpha_s = alpha * alphamax_s
+        it = (delayed(gl_wrapper)(gains_scaled, M[:, :, i], alpha=alpha_s[i],
+                                  **kwargs) for i in range(n_times))
+        coefs, residuals, loss, dg = list(zip(*Parallel(n_jobs=n_jobs)(it)))
+    else:
+        M = np.swapaxes(M, 1, 2).reshape(-1, n_channels)
+        gains_scaled = np.tile(gains, (n_times, 1, 1))
+        gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
+        alphamax = np.linalg.norm(gty, axis=0).max(axis=0)
+        alpha = alpha * alphamax
+        coefs, residuals, loss, dg = gl_wrapper(gains_scaled, M, alpha=alpha)
+        coefs = coefs.reshape(-1, n_subjects, n_times).T
+        coefs = np.swapaxes(coefs, 1, 2)
     # re-normalize coefs and change units to nAm
     coefs = np.array(coefs) * 1e9 / norms.T[None, :, :]
     log = dict(residuals=residuals, loss=loss, dg=dg)
