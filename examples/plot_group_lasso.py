@@ -121,11 +121,11 @@ gains, M, group_info = \
 print("(# subjects, # channels, # sources) = ", gains.shape)
 print("(# subjects, # channels, # time points) = ", M.shape)
 
-############################################
-# Solve the inverse problems
-# --------------------------
+###########################################
+# Solve the inverse problems with groupmne
+# ----------------------------------------
 # For now, only the group lasso model is supported.
-# It assumes the source locations are the same across subjects at each instant.
+# It assumes the source locations are the same across subjects for all instants
 # i.e if a source is zero for one subject, it will be zero for all subjects.
 # "alpha" is a hyperparameter that controls this structured sparsity prior.
 # it must be set as a positive number between 0 and 1. With alpha = 1, all
@@ -133,13 +133,11 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 
 stcs, log = compute_group_inverse(gains, M, group_info,
                                   method="grouplasso",
-                                  depth=0.9, alpha=0.5, return_stc=True,
+                                  depth=0.9, alpha=0.6, return_stc=True,
                                   n_jobs=4)
 
 
 ############################################
-# Visualization
-# -------------
 # Let's visualize the N20 response. The stimulus was applied on the right
 # hand, thus we only show the left hemisphere. The activation is exactly in
 # the Primary somatosensory cortex. We highlight the borders of the post
@@ -157,8 +155,40 @@ for stc, subject in zip(stcs, subjects):
     surfer_kwargs = dict(
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
         hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t, time_unit='s', size=(500, 500),
+        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
         smoothing_steps=5)
     brain = stc.plot(**surfer_kwargs, views=view)
-    brain.add_text(0.1, 0.9, subject, "title")
+    brain.add_text(0.1, 0.9, subject + "groupmne", "title")
+    brain.add_label(g_post_central, borders=True, color="green")
+
+#####################################
+# Group MNE leads to better accuracy
+# ----------------------------------
+# To evaluate the effect of the joint inverse solution, we compute the
+# individual solutions using `mne.inverse_sparse.mixed_norm` for each subject.
+# The group solutions are better located in S1.
+
+
+from mne.inverse_sparse import mixed_norm  # noqa: E402
+
+t = 0.02
+t_idx = stcs[0].time_as_index(t)
+view = "lateral"
+for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
+    ev = evoked.copy()
+    ev.pick_types(meg="grad")
+    ev.crop(0.015, 0.025)
+    stc = mixed_norm(ev, fwd, cov, alpha=60., loose=0., depth=0.9)
+    stc.subject = subject
+    g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
+                                                subjects_dir=subjects_dir,
+                                                regexp="G_postcentral-lh")[0]
+    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    surfer_kwargs = dict(
+        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+        hemi='lh', subjects_dir=subjects_dir,
+        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+        smoothing_steps=5)
+    brain = stc.plot(**surfer_kwargs, views=view)
+    brain.add_text(0.1, 0.9, subject + "_mxne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
