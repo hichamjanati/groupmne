@@ -2,6 +2,10 @@ import mne
 import numpy as np
 from mne.source_space import (_ensure_src, _get_morph_src_reordering,
                               _ensure_src_subject, SourceSpaces)
+import warnings
+import os
+from mne.transforms import _get_trans, apply_trans
+from sklearn.metrics import euclidean_distances
 
 
 def get_morph_src_mapping(src_from, src_to, subject_from=None,
@@ -144,3 +148,35 @@ def make_fake_group_info(n_sources=2562, n_subjects=2, hemi="lh"):
     group_info["tmin"] = 0.
     group_info["tstep"] = 0.1
     return group_info
+
+
+def compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
+    """Compute the avg distance between the dig points and their closest
+       surface MRI neighbors in Head coordinates.
+    """
+    trans = mne.read_trans(trans_fname)
+
+    high_res_surf = subjects_dir + "/%s/surf/lh.seghead" % subject
+    low_res_surf = subjects_dir + "/%s/bem/%s-outer_skull.surf" % (subject,
+                                                                   subject)
+    if os.path.exists(high_res_surf):
+        pts, _ = mne.read_surface(high_res_surf, verbose=False)
+        pts /= 1e3  # convert to mm
+    elif os.path.exists(low_res_surf):
+        warnings.warn("""Using low resolution head surface,
+                         the average distance will be potentially
+                         overestimated""")
+        pts, _ = mne.read_surface(high_res_surf, verbose=False)
+        pts /= 1e3  # convert to mm
+    else:
+        raise FileNotFoundError("No MRI surface was found!")
+    trans = _get_trans(trans, fro="mri", to="head")[0]
+    pts = apply_trans(trans, pts)
+    info = mne.io.read_info(info_fname, verbose=False)
+    info_dig = np.stack([list(x["r"]) for x in info["dig"]],
+                        axis=0)
+    M = euclidean_distances(info_dig, pts)
+    idx = np.argmin(M, axis=1)
+    dist = M[np.arange(len(info_dig)), idx].mean()
+
+    return dist
