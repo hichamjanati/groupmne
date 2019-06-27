@@ -41,6 +41,7 @@ MEG and MRI data for two subjects.
 Download and process MEG data
 -----------------------------
 
+For this example, we use the HF somatosensory dataset [2].
 We need the raw data to estimate the noise covariance
 since only average MEG data (and MRI) are provided in "evoked".
 The data will be downloaded in the same location
@@ -90,15 +91,18 @@ The data will be downloaded in the same location
         noise_cov_s.append(cov)
 
 
-    # f, axes = plt.subplots(1, 2, sharey=True)
-    # for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
-    #     picks = mne.pick_types(ev.info, meg="grad")
-    #     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
-    #     ax.set_title("Subject %s" % ll, fontsize=15)
-    # plt.show()
+    f, axes = plt.subplots(1, 2, sharey=True)
+    for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+        picks = mne.pick_types(ev.info, meg="grad")
+        ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+        ax.set_title("Subject %s" % ll, fontsize=15)
+    plt.show()
 
 
 
+
+.. image:: /auto_examples/images/sphx_glr_plot_group_lasso_001.png
+    :class: sphx-glr-single-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -191,6 +195,22 @@ The data will be downloaded in the same location
             generated with autossp-1.0.1 (1 x 306) active
             generated with autossp-1.0.1 (1 x 306) active
             generated with autossp-1.0.1 (1 x 306) active
+    Computing data rank from covariance with rank=None
+        Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+        Estimated rank (grad): 201
+        GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Computing data rank from covariance with rank=None
+        Using tolerance 1.1e-14 (2.2e-16 eps * 102 dim * 0.48  max singular value)
+        Estimated rank (mag): 97
+        MAG: rank 97 computed from 102 data channels with 5 projectors
+    Computing data rank from covariance with rank=None
+        Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+        Estimated rank (grad): 201
+        GRAD: rank 201 computed from 204 data channels with 3 projectors
+    Computing data rank from covariance with rank=None
+        Using tolerance 5.2e-15 (2.2e-16 eps * 102 dim * 0.23  max singular value)
+        Estimated rank (mag): 97
+        MAG: rank 97 computed from 102 data channels with 5 projectors
 
 
 Source and forward modeling
@@ -331,7 +351,7 @@ the N20 response.
 
 Solve the inverse problems with groupmne
 ----------------------------------------
-For now, only the group lasso model is supported.
+For now, only the group lasso model [1] is supported.
 It assumes the source locations are the same across subjects for all instants
 i.e if a source is zero for one subject, it will be zero for all subjects.
 "alpha" is a hyperparameter that controls this structured sparsity prior.
@@ -389,12 +409,12 @@ central gyrus.
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_001.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_002.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_002.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_003.png
             :class: sphx-glr-multi-img
 
 
@@ -449,17 +469,19 @@ The group solutions are better located in S1.
 
 
 
+
+
 .. rst-class:: sphx-glr-horizontal
 
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_003.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_004.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_004.png
+      .. image:: /auto_examples/images/sphx_glr_plot_group_lasso_005.png
             :class: sphx-glr-multi-img
 
 
@@ -527,10 +549,18 @@ The group solutions are better located in S1.
        read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
 
 
+References
+----------
+[1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
+2017
+[2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
+somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
+Zenodo. http://doi.org/10.5281/zenodo.889235
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  55.542 seconds)
+   **Total running time of the script:** ( 2 minutes  1.833 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:

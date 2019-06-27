@@ -81,6 +81,7 @@
 <li><a class="reference internal" href="#source-and-forward-modeling">Source and forward modeling</a></li>
 <li><a class="reference internal" href="#solve-the-inverse-problems-with-groupmne">Solve the inverse problems with groupmne</a></li>
 <li><a class="reference internal" href="#group-mne-leads-to-better-accuracy">Group MNE leads to better accuracy</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
 </ul>
@@ -145,7 +146,8 @@ MEG and MRI data for two subjects.</p>
 </div>
 <div class="section" id="download-and-process-meg-data">
 <h2>Download and process MEG data<a class="headerlink" href="#download-and-process-meg-data" title="Permalink to this headline">¶</a></h2>
-<p>We need the raw data to estimate the noise covariance
+<p>For this example, we use the HF somatosensory dataset [2].
+We need the raw data to estimate the noise covariance
 since only average MEG data (and MRI) are provided in “evoked”.
 The data will be downloaded in the same location</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><span class="n">data_path</span><span class="p">(</span><span class="s2">&quot;raw&quot;</span><span class="p">)</span>
@@ -188,14 +190,15 @@ The data will be downloaded in the same location</p>
     <span class="n">noise_cov_s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
 
 
-<span class="c1"># f, axes = plt.subplots(1, 2, sharey=True)</span>
-<span class="c1"># for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, [&quot;a&quot;, &quot;b&quot;]):</span>
-<span class="c1">#     picks = mne.pick_types(ev.info, meg=&quot;grad&quot;)</span>
-<span class="c1">#     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)</span>
-<span class="c1">#     ax.set_title(&quot;Subject %s&quot; % ll, fontsize=15)</span>
-<span class="c1"># plt.show()</span>
+<span class="n">f</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="View documentation for matplotlib.pyplot.subplots"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">evoked_s</span><span class="p">,</span> <span class="n">noise_cov_s</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]):</span>
+    <span class="n">picks</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">pick_types</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">meg</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">)</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">picks</span><span class="o">=</span><span class="n">picks</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">noise_cov</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Subject </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ll</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="View documentation for matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
 </pre></div>
 </div>
+<img alt="../_images/sphx_glr_plot_group_lasso_001.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_group_lasso_001.png" />
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Opening raw data file /Users/hichamjanati/mne_data/HF_SEF/MEG/subject_a/sef_right_raw.fif...
     Read a total of 8 projection items:
@@ -281,6 +284,22 @@ Created an SSP operator (subspace dimension = 8)
         generated with autossp-1.0.1 (1 x 306) active
         generated with autossp-1.0.1 (1 x 306) active
         generated with autossp-1.0.1 (1 x 306) active
+Computing data rank from covariance with rank=None
+    Using tolerance 2.6e-13 (2.2e-16 eps * 204 dim * 5.8  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 1.1e-14 (2.2e-16 eps * 102 dim * 0.48  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 2.2e-13 (2.2e-16 eps * 204 dim * 4.9  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing data rank from covariance with rank=None
+    Using tolerance 5.2e-15 (2.2e-16 eps * 102 dim * 0.23  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
 </pre></div>
 </div>
 </div>
@@ -386,7 +405,7 @@ Computing data rank from covariance with rank=None
 </div>
 <div class="section" id="solve-the-inverse-problems-with-groupmne">
 <h2>Solve the inverse problems with groupmne<a class="headerlink" href="#solve-the-inverse-problems-with-groupmne" title="Permalink to this headline">¶</a></h2>
-<p>For now, only the group lasso model is supported.
+<p>For now, only the group lasso model [1] is supported.
 It assumes the source locations are the same across subjects for all instants
 i.e if a source is zero for one subject, it will be zero for all subjects.
 “alpha” is a hyperparameter that controls this structured sparsity prior.
@@ -421,9 +440,9 @@ central gyrus.</p>
 </pre></div>
 </div>
 <ul class="sphx-glr-horizontal">
-<li><img alt="../_images/sphx_glr_plot_group_lasso_001.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_001.png" />
-</li>
 <li><img alt="../_images/sphx_glr_plot_group_lasso_002.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_002.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
 </li>
 </ul>
 <p class="sphx-glr-script-out">Out:</p>
@@ -467,9 +486,9 @@ The group solutions are better located in S1.</p>
 </pre></div>
 </div>
 <ul class="sphx-glr-horizontal">
-<li><img alt="../_images/sphx_glr_plot_group_lasso_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_003.png" />
-</li>
 <li><img alt="../_images/sphx_glr_plot_group_lasso_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_004.png" />
+</li>
+<li><img alt="../_images/sphx_glr_plot_group_lasso_005.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_plot_group_lasso_005.png" />
 </li>
 </ul>
 <p class="sphx-glr-script-out">Out:</p>
@@ -531,7 +550,15 @@ Reading labels from parcellation...
    read 0 labels from /Users/hichamjanati/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  55.542 seconds)</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>[1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
+2017
+[2] Jussi Nurminen, Hilla Paananen, &amp; Jyrki Mäkelä. (2017). High frequency
+somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
+Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.889235">http://doi.org/10.5281/zenodo.889235</a></p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  1.833 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
