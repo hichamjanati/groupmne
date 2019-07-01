@@ -159,6 +159,7 @@ def compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
     high_res_surf = subjects_dir + "/%s/surf/lh.seghead" % subject
     low_res_surf = subjects_dir + "/%s/bem/%s-outer_skull.surf" % (subject,
                                                                    subject)
+    low_res_surf_2 = subjects_dir + "/%s/bem/outer_skull.surf" % subject
     if os.path.exists(high_res_surf):
         pts, _ = mne.read_surface(high_res_surf, verbose=False)
         pts /= 1e3  # convert to mm
@@ -166,7 +167,13 @@ def compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
         warnings.warn("""Using low resolution head surface,
                          the average distance will be potentially
                          overestimated""")
-        pts, _ = mne.read_surface(high_res_surf, verbose=False)
+        pts, _ = mne.read_surface(low_res_surf, verbose=False)
+        pts /= 1e3  # convert to mm
+    elif os.path.exists(low_res_surf_2):
+        warnings.warn("""Using low resolution head surface,
+                         the average distance will be potentially
+                         overestimated""")
+        pts, _ = mne.read_surface(low_res_surf_2, verbose=False)
         pts /= 1e3  # convert to mm
     else:
         raise FileNotFoundError("No MRI surface was found!")

@@ -25,6 +25,7 @@ from groupmne.inverse import compute_group_inverse
 # Download and process MEG data
 # -----------------------------
 #
+# For this example, we use the HF somatosensory dataset [2].
 # We need the raw data to estimate the noise covariance
 # since only average MEG data (and MRI) are provided in "evoked".
 # The data will be downloaded in the same location
@@ -70,12 +71,12 @@ for subj, ep in zip(["a", "b"], epochs_s):
     noise_cov_s.append(cov)
 
 
-# f, axes = plt.subplots(1, 2, sharey=True)
-# for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
-#     picks = mne.pick_types(ev.info, meg="grad")
-#     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
-#     ax.set_title("Subject %s" % ll, fontsize=15)
-# plt.show()
+f, axes = plt.subplots(1, 2, sharey=True)
+for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+    picks = mne.pick_types(ev.info, meg="grad")
+    ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
+    ax.set_title("Subject %s" % ll, fontsize=15)
+plt.show()
 
 #########################################################
 # Source and forward modeling
@@ -111,7 +112,7 @@ fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
 # We can now compute the data of the inverse problem.
 # `group_info` is a dictionary that contains the selected channels and the
 # alignment maps between src_ref and the subjects which are required if you
-# want to plot source estimates on the brain surface of each subject.
+# want to plot source estimates on the brain surface of each subject. The
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 
@@ -124,7 +125,7 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 ###########################################
 # Solve the inverse problems with groupmne
 # ----------------------------------------
-# For now, only the group lasso model is supported.
+# For now, only the group lasso model [1] is supported.
 # It assumes the source locations are the same across subjects for all instants
 # i.e if a source is zero for one subject, it will be zero for all subjects.
 # "alpha" is a hyperparameter that controls this structured sparsity prior.
@@ -192,3 +193,14 @@ for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
     brain = stc.plot(**surfer_kwargs, views=view)
     brain.add_text(0.1, 0.9, subject + "_mxne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
+
+
+###########################################
+# References
+# ----------
+# [1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
+# 2017
+#
+# [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
+# somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
+# Zenodo. http://doi.org/10.5281/zenodo.889235
