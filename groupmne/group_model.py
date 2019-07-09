@@ -12,8 +12,10 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
 
     Parameters
     ----------
-    subject: str. Name of the reference subject.
-    spacing: str. The spacing to use. Can be ``'ico#'`` for a recursively
+    subject : str
+        Name of the reference subject.
+    spacing : str
+        The spacing to use. Can be ``'ico#'`` for a recursively
         subdivided icosahedron, ``'oct#'`` for a recursively subdivided
         octahedron, ``'all'`` for all points, or an integer to use
         appoximate distance-based spacing (in mm).
@@ -25,17 +27,20 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
     src : SourceSpaces
         The source space for each hemisphere.
     """
-
+    subjects_dir = \
+        mne.utils.get_subjects_dir(subjects_dir=None, raise_error=True)
     fname_src = op.join(subjects_dir, subject, 'bem', '%s-%s-src.fif'
                         % (subject, spacing))
     if os.path.isfile(fname_src):
         src_ref = mne.read_source_spaces(fname_src)
-    elif os.path.exists(subjects_dir + subject):
+    elif os.path.exists(os.path.join(subjects_dir, subject)):
         src_ref = mne.setup_source_space(subject=subject,
                                          spacing=spacing,
                                          subjects_dir=subjects_dir,
                                          add_dist=False)
     else:
+        # XXX : I don't get the logic here. Why fetching
+        # fsaverage if subject is not fsaverage?
         mne.datasets.fetch_fsaverage(subjects_dir)
         src_ref = mne.setup_source_space(subject=subject,
                                          spacing=spacing,
@@ -46,7 +51,10 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
 
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 mindist=2, subjects_dir=None):
-    """Morph the source space of fsaverage to a subject."""
+    """Morph the source space of fsaverage to a subject.
+
+    XXX missing docstring
+    """
     print("Processing subject %s" % subject)
 
     src = mne.morph_source_spaces(src_ref, subject_to=subject,
@@ -120,24 +128,30 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
 
 
 def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
-    """Compute aligned gain matrices of the group of subjects with respect to
-    a reference source space.
+    """Compute aligned gain matrices of the group of subjects
+
+    Computation is done with respect to a reference source space.
 
     Parameters
     ----------
-    fwds: list of forward operators computed on the morphed source
+    fwds : list
+        The forward operators computed on the morphed source
         space `src_ref`.
-    src_ref: SourceSpace instance. Reference source model.
-    ch_type: str. Type of channels used for source reconstruction. Can be one
+    src_ref : instance of SourceSpace instance
+        Reference source model.
+    ch_type : str
+        Type of channels used for source reconstruction. Can be one
         of ("mag", "grad", "eeg"). Using more than one type of channels is not
         yet supported.
-    hemi: str. Hemisphere, "lh", "rh" or "both".
+    hemi : str
+        Hemisphere, "lh", "rh" or "both".
 
     Returns
     -------
-    gains: array (n_subjects, n_channels, n_sources)
-    group_info: dict. Group information (channels, alignments maps across
-        subjects)
+    gains: ndarray, shape (n_subjects, n_channels, n_sources)
+        The gain matrices.
+    group_info: dict
+        Group information (channels, alignments maps across subjects)
     """
     gains, group_info = _group_filtering(fwds, src_ref, noise_covs=None)
     n_lh = group_info["n_sources"][0]
@@ -169,24 +183,32 @@ def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
 
     Parameters
     ----------
-    fwds: list of forward operators computed on the morphed source
+    fwds : list
+        The forward operators computed on the morphed source
         space `src_ref`.
-    src_ref: SourceSpace instance. Reference source model.
-    evokeds: list of Evoked instances, one element for each subject.
-    noise_cov_s: list of Covariance instances, estimates of the noise cov.
-    ch_type: str. Type of channels used for source reconstruction. Can be one
+    src_ref : instance of SourceSpace instance
+        Reference source model.
+    evokeds : list
+        The Evoked instances, one element for each subject.
+    noise_cov_s : list of instances of Covariance
+        The noise covariances, one element for each subject.
+    ch_type : str
+        Type of channels used for source reconstruction. Can be one
         of ("mag", "grad", "eeg"). Using more than one type of channels is not
         yet supported.
-    tmin: float. initial time point.
-    tmax: float. final time point.
+    tmin: float
+        initial time point.
+    tmax: float
+        final time point.
 
     Returns
     -------
-    gains: array (n_subjects, n_channels, n_sources)
-    M: array (n_subjects, n_channels, n_times)
+    gains: ndarray, shape (n_subjects, n_channels, n_sources)
+        The gain matrices.
+    M: ndarray, shape (n_subjects, n_channels, n_times)
         M-EEG data.
-    group_info: dict. Group information (channels, alignments maps across
-        subjects)
+    group_info: dict
+        Group information (channels, alignments maps across subjects)
     """
     if len(fwds) != len(noise_cov_s):
         raise ValueError("""The length of `fwds` and `noise_cov_s`
