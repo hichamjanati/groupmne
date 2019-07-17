@@ -8,7 +8,7 @@ import os
 import pytest
 
 
-data_path = testing.data_path(download=True)
+data_path = testing.data_path()
 subjects_dir = op.join(data_path, 'subjects')
 
 bem_fname = op.join(data_path, 'subjects', 'sample', 'bem',

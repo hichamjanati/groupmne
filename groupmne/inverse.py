@@ -13,28 +13,39 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
 
     Parameters
     ----------
-    gains: array (n_subjects, n_channels, n_sources). forward data, returned by
+    gains: ndarray, shape (n_subjects, n_channels, n_sources).
+        Forward data, returned by
         `group_model.compute_gains` or `group_model.compute_inv_data`.
-    M: array (n_subjects, n_channels, n_times). M-EEG data.
-    group_info: dict.
-    method: str. Inverse problem model to use. For now, only "grouplasso" is
+    M : ndarray, shape (n_subjects, n_channels, n_times)
+        M-EEG data
+    group_info : dict
+        The measurement info.
+    method : str
+        Inverse problem model to use. For now, only "grouplasso" is
         supported. The group-lasso solver promotes source estimates with
         overlapping active vertices across subjects. Each time point is
         treated independently.
-    depth: float (0-1). Depth weighting. If 1, no normalization is done.
-    alpha: float in (0, 1). regularization hyperparameter set as a fraction of
+    depth : float in (0, 1)
+        Depth weighting. If 1, no normalization is done.
+    alpha : float in (0, 1)
+        Regularization hyperparameter set as a fraction of
         alpha_max for which all sources are 0.
-    return_stc: bool, (optional, default True). If true, source estimates are
-        returned as stc objects, array otherwise.
-    time_independent: bool, (optional, default false). If True, each time point
-        is solved independently. By default, the group lasso is applied on the
-        time and subjects axes.
-    n_jobs: int (default 1).
-    kwargs: additional arguments passed to the solver.
+    return_stc : bool, (optional, default True)
+        If true, source estimates are returned as stc objects, array otherwise.
+    time_independent : bool, (optional, default false)
+        If True, each time point is solved independently. By default,
+        the group lasso is applied on the time and subjects axes.
+    n_jobs : int (default 1)
+        The number of CPUs to use in parallel.
+    kwargs : dict
+        additional arguments passed to the solver.
 
-    Return
-    ------
-    estimates: stc object, array if `return_stc` is False.
+    Returns
+    -------
+    estimates: instance of SourceEstimates | array
+        The estimated sources as an array if `return_stc` is False.
+    log : dict
+        Some info about the convergence.
     """
     n_subjects, n_channels, n_times = M.shape
     norms = np.linalg.norm(gains, axis=1) ** depth
