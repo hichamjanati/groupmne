@@ -1,3 +1,5 @@
+"""Multi-subject source localization with MNE."""
+
 from . import group_model, inverse, utils
 from .group_model import (compute_gains, compute_inv_data, get_src_reference,
                           compute_fwd)

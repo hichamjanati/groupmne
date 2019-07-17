@@ -17,9 +17,9 @@ def test_inverse(hemi, time_independent):
     gains = rnd.randn(n_subjects, n_samples, n_features)
     M = rnd.randn(n_subjects, n_samples, n_times)
 
-    group_info = utils.make_fake_group_info(n_sources=n_features,
-                                            n_subjects=n_subjects,
-                                            hemi=hemi)
+    group_info = utils._make_fake_group_info(n_sources=n_features,
+                                             n_subjects=n_subjects,
+                                             hemi=hemi)
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
                                       depth=0.9, alpha=0.1, return_stc=True,

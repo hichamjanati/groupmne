@@ -6,7 +6,7 @@ from numba import (jit, float64, int64, boolean)
 
 
 @jit(float64[:](float64[::1, :, :]), nopython=True, cache=True)
-def lipschitz(X):
+def _lipschitz(X):
     """Compute lipschitz constants."""
     T, n, p = X.shape
     L = np.zeros(p)
@@ -25,7 +25,7 @@ def lipschitz(X):
 @jit(float64(float64[::1, :, :], float64[::1, :], float64[::1, :],
              float64[::1, :], float64),
      nopython=True, cache=True)
-def dualgap(X, theta, R, y, alpha):
+def _dualgap(X, theta, R, y, alpha):
     """Compute dual gap for multi task group lasso."""
     n_samples, n_tasks = R.T.shape
     n_features = X.shape[-1]
@@ -53,7 +53,7 @@ def dualgap(X, theta, R, y, alpha):
 
 @jit(float64(float64[::1, :], float64[::1, :], float64[::1, :], float64),
      nopython=True, cache=True)
-def mtlobjective(theta, R, y, alpha):
+def _mtlobjective(theta, R, y, alpha):
     """Compute objective function for multi task group lasso."""
     n_samples, n_tasks = R.T.shape
     n_features = theta.shape[0]
@@ -75,11 +75,11 @@ output_type = nb.types.Tuple((float64[::1, :], float64[::1, :],
                  float64[::1, :], float64[::1, :], float64, int64,
                  float64, boolean, boolean),
      nopython=True, cache=True)
-def gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
+def _gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
     """Solve Multi-task group lasso."""
     n_tasks = len(X)
     n_samples, n_features = X[0].shape
-    Ls = lipschitz(X)
+    Ls = _lipschitz(X)
     dg_tol = tol * np.linalg.norm(y) ** 2
     loss = []
     flag = 0
@@ -116,11 +116,11 @@ def gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
                     R[t] -= X[t, :, j] * theta[j, t]
 
         if compute_obj:
-            obj = mtlobjective(theta, R, y, alpha)
+            obj = _mtlobjective(theta, R, y, alpha)
             loss.append(obj)
         if (w_max == 0.0 or d_w_max / w_max < tol or
                 i == maxiter - 1):
-            dg = dualgap(X, theta, R, y, alpha)
+            dg = _dualgap(X, theta, R, y, alpha)
             if verbose:
                 print("it:", i, "- duality gap: ", dg)
             if dg < dg_tol:
@@ -131,8 +131,8 @@ def gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
     return theta, R, loss, dg, flag
 
 
-def gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
-               computeobj=False):
+def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
+                computeobj=False):
     """Group lasso solver wrapper."""
     X = np.asfortranarray(X)
     y = np.asfortranarray(y)
@@ -144,8 +144,8 @@ def gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
     coefs0 = np.asfortranarray(coefs0)
 
     R = np.asfortranarray(R)
-    theta, R, loss, dg, flag = gl_solver(X, y, coefs0, R, alpha,
-                                         maxiter, tol, verbose, computeobj)
+    theta, R, loss, dg, flag = _gl_solver(X, y, coefs0, R, alpha,
+                                          maxiter, tol, verbose, computeobj)
     theta = np.ascontiguousarray(theta)
     if flag:
         warnings.warn("Did not reach convergence threshold. Stopped with" +

@@ -1,4 +1,4 @@
-from groupmne.utils import compute_coreg_dist
+from groupmne.utils import _compute_coreg_dist
 from mne.datasets import testing
 import os.path as op
 import os
@@ -18,5 +18,5 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 @testing.requires_testing_data
 def test_trans():
-    d = compute_coreg_dist(subject, trans_fname, raw_fname, subjects_dir)
+    d = _compute_coreg_dist(subject, trans_fname, raw_fname, subjects_dir)
     assert d < 5e-2

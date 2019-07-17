@@ -1,6 +1,7 @@
 """
-Multi-subject joint source localization with multi-task models
-==============================================================
+Multi-subject joint source localization with multi-task models.
+===============================================================
+
 The aim of this tutorial is to show how to leverage functional similarity
 across subjects to improve source localization. For that purpose we use the
 the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
@@ -44,6 +45,18 @@ raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
 
 
 def process_meg(raw_name):
+    """Extract epochs from a raw fif file.
+
+    Parameters
+    ----------
+    raw_name: str.
+        path to the raw fif file.
+
+    Returns
+    -------
+    epochs: Epochs instance
+
+    """
     raw = mne.io.read_raw_fif(raw_name)
     events = mne.find_events(raw)
 
