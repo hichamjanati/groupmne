@@ -1,3 +1,11 @@
+"""
+Multi-subject source modeling.
+
+This module implements the computation of the forward operators with aligned
+source locations across subjects. This is done through morphing a reference
+head model (fsaverage by default) to the surface of each subject.
+"""
+
 import mne
 import os
 import os.path as op
@@ -13,6 +21,7 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
     Parameters
     ----------
     subject: str. Name of the reference subject.
+
     spacing: str. The spacing to use. Can be ``'ico#'`` for a recursively
         subdivided icosahedron, ``'oct#'`` for a recursively subdivided
         octahedron, ``'all'`` for all points, or an integer to use
@@ -24,8 +33,8 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
     -------
     src : SourceSpaces
         The source space for each hemisphere.
-    """
 
+    """
     fname_src = op.join(subjects_dir, subject, 'bem', '%s-%s-src.fif'
                         % (subject, spacing))
     if os.path.isfile(fname_src):
@@ -120,17 +129,19 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
 
 
 def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
-    """Compute aligned gain matrices of the group of subjects with respect to
-    a reference source space.
+    """Compute aligned gain matrices of the group of subjects.
 
     Parameters
     ----------
     fwds: list of forward operators computed on the morphed source
         space `src_ref`.
+
     src_ref: SourceSpace instance. Reference source model.
+
     ch_type: str. Type of channels used for source reconstruction. Can be one
         of ("mag", "grad", "eeg"). Using more than one type of channels is not
         yet supported.
+
     hemi: str. Hemisphere, "lh", "rh" or "both".
 
     Returns
@@ -138,6 +149,7 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
     gains: array (n_subjects, n_channels, n_sources)
     group_info: dict. Group information (channels, alignments maps across
         subjects)
+
     """
     gains, group_info = _group_filtering(fwds, src_ref, noise_covs=None)
     n_lh = group_info["n_sources"][0]
@@ -164,16 +176,19 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
 
 def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
                      tmin=0., tmax=0.1):
-    """Compute aligned gain matrices of the group of subjects with respect to
-    a reference source space and whiten M-EEG data.
+    """Compute aligned gain matrices and M-EEG data of the group of subjects.
 
     Parameters
     ----------
     fwds: list of forward operators computed on the morphed source
         space `src_ref`.
+
     src_ref: SourceSpace instance. Reference source model.
+
     evokeds: list of Evoked instances, one element for each subject.
+
     noise_cov_s: list of Covariance instances, estimates of the noise cov.
+
     ch_type: str. Type of channels used for source reconstruction. Can be one
         of ("mag", "grad", "eeg"). Using more than one type of channels is not
         yet supported.
@@ -187,6 +202,7 @@ def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
         M-EEG data.
     group_info: dict. Group information (channels, alignments maps across
         subjects)
+
     """
     if len(fwds) != len(noise_cov_s):
         raise ValueError("""The length of `fwds` and `noise_cov_s`

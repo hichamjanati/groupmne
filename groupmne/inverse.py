@@ -1,3 +1,11 @@
+"""
+Multi-subject inverse problem.
+
+This module fits multi-subject inverse problem models on real or simulated
+M-EEG data.
+"""
+
+
 import numpy as np
 from joblib import Parallel, delayed
 
@@ -16,6 +24,7 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
     gains: array (n_subjects, n_channels, n_sources). forward data, returned by
         `group_model.compute_gains` or `group_model.compute_inv_data`.
     M: array (n_subjects, n_channels, n_times). M-EEG data.
+
     group_info: dict.
     method: str. Inverse problem model to use. For now, only "grouplasso" is
         supported. The group-lasso solver promotes source estimates with
