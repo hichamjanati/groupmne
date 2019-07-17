@@ -1,3 +1,11 @@
+"""
+Multi-subject inverse problem.
+
+This module fits multi-subject inverse problem models on real or simulated
+M-EEG data.
+"""
+
+
 import numpy as np
 from joblib import Parallel, delayed
 

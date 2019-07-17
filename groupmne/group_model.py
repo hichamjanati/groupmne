@@ -1,3 +1,11 @@
+"""
+Multi-subject source modeling.
+
+This module implements the computation of the forward operators with aligned
+source locations across subjects. This is done through morphing a reference
+head model (fsaverage by default) to the surface of each subject.
+"""
+
 import mne
 import os
 import os.path as op
@@ -178,8 +186,7 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
 
 def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
                      tmin=0., tmax=0.1):
-    """Compute aligned gain matrices of the group of subjects with respect to
-    a reference source space and whiten M-EEG data.
+    """Compute aligned gain matrices and M-EEG data of the group of subjects.
 
     Parameters
     ----------
