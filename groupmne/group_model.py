@@ -34,6 +34,7 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
     -------
     src : SourceSpaces
         The source space for each hemisphere.
+
     """
     subjects_dir = \
         mne.utils.get_subjects_dir(subjects_dir=None, raise_error=True)
@@ -136,7 +137,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
 
 
 def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
-    """Compute aligned gain matrices of the group of subjects
+    """Compute aligned gain matrices of the group of subjects.
 
     Computation is done with respect to a reference source space.
 
@@ -160,6 +161,7 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
         The gain matrices.
     group_info: dict
         Group information (channels, alignments maps across subjects)
+
     """
     gains, group_info = _group_filtering(fwds, src_ref, noise_covs=None)
     n_lh = group_info["n_sources"][0]
@@ -216,6 +218,7 @@ def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
         M-EEG data.
     group_info: dict
         Group information (channels, alignments maps across subjects)
+
     """
     if len(fwds) != len(noise_cov_s):
         raise ValueError("""The length of `fwds` and `noise_cov_s`

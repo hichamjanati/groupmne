@@ -35,7 +35,7 @@ before_install:
     else
         conda install -c tstenner pylsl;
     fi
-  - pip install flake8 check-manifest
+  - pip install flake8 check-manifest pydocstyle
   - pip install codecov
 
 install:
@@ -47,6 +47,7 @@ script:
   - pytest -lv --cov-report term-missing groupmne --cov=groupmne --cov-config .coveragerc
   - make
   - flake8 --count groupmne
+  - pydocstyle groupmne
 
 after_success:
   - cp .coverage $TRAVIS_BUILD_DIR

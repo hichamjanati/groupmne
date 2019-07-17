@@ -1,3 +1,4 @@
+"""util functions."""
 import mne
 import numpy as np
 from mne.source_space import (_ensure_src, _get_morph_src_reordering,
@@ -11,9 +12,11 @@ from sklearn.metrics import euclidean_distances
 def get_morph_src_mapping(src_from, src_to, subject_from=None,
                           subject_to=None, subjects_dir=None):
     """Get a mapping between an original source space and its morphed version.
+
     It is assumed that the number of vertices and their positions match between
     the source spaces, only the ordering is different. This is commonly the
     case when using :func:`morph_source_spaces`.
+
     Parameters
     ----------
     src_from : instance of SourceSpaces
@@ -29,6 +32,7 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
         default, the value stored in the SourceSpaces object is used.
     subjects_dir : str | None
         Path to SUBJECTS_DIR if it is not set in the environment.
+
     Returns
     -------
     from_to : dict | pair of dicts
@@ -37,9 +41,11 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
     to_from : dict | pair of dicts
         For each hemisphere, a
         dictionary mapping vertex numbers from src_to -> src_from.
+
     See also
     --------
     _get_morph_src_reordering
+
     """
     if subject_from is None:
         subject_from = src_from[0]['subject_his_id']
@@ -79,7 +85,7 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
     return from_to, to_from
 
 
-def make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
+def _make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
     """Create stc from data."""
     n_sources_l, n_sources_r = [len(v) for v in vertices]
     assert data.shape[0] == n_sources_l + n_sources_r
@@ -103,6 +109,7 @@ def make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
 
 
 def _get_channels(forward, noise_cov):
+    """Get channels from a forward object and exclude bad ones."""
     fwd_sol_ch_names = forward['sol']['row_names']
     info = forward["info"]
     all_ch_names = set(fwd_sol_ch_names)
@@ -134,7 +141,8 @@ def _filter_channels(info, ch_names, ch_type):
     return sel
 
 
-def make_fake_group_info(n_sources=2562, n_subjects=2, hemi="lh"):
+def _make_fake_group_info(n_sources=2562, n_subjects=2, hemi="lh"):
+    """Create fake group info for testing."""
     if hemi == "both":
         n_sources /= 2
     group_info = dict(subjects=[str(i) for i in range(n_subjects)])
@@ -150,10 +158,8 @@ def make_fake_group_info(n_sources=2562, n_subjects=2, hemi="lh"):
     return group_info
 
 
-def compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
-    """Compute the avg distance between the dig points and their closest
-       surface MRI neighbors in Head coordinates.
-    """
+def _compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
+    """Assess quality of coregistration."""
     trans = mne.read_trans(trans_fname)
 
     high_res_surf = subjects_dir + "/%s/surf/lh.seghead" % subject

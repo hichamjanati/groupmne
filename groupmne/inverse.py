@@ -10,7 +10,7 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from . import utils
-from .solvers import gl_wrapper
+from .solvers import _gl_wrapper
 
 
 def compute_group_inverse(gains, M, group_info, method="grouplasso",
@@ -54,6 +54,7 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         The estimated sources as an array if `return_stc` is False.
     log : dict
         Some info about the convergence.
+
     """
     n_subjects, n_channels, n_times = M.shape
     norms = np.linalg.norm(gains, axis=1) ** depth
@@ -62,8 +63,8 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
         alphamax_s = np.linalg.norm(gty, axis=0).max(axis=0)
         alpha_s = alpha * alphamax_s
-        it = (delayed(gl_wrapper)(gains_scaled, M[:, :, i], alpha=alpha_s[i],
-                                  **kwargs) for i in range(n_times))
+        it = (delayed(_gl_wrapper)(gains_scaled, M[:, :, i], alpha=alpha_s[i],
+                                   **kwargs) for i in range(n_times))
         coefs, residuals, loss, dg = list(zip(*Parallel(n_jobs=n_jobs)(it)))
     else:
         M = np.swapaxes(M, 1, 2).reshape(-1, n_channels)
@@ -71,7 +72,7 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
         alphamax = np.linalg.norm(gty, axis=0).max(axis=0)
         alpha = alpha * alphamax
-        coefs, residuals, loss, dg = gl_wrapper(gains_scaled, M, alpha=alpha)
+        coefs, residuals, loss, dg = _gl_wrapper(gains_scaled, M, alpha=alpha)
         coefs = coefs.reshape(-1, n_subjects, n_times).T
         coefs = np.swapaxes(coefs, 1, 2)
     # re-normalize coefs and change units to nAm
