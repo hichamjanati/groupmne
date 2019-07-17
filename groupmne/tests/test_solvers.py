@@ -1,5 +1,5 @@
 import numpy as np
-from groupmne.solvers import gl_wrapper
+from groupmne.solvers import _gl_wrapper
 
 
 def test_solver_gl():
@@ -17,15 +17,15 @@ def test_solver_gl():
 
     a = 0.1
     alpha = a * alphamax
-    theta, R, loss, dg = gl_wrapper(X, y, alpha=alpha, maxiter=2000,
-                                    tol=tol_dg, verbose=False,
-                                    computeobj=True)
+    theta, R, loss, dg = _gl_wrapper(X, y, alpha=alpha, maxiter=2000,
+                                     tol=tol_dg, verbose=False,
+                                     computeobj=True)
     assert np.diff(loss).max() <= 0.
     assert (theta.any(axis=1) == theta.all(axis=1)).all()
 
     a = 1.1
     alpha = a * alphamax
-    theta, R, loss, dg = gl_wrapper(X, y, alpha=alpha, maxiter=2000,
-                                    tol=tol_dg, verbose=False,
-                                    computeobj=True)
+    theta, R, loss, dg = _gl_wrapper(X, y, alpha=alpha, maxiter=2000,
+                                     tol=tol_dg, verbose=False,
+                                     computeobj=True)
     assert abs(theta).max() == 0.

@@ -92,8 +92,8 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
                 v = [[], v_r]
             else:
                 v = [v_l, v_r]
-            stc = utils.make_stc(coefs[:, :, i].T, v, tmin=group_info["tmin"],
-                                 tstep=group_info["tstep"], subject=subject)
+            stc = utils._make_stc(coefs[:, :, i].T, v, tmin=group_info["tmin"],
+                                  tstep=group_info["tstep"], subject=subject)
             stcs.append(stc)
         return stcs, log
     return coefs, log
