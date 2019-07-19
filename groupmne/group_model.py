@@ -160,7 +160,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
     return gains, group_info
 
 
-def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh", fixed_ori=True):
+def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
     """Compute aligned gain matrices of the group of subjects.
 
     Computation is done with respect to a reference source space.
