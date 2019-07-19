@@ -172,7 +172,7 @@ for stc, subject in zip(stcs, subjects):
         initial_time=t * 1e3, time_unit='ms', size=(500, 500),
         smoothing_steps=5)
     brain = stc.plot(**surfer_kwargs, views=view)
-    brain.add_text(0.1, 0.9, subject + "groupmne", "title")
+    brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
 #####################################
