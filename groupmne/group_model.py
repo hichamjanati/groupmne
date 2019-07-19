@@ -15,7 +15,8 @@ import numpy as np
 from . import utils
 
 
-def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
+def get_src_reference(subject="fsaverage", spacing="ico4",
+                      subjects_dir=None, fetch_fsaverage=False):
     """Compute source space of the reference subject.
 
     Parameters
@@ -27,8 +28,9 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
         subdivided icosahedron, ``'oct#'`` for a recursively subdivided
         octahedron, ``'all'`` for all points, or an integer to use
         appoximate distance-based spacing (in mm).
-        .. versionchanged:: 0.18
-           Support for integers for distance-based spacing.
+    fetch_fsaverage : bool
+        If `True` and `subject` is fsaverage the data of fsaverage is fetched
+        if not found.
 
     Returns
     -------
@@ -47,14 +49,19 @@ def get_src_reference(subject="fsaverage", spacing="ico5", subjects_dir=None):
                                          spacing=spacing,
                                          subjects_dir=subjects_dir,
                                          add_dist=False)
-    else:
-        # XXX : I don't get the logic here. Why fetching
-        # fsaverage if subject is not fsaverage?
-        mne.datasets.fetch_fsaverage(subjects_dir)
+    elif subject == "fsaverage":
+        if fetch_fsaverage:
+            mne.datasets.fetch_fsaverage(subjects_dir)
+        else:
+            raise FileNotFoundError("The fsaverage data could not be found." +
+                                    "To download the fsaverage data, set " +
+                                    "`fetch_fsaverage` to True")
         src_ref = mne.setup_source_space(subject=subject,
                                          spacing=spacing,
                                          subjects_dir=subjects_dir,
                                          add_dist=False)
+    else:
+        raise FileNotFoundError("The data of %s could not be found" % subject)
     return src_ref
 
 
@@ -62,7 +69,24 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 mindist=2, subjects_dir=None):
     """Morph the source space of fsaverage to a subject.
 
-    XXX missing docstring
+    Parameters
+    ----------
+    subject : str
+        Name of the reference subject.
+    src_ref : instance of SourceSpaces
+        Source space of the reference subject. See `get_src_reference.`
+    info : str | instance of mne.Info
+        Instance of an MNE info file or path to a raw fif file.
+    trans_fname : str
+        Path to the trans file of the subject.
+    bem_fname : str
+        Path to the bem solution of the subject.
+    mindist : float
+        Safety distance from the outer skull. Sources below `mindist` will be
+        discarded in the forward operator.
+    subjects_dir : str
+        Path to the freesurfer `subjects` directory.
+
     """
     print("Processing subject %s" % subject)
 
@@ -121,7 +145,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
     common_pos = np.r_[common_pos_lh, common_pos_rh + len(positions[0])]
     vertno_ref = [common_pos_lh, common_pos_rh]
     for i in range(len(fwds)):
-        gains[i] = gain[:, common_pos]
+        gains[i] = gains[i][:, common_pos]
         for j, common in enumerate(vertno_ref):
             vertices[j][i] = vertices[j][i][common.astype(int)]
     gains = np.stack(gains, axis=0)
@@ -136,7 +160,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
     return gains, group_info
 
 
-def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
+def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh", fixed_ori=True):
     """Compute aligned gain matrices of the group of subjects.
 
     Computation is done with respect to a reference source space.
