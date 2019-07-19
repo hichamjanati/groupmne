@@ -118,29 +118,36 @@
 <dl class="function">
 <dt id="groupmne.compute_inv_data">
 <code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_inv_data</code><span class="sig-paren">(</span><em class="sig-param">fwds</em>, <em class="sig-param">src_ref</em>, <em class="sig-param">evokeds</em>, <em class="sig-param">noise_cov_s</em>, <em class="sig-param">ch_type='grad'</em>, <em class="sig-param">tmin=0.0</em>, <em class="sig-param">tmax=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/group_model.html#compute_inv_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_inv_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute aligned gain matrices of the group of subjects with respect to
-a reference source space and whiten M-EEG data.</p>
+<dd><p>Compute aligned gain matrices and M-EEG data of the group of subjects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>fwds: list of forward operators computed on the morphed source</strong></dt><dd><p>space <cite>src_ref</cite>.</p>
+<dt><strong>fwds</strong><span class="classifier">list</span></dt><dd><p>The forward operators computed on the morphed source
+space <cite>src_ref</cite>.</p>
 </dd>
-<dt><strong>src_ref: SourceSpace instance. Reference source model.</strong></dt><dd></dd>
-<dt><strong>evokeds: list of Evoked instances, one element for each subject.</strong></dt><dd></dd>
-<dt><strong>noise_cov_s: list of Covariance instances, estimates of the noise cov.</strong></dt><dd></dd>
-<dt><strong>ch_type: str. Type of channels used for source reconstruction. Can be one</strong></dt><dd><p>of (“mag”, “grad”, “eeg”). Using more than one type of channels is not
+<dt><strong>src_ref</strong><span class="classifier">instance of SourceSpace instance</span></dt><dd><p>Reference source model.</p>
+</dd>
+<dt><strong>evokeds</strong><span class="classifier">list</span></dt><dd><p>The Evoked instances, one element for each subject.</p>
+</dd>
+<dt><strong>noise_cov_s</strong><span class="classifier">list of instances of Covariance</span></dt><dd><p>The noise covariances, one element for each subject.</p>
+</dd>
+<dt><strong>ch_type</strong><span class="classifier">str</span></dt><dd><p>Type of channels used for source reconstruction. Can be one
+of (“mag”, “grad”, “eeg”). Using more than one type of channels is not
 yet supported.</p>
 </dd>
-<dt><strong>tmin: float. initial time point.</strong></dt><dd></dd>
-<dt><strong>tmax: float. final time point.</strong></dt><dd></dd>
+<dt><strong>tmin: float</strong></dt><dd><p>initial time point.</p>
+</dd>
+<dt><strong>tmax: float</strong></dt><dd><p>final time point.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>gains: array (n_subjects, n_channels, n_sources)</strong></dt><dd></dd>
-<dt><strong>M: array (n_subjects, n_channels, n_times)</strong></dt><dd><p>M-EEG data.</p>
+<dt><strong>gains: ndarray, shape (n_subjects, n_channels, n_sources)</strong></dt><dd><p>The gain matrices.</p>
 </dd>
-<dt><strong>group_info: dict. Group information (channels, alignments maps across</strong></dt><dd><p>subjects)</p>
+<dt><strong>M: ndarray, shape (n_subjects, n_channels, n_times)</strong></dt><dd><p>M-EEG data.</p>
+</dd>
+<dt><strong>group_info: dict</strong></dt><dd><p>Group information (channels, alignments maps across subjects)</p>
 </dd>
 </dl>
 </dd>

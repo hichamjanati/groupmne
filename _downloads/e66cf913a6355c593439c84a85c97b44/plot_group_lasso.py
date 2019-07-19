@@ -1,6 +1,7 @@
 """
-Multi-subject joint source localization with multi-task models
-==============================================================
+Multi-subject joint source localization with multi-task models.
+===============================================================
+
 The aim of this tutorial is to show how to leverage functional similarity
 across subjects to improve source localization. For that purpose we use the
 the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
@@ -44,6 +45,18 @@ raw_name_s = [meg_path + s for s in ["subject_a/sef_right_raw.fif",
 
 
 def process_meg(raw_name):
+    """Extract epochs from a raw fif file.
+
+    Parameters
+    ----------
+    raw_name: str.
+        path to the raw fif file.
+
+    Returns
+    -------
+    epochs: Epochs instance
+
+    """
     raw = mne.io.read_raw_fif(raw_name)
     events = mne.find_events(raw)
 
@@ -112,7 +125,7 @@ fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
 # We can now compute the data of the inverse problem.
 # `group_info` is a dictionary that contains the selected channels and the
 # alignment maps between src_ref and the subjects which are required if you
-# want to plot source estimates on the brain surface of each subject.
+# want to plot source estimates on the brain surface of each subject. The
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 
@@ -159,7 +172,7 @@ for stc, subject in zip(stcs, subjects):
         initial_time=t * 1e3, time_unit='ms', size=(500, 500),
         smoothing_steps=5)
     brain = stc.plot(**surfer_kwargs, views=view)
-    brain.add_text(0.1, 0.9, subject + "groupmne", "title")
+    brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
 #####################################
@@ -200,6 +213,7 @@ for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
 # ----------
 # [1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
 # 2017
+#
 # [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 # somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
 # Zenodo. http://doi.org/10.5281/zenodo.889235

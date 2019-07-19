@@ -122,24 +122,40 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>gains: array (n_subjects, n_channels, n_sources). forward data, returned by</strong></dt><dd><p><cite>group_model.compute_gains</cite> or <cite>group_model.compute_inv_data</cite>.</p>
+<dt><strong>gains: ndarray, shape (n_subjects, n_channels, n_sources).</strong></dt><dd><p>Forward data, returned by
+<cite>group_model.compute_gains</cite> or <cite>group_model.compute_inv_data</cite>.</p>
 </dd>
-<dt><strong>M: array (n_subjects, n_channels, n_times). M-EEG data.</strong></dt><dd></dd>
-<dt><strong>group_info: dict.</strong></dt><dd></dd>
-<dt><strong>method: str. Inverse problem model to use. For now, only “grouplasso” is</strong></dt><dd><p>supported. The group-lasso solver promotes source estimates with
+<dt><strong>M</strong><span class="classifier">ndarray, shape (n_subjects, n_channels, n_times)</span></dt><dd><p>M-EEG data</p>
+</dd>
+<dt><strong>group_info</strong><span class="classifier">dict</span></dt><dd><p>The measurement info.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Inverse problem model to use. For now, only “grouplasso” is
+supported. The group-lasso solver promotes source estimates with
 overlapping active vertices across subjects. Each time point is
 treated independently.</p>
 </dd>
-<dt><strong>depth: float (0-1). Depth weighting. If 1, no normalization is done.</strong></dt><dd></dd>
-<dt><strong>alpha: float in (0, 1). regularization hyperparameter set as a fraction of</strong></dt><dd><p>alpha_max for which all sources are 0.</p>
+<dt><strong>depth</strong><span class="classifier">float in (0, 1)</span></dt><dd><p>Depth weighting. If 1, no normalization is done.</p>
 </dd>
-<dt><strong>return_stc: bool, (optional, default True). If true, source estimates are</strong></dt><dd><p>returned as stc objects, array otherwise.</p>
+<dt><strong>alpha</strong><span class="classifier">float in (0, 1)</span></dt><dd><p>Regularization hyperparameter set as a fraction of
+alpha_max for which all sources are 0.</p>
 </dd>
-<dt><strong>time_independent: bool, (optional, default false). If True, each time point</strong></dt><dd><p>is solved independently. By default, the group lasso is applied on the
-time and subjects axes.</p>
+<dt><strong>return_stc</strong><span class="classifier">bool, (optional, default True)</span></dt><dd><p>If true, source estimates are returned as stc objects, array otherwise.</p>
 </dd>
-<dt><strong>n_jobs: int (default 1).</strong></dt><dd></dd>
-<dt><strong>kwargs: additional arguments passed to the solver.</strong></dt><dd></dd>
+<dt><strong>time_independent</strong><span class="classifier">bool, (optional, default false)</span></dt><dd><p>If True, each time point is solved independently. By default,
+the group lasso is applied on the time and subjects axes.</p>
+</dd>
+<dt><strong>n_jobs</strong><span class="classifier">int (default 1)</span></dt><dd><p>The number of CPUs to use in parallel.</p>
+</dd>
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>additional arguments passed to the solver.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>estimates: instance of SourceEstimates | array</strong></dt><dd><p>The estimated sources as an array if <cite>return_stc</cite> is False.</p>
+</dd>
+<dt><strong>log</strong><span class="classifier">dict</span></dt><dd><p>Some info about the convergence.</p>
+</dd>
 </dl>
 </dd>
 </dl>

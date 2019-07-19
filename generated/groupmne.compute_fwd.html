@@ -119,6 +119,27 @@
 <dt id="groupmne.compute_fwd">
 <code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_fwd</code><span class="sig-paren">(</span><em class="sig-param">subject</em>, <em class="sig-param">src_ref</em>, <em class="sig-param">info</em>, <em class="sig-param">trans_fname</em>, <em class="sig-param">bem_fname</em>, <em class="sig-param">mindist=2</em>, <em class="sig-param">subjects_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/group_model.html#compute_fwd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_fwd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Morph the source space of fsaverage to a subject.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject</strong><span class="classifier">str</span></dt><dd><p>Name of the reference subject.</p>
+</dd>
+<dt><strong>src_ref</strong><span class="classifier">instance of SourceSpaces</span></dt><dd><p>Source space of the reference subject. See <cite>get_src_reference.</cite></p>
+</dd>
+<dt><strong>info</strong><span class="classifier">str | instance of mne.Info</span></dt><dd><p>Instance of an MNE info file or path to a raw fif file.</p>
+</dd>
+<dt><strong>trans_fname</strong><span class="classifier">str</span></dt><dd><p>Path to the trans file of the subject.</p>
+</dd>
+<dt><strong>bem_fname</strong><span class="classifier">str</span></dt><dd><p>Path to the bem solution of the subject.</p>
+</dd>
+<dt><strong>mindist</strong><span class="classifier">float</span></dt><dd><p>Safety distance from the outer skull. Sources below <cite>mindist</cite> will be
+discarded in the forward operator.</p>
+</dd>
+<dt><strong>subjects_dir</strong><span class="classifier">str</span></dt><dd><p>Path to the freesurfer <cite>subjects</cite> directory.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

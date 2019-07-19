@@ -105,11 +105,19 @@
     <div class="col-md-12 content">
       
   <h1>Source code for groupmne.inverse</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Multi-subject inverse problem.</span>
+
+<span class="sd">This module fits multi-subject inverse problem models on real or simulated</span>
+<span class="sd">M-EEG data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">.solvers</span> <span class="k">import</span> <span class="n">gl_wrapper</span>
+<span class="kn">from</span> <span class="nn">.solvers</span> <span class="k">import</span> <span class="n">_gl_wrapper</span>
 
 
 <div class="viewcode-block" id="compute_group_inverse"><a class="viewcode-back" href="../../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse">[docs]</a><span class="k">def</span> <span class="nf">compute_group_inverse</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grouplasso&quot;</span><span class="p">,</span>
@@ -120,28 +128,40 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    gains: array (n_subjects, n_channels, n_sources). forward data, returned by</span>
+<span class="sd">    gains: ndarray, shape (n_subjects, n_channels, n_sources).</span>
+<span class="sd">        Forward data, returned by</span>
 <span class="sd">        `group_model.compute_gains` or `group_model.compute_inv_data`.</span>
-<span class="sd">    M: array (n_subjects, n_channels, n_times). M-EEG data.</span>
-<span class="sd">    group_info: dict.</span>
-<span class="sd">    method: str. Inverse problem model to use. For now, only &quot;grouplasso&quot; is</span>
+<span class="sd">    M : ndarray, shape (n_subjects, n_channels, n_times)</span>
+<span class="sd">        M-EEG data</span>
+<span class="sd">    group_info : dict</span>
+<span class="sd">        The measurement info.</span>
+<span class="sd">    method : str</span>
+<span class="sd">        Inverse problem model to use. For now, only &quot;grouplasso&quot; is</span>
 <span class="sd">        supported. The group-lasso solver promotes source estimates with</span>
 <span class="sd">        overlapping active vertices across subjects. Each time point is</span>
 <span class="sd">        treated independently.</span>
-<span class="sd">    depth: float (0-1). Depth weighting. If 1, no normalization is done.</span>
-<span class="sd">    alpha: float in (0, 1). regularization hyperparameter set as a fraction of</span>
+<span class="sd">    depth : float in (0, 1)</span>
+<span class="sd">        Depth weighting. If 1, no normalization is done.</span>
+<span class="sd">    alpha : float in (0, 1)</span>
+<span class="sd">        Regularization hyperparameter set as a fraction of</span>
 <span class="sd">        alpha_max for which all sources are 0.</span>
-<span class="sd">    return_stc: bool, (optional, default True). If true, source estimates are</span>
-<span class="sd">        returned as stc objects, array otherwise.</span>
-<span class="sd">    time_independent: bool, (optional, default false). If True, each time point</span>
-<span class="sd">        is solved independently. By default, the group lasso is applied on the</span>
-<span class="sd">        time and subjects axes.</span>
-<span class="sd">    n_jobs: int (default 1).</span>
-<span class="sd">    kwargs: additional arguments passed to the solver.</span>
+<span class="sd">    return_stc : bool, (optional, default True)</span>
+<span class="sd">        If true, source estimates are returned as stc objects, array otherwise.</span>
+<span class="sd">    time_independent : bool, (optional, default false)</span>
+<span class="sd">        If True, each time point is solved independently. By default,</span>
+<span class="sd">        the group lasso is applied on the time and subjects axes.</span>
+<span class="sd">    n_jobs : int (default 1)</span>
+<span class="sd">        The number of CPUs to use in parallel.</span>
+<span class="sd">    kwargs : dict</span>
+<span class="sd">        additional arguments passed to the solver.</span>
 
-<span class="sd">    Return</span>
-<span class="sd">    ------</span>
-<span class="sd">    estimates: stc object, array if `return_stc` is False.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    estimates: instance of SourceEstimates | array</span>
+<span class="sd">        The estimated sources as an array if `return_stc` is False.</span>
+<span class="sd">    log : dict</span>
+<span class="sd">        Some info about the convergence.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">n_subjects</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">,</span> <span class="n">n_times</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">depth</span>
@@ -150,8 +170,8 @@
         <span class="n">gty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">)])</span>
         <span class="n">alphamax_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gty</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">alpha_s</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">alphamax_s</span>
-        <span class="n">it</span> <span class="o">=</span> <span class="p">(</span><span class="n">delayed</span><span class="p">(</span><span class="n">gl_wrapper</span><span class="p">)(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_times</span><span class="p">))</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="p">(</span><span class="n">delayed</span><span class="p">(</span><span class="n">_gl_wrapper</span><span class="p">)(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_s</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                   <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_times</span><span class="p">))</span>
         <span class="n">coefs</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">dg</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)(</span><span class="n">it</span><span class="p">)))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_channels</span><span class="p">)</span>
@@ -159,7 +179,7 @@
         <span class="n">gty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">)])</span>
         <span class="n">alphamax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gty</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">alphamax</span>
-        <span class="n">coefs</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">dg</span> <span class="o">=</span> <span class="n">gl_wrapper</span><span class="p">(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">coefs</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">dg</span> <span class="o">=</span> <span class="n">_gl_wrapper</span><span class="p">(</span><span class="n">gains_scaled</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
         <span class="n">coefs</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">,</span> <span class="n">n_times</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
     <span class="c1"># re-normalize coefs and change units to nAm</span>
@@ -179,8 +199,8 @@
                 <span class="n">v</span> <span class="o">=</span> <span class="p">[[],</span> <span class="n">v_r</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">v_l</span><span class="p">,</span> <span class="n">v_r</span><span class="p">]</span>
-            <span class="n">stc</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_stc</span><span class="p">(</span><span class="n">coefs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tmin&quot;</span><span class="p">],</span>
-                                 <span class="n">tstep</span><span class="o">=</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tstep&quot;</span><span class="p">],</span> <span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">)</span>
+            <span class="n">stc</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_make_stc</span><span class="p">(</span><span class="n">coefs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">tmin</span><span class="o">=</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tmin&quot;</span><span class="p">],</span>
+                                  <span class="n">tstep</span><span class="o">=</span><span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tstep&quot;</span><span class="p">],</span> <span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">)</span>
             <span class="n">stcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stc</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">stcs</span><span class="p">,</span> <span class="n">log</span>
     <span class="k">return</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">log</span></div>

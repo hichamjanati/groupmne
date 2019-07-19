@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Multi-subject joint source localization with multi-task models &#8212; groupmne 0.0.1dev documentation</title>
+    <title>Multi-subject joint source localization with multi-task models. &#8212; groupmne 0.0.1dev documentation</title>
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
@@ -76,7 +76,7 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Multi-subject joint source localization with multi-task models</a><ul>
+<li><a class="reference internal" href="#">Multi-subject joint source localization with multi-task models.</a><ul>
 <li><a class="reference internal" href="#download-and-process-meg-data">Download and process MEG data</a></li>
 <li><a class="reference internal" href="#source-and-forward-modeling">Source and forward modeling</a></li>
 <li><a class="reference internal" href="#solve-the-inverse-problems-with-groupmne">Solve the inverse problems with groupmne</a></li>
@@ -124,7 +124,7 @@
 <p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-plot-group-lasso-py"><span class="std std-ref">here</span></a> to download the full example code</p>
 </div>
 <div class="sphx-glr-example-title section" id="multi-subject-joint-source-localization-with-multi-task-models">
-<span id="sphx-glr-auto-examples-plot-group-lasso-py"></span><h1>Multi-subject joint source localization with multi-task models<a class="headerlink" href="#multi-subject-joint-source-localization-with-multi-task-models" title="Permalink to this headline">¶</a></h1>
+<span id="sphx-glr-auto-examples-plot-group-lasso-py"></span><h1>Multi-subject joint source localization with multi-task models.<a class="headerlink" href="#multi-subject-joint-source-localization-with-multi-task-models" title="Permalink to this headline">¶</a></h1>
 <p>The aim of this tutorial is to show how to leverage functional similarity
 across subjects to improve source localization. For that purpose we use the
 the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
@@ -163,6 +163,18 @@ The data will be downloaded in the same location</p>
 
 
 <span class="k">def</span> <span class="nf">process_meg</span><span class="p">(</span><span class="n">raw_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract epochs from a raw fif file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raw_name: str.</span>
+<span class="sd">        path to the raw fif file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    epochs: Epochs instance</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span><span class="p">(</span><span class="n">raw_name</span><span class="p">)</span>
     <span class="n">events</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">find_events</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
 
@@ -363,7 +375,7 @@ and computes their forward operators.</p>
 <p>We can now compute the data of the inverse problem.
 <cite>group_info</cite> is a dictionary that contains the selected channels and the
 alignment maps between src_ref and the subjects which are required if you
-want to plot source estimates on the brain surface of each subject.
+want to plot source estimates on the brain surface of each subject. The
 We restric the time points around 20ms in order to reconstruct the sources of
 the N20 response.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span> <span class="o">=</span> \
@@ -435,7 +447,7 @@ central gyrus.</p>
         <span class="n">initial_time</span><span class="o">=</span><span class="n">t</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;ms&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
         <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">brain</span> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">surfer_kwargs</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
-    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;groupmne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+    <span class="n">brain</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;_groupmne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
     <span class="n">brain</span><span class="o">.</span><span class="n">add_label</span><span class="p">(</span><span class="n">g_post_central</span><span class="p">,</span> <span class="n">borders</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -554,11 +566,11 @@ Reading labels from parcellation...
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <p>[1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
-2017
-[2] Jussi Nurminen, Hilla Paananen, &amp; Jyrki Mäkelä. (2017). High frequency
+2017</p>
+<p>[2] Jussi Nurminen, Hilla Paananen, &amp; Jyrki Mäkelä. (2017). High frequency
 somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
 Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.889235">http://doi.org/10.5281/zenodo.889235</a></p>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  1.833 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 2 minutes  17.942 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-group-lasso-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/e66cf913a6355c593439c84a85c97b44/plot_group_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_group_lasso.py</span></code></a></p>
