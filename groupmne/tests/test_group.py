@@ -1,5 +1,4 @@
-from groupmne import (compute_fwd, get_src_reference, compute_gains,
-                      compute_inv_data)
+from groupmne import compute_gains, compute_inv_data
 import mne
 from mne.datasets import testing
 import numpy as np
@@ -31,13 +30,8 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 @testing.requires_testing_data
 @pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_gains(hemi):
-    src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
-    fwd0 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=5)
-    fwd1 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=10)
-    fwds = [fwd0, fwd1]
+def test_gains(src_fwds, hemi):
+    src_ref, fwds = src_fwds
     gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
                                       hemi=hemi)
     n_ch = len(group_info["sel"])
@@ -50,13 +44,8 @@ def test_gains(hemi):
 
 
 @testing.requires_testing_data
-def test_inverse_data():
-    src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
-    fwd0 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=5)
-    fwd1 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=10)
-    fwds = [fwd0, fwd1]
+def test_inverse_data(src_fwds):
+    src_ref, fwds = src_fwds
     ev = mne.read_evokeds(ave_fname)[0]
     cov = mne.read_cov(cov_fname)
     evoked_s = [ev, ev]
@@ -69,3 +58,22 @@ def test_inverse_data():
     n_t = ev.crop(0.02, 0.04).times.shape[0]
     assert gains.shape == (2, n_ch, n_s)
     assert M.shape == (2, n_ch, n_t)
+
+
+@testing.requires_testing_data
+@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
+def test_different_gains(src_fwds, hemi):
+    src_ref, fwds = src_fwds
+    # are different
+    gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
+                                      hemi=hemi)
+    n_ch = len(group_info["sel"])
+    if hemi == "both":
+        n_s = sum(group_info["n_sources"])
+    else:
+        i = int(hemi == "rh")
+        n_s = group_info["n_sources"][i]
+    assert gains.shape == (2, n_ch, n_s)
+    with pytest.raises(AssertionError):
+        gains /= abs(gains).max()
+        np.testing.assert_allclose(gains[0], gains[1])
