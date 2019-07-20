@@ -377,7 +377,7 @@ the sources are 0.
 
     stcs, log = compute_group_inverse(gains, M, group_info,
                                       method="grouplasso",
-                                      depth=0.9, alpha=0.6, return_stc=True,
+                                      depth=0.9, alpha=0.7, return_stc=True,
                                       n_jobs=4)
 
 
@@ -574,7 +574,7 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  6.808 seconds)
+   **Total running time of the script:** ( 1 minutes  49.859 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_group_lasso.py:
