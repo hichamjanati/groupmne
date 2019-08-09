@@ -211,7 +211,7 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
 
 
 def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
-                     tmin=0., tmax=0.1):
+                     tmin=None, tmax=None):
     """Compute aligned gain matrices and M-EEG data of the group of subjects.
 
     Parameters
@@ -225,13 +225,13 @@ def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
         The Evoked instances, one element for each subject.
     noise_cov_s : list of instances of Covariance
         The noise covariances, one element for each subject.
-    ch_type : str
+    ch_type : str (default "grad")
         Type of channels used for source reconstruction. Can be one
         of ("mag", "grad", "eeg"). Using more than one type of channels is not
         yet supported.
-    tmin: float
+    tmin: float (default None)
         initial time point.
-    tmax: float
+    tmax: float (default None)
         final time point.
 
     Returns
