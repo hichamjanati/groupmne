@@ -39,7 +39,7 @@ def get_src_reference(subject="fsaverage", spacing="ico4",
 
     """
     subjects_dir = \
-        mne.utils.get_subjects_dir(subjects_dir=None, raise_error=True)
+        mne.utils.get_subjects_dir(subjects_dir=subjects_dir, raise_error=True)
     fname_src = op.join(subjects_dir, subject, 'bem', '%s-%s-src.fif'
                         % (subject, spacing))
     if os.path.isfile(fname_src):
