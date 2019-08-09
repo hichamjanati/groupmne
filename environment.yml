@@ -3,17 +3,6 @@ channels:
 - defaults
 
 dependencies:
-    - pip
-    - numpy
-    - scipy
-    - matplotlib
-    - joblib
-    - numba
-    - pytest
-    - pip:
-        - mne
-
-dependencies:
   - cython
   - flake8
   - h5py
@@ -48,7 +37,6 @@ dependencies:
     - mne
     - vtk
     - pyvista>=0.20.3
-    - PySurfer[save_movie]
     - dipy --only-binary dipy
     - nibabel
     - nilearn
