@@ -30,5 +30,10 @@ def src_fwds(request):
                        mindist=5)
     fwd1 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
                        mindist=10)
+    fwd2 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
+                       mindist=10, meg=False)
+    fwd2 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
+                       mindist=10, eeg=False)
+    assert fwd2["sol"]["data"].size < fwd0["sol"]["data"].size
     src_fwds = src_ref, [fwd0, fwd1]
     return src_fwds
