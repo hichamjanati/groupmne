@@ -66,7 +66,8 @@ def get_src_reference(subject="fsaverage", spacing="ico4",
 
 
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
-                mindist=2, subjects_dir=None):
+                meg=True, eeg=True, mindist=2, subjects_dir=None,
+                n_jobs=1):
     """Morph the source space of fsaverage to a subject.
 
     Parameters
@@ -94,9 +95,9 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                                   subjects_dir=subjects_dir)
     bem = mne.read_bem_solution(bem_fname)
     fwd = mne.make_forward_solution(info, trans=trans_fname, src=src,
-                                    bem=bem,
+                                    bem=bem, meg=meg, eeg=eeg,
                                     mindist=mindist,
-                                    n_jobs=1)
+                                    n_jobs=n_jobs)
     return fwd
 
 
