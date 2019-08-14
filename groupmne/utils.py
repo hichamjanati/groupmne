@@ -108,7 +108,7 @@ def _make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
     return stc
 
 
-def _get_channels(forward, noise_cov):
+def _get_channels(forward, noise_cov=None):
     """Get channels from a forward object and exclude bad ones."""
     fwd_sol_ch_names = forward['sol']['row_names']
     info = forward["info"]
