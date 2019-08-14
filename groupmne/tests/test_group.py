@@ -1,4 +1,4 @@
-from groupmne import compute_gains, compute_inv_data
+from groupmne import compute_gains, compute_inv_data, utils
 import mne
 from mne.datasets import testing
 import numpy as np
@@ -77,3 +77,34 @@ def test_different_gains(src_fwds, hemi):
     with pytest.raises(AssertionError):
         gains /= abs(gains).max()
         np.testing.assert_allclose(gains[0], gains[1])
+
+
+@testing.requires_testing_data
+@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
+def test_no_filtering(src_fwds, hemi):
+    src_ref, (fwd0, fwd1) = src_fwds
+    # are different
+    fwds = [fwd1, fwd1]
+    gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
+                                      hemi=hemi)
+
+    n_lh = fwds[0]["src"][0]["nuse"]
+    if hemi == "lh":
+        col0 = 0
+        col1 = n_lh
+    elif hemi == "rh":
+        col0 = n_lh
+        col1 = None
+    elif hemi == "both":
+        col0 = 0
+        col1 = None
+    for fwd, gain in zip(fwds, gains):
+        print("\n yep doing \n")
+        fwd = mne.convert_forward_solution(fwd, surf_ori=True,
+                                           force_fixed=True,
+                                           use_cps=True)
+        ch_names = utils._get_channels(fwd)
+        sel = utils._filter_channels(fwd["info"], ch_names, "grad")
+        fwd_gain = fwd["sol"]["data"][sel]
+        fwd_gain = fwd_gain[:, col0:col1]
+        np.testing.assert_allclose(gain, fwd_gain)

@@ -31,9 +31,12 @@ def src_fwds(request):
     fwd1 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
                        mindist=10)
     fwd2 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=10, meg=False)
-    fwd2 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
-                       mindist=10, eeg=False)
-    assert fwd2["sol"]["data"].size < fwd0["sol"]["data"].size
+                       mindist=0, meg=False)
+    fwd3 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,
+                       mindist=0, eeg=False)
+
+    assert len(fwd2["sol"]["data"]) < len(fwd0["sol"]["data"])
+    assert len(fwd3["sol"]["data"]) < len(fwd0["sol"]["data"])
+
     src_fwds = src_ref, [fwd0, fwd1]
     return src_fwds
