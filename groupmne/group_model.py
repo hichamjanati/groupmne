@@ -138,7 +138,7 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
             permutation = np.argsort(np.argsort(vertno_tmp))
 
             # these indices allow to switch between left and right hemispheres
-            col_0 = i * n_sources[i]
+            col_0 = i * n_sources[0]
             col_1 = i * fwd["src"][0]["nuse"]
             full_gain = fwd["sol"]["data"]
 

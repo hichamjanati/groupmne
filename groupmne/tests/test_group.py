@@ -64,7 +64,6 @@ def test_inverse_data(src_fwds):
 @pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
 def test_different_gains(src_fwds, hemi):
     src_ref, fwds = src_fwds
-    # are different
     gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
                                       hemi=hemi)
     n_ch = len(group_info["sel"])
@@ -81,9 +80,8 @@ def test_different_gains(src_fwds, hemi):
 
 @testing.requires_testing_data
 @pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_no_filtering(src_fwds, hemi):
+def test_filtering_fsaverage(src_fwds, hemi):
     src_ref, (fwd0, fwd1) = src_fwds
-    # are different
     fwds = [fwd1, fwd1]
     gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
                                       hemi=hemi)
@@ -99,7 +97,6 @@ def test_no_filtering(src_fwds, hemi):
         col0 = 0
         col1 = None
     for fwd, gain in zip(fwds, gains):
-        print("\n yep doing \n")
         fwd = mne.convert_forward_solution(fwd, surf_ori=True,
                                            force_fixed=True,
                                            use_cps=True)
