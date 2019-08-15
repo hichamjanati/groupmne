@@ -120,36 +120,52 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         subject = src[0]["subject_his_id"]
         group_info["subjects"].append(subject)
         ch_names.append(utils._get_channels(fwd, cov))
-        # find removed vertices
+
+        # find mapping between src_ref and new src space of fwd
         mapping = utils.get_morph_src_mapping(src_ref, src)
-        gain = []
+
+        # create a gain with the "large" src_ref resolution
+        gain = np.ones((fwd["nchan"], sum(n_sources)))
         for i in range(2):
+            # pos contains the reference sources of src_ref
             pos = list(mapping[0][i].keys())
             positions[i].append(pos)
             vertno = - np.ones(n_sources[i]).astype(int)
-            gain_h = np.ones((fwd["nchan"], n_sources[i]))
             # re-order columns of the gain matrices
+            # vertno_tmp contains the new vertices in the right order
             vertno_tmp = np.array(list(mapping[0][i].values()))
+            # find the appropriate permutation to reorder columns
             permutation = np.argsort(np.argsort(vertno_tmp))
-            gain_h[:, pos] = fwd["sol"]["data"][:, permutation]
-            vertno[pos] = vertno_tmp
-            gain.append(gain_h)
-            vertices[i].append(vertno)
 
-        gain = np.hstack(gain)
+            # these indices allow to switch between left and right hemispheres
+            col_0 = i * n_sources[0]
+            col_1 = i * fwd["src"][0]["nuse"]
+            full_gain = fwd["sol"]["data"]
+
+            # filter the gain on kept sources
+            gain[:, col_0 + pos] = full_gain[:, col_1 + permutation]
+
+            # add the kept vertices to the list
+            vertno[pos] = vertno_tmp
+            vertices[i].append(vertno)
         gains.append(gain)
 
+    # Now we can compute the intersection of all common vertices
     common_pos_lh = np.array(list(
         set(positions[0][0]).intersection(*positions[0])))
     common_pos_rh = np.array(list(
         set(positions[1][0]).intersection(*positions[1])))
-    common_pos = np.r_[common_pos_lh, common_pos_rh + len(positions[0])]
+
+    common_pos = np.r_[common_pos_lh, common_pos_rh + n_sources[0]]
     vertno_ref = [common_pos_lh, common_pos_rh]
+
+    # Compute the final filtered gains
     for i in range(len(fwds)):
         gains[i] = gains[i][:, common_pos]
         for j, common in enumerate(vertno_ref):
             vertices[j][i] = vertices[j][i][common.astype(int)]
     gains = np.stack(gains, axis=0)
+
     ch_names = set(ch_names[0]).intersection(*ch_names)
     group_info["ch_names"] = list(ch_names)
     group_info["vertno_lh"] = vertices[0]
