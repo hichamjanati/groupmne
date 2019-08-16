@@ -117,7 +117,7 @@
 <h1>groupmne.compute_inv_data<a class="headerlink" href="#groupmne-compute-inv-data" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="groupmne.compute_inv_data">
-<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_inv_data</code><span class="sig-paren">(</span><em class="sig-param">fwds</em>, <em class="sig-param">src_ref</em>, <em class="sig-param">evokeds</em>, <em class="sig-param">noise_cov_s</em>, <em class="sig-param">ch_type='grad'</em>, <em class="sig-param">tmin=0.0</em>, <em class="sig-param">tmax=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/group_model.html#compute_inv_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_inv_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_inv_data</code><span class="sig-paren">(</span><em class="sig-param">fwds</em>, <em class="sig-param">src_ref</em>, <em class="sig-param">evokeds</em>, <em class="sig-param">noise_cov_s</em>, <em class="sig-param">ch_type='grad'</em>, <em class="sig-param">tmin=None</em>, <em class="sig-param">tmax=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/group_model.html#compute_inv_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_inv_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute aligned gain matrices and M-EEG data of the group of subjects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -131,13 +131,13 @@ space <cite>src_ref</cite>.</p>
 </dd>
 <dt><strong>noise_cov_s</strong><span class="classifier">list of instances of Covariance</span></dt><dd><p>The noise covariances, one element for each subject.</p>
 </dd>
-<dt><strong>ch_type</strong><span class="classifier">str</span></dt><dd><p>Type of channels used for source reconstruction. Can be one
+<dt><strong>ch_type</strong><span class="classifier">str (default “grad”)</span></dt><dd><p>Type of channels used for source reconstruction. Can be one
 of (“mag”, “grad”, “eeg”). Using more than one type of channels is not
 yet supported.</p>
 </dd>
-<dt><strong>tmin: float</strong></dt><dd><p>initial time point.</p>
+<dt><strong>tmin: float (default None)</strong></dt><dd><p>initial time point.</p>
 </dd>
-<dt><strong>tmax: float</strong></dt><dd><p>final time point.</p>
+<dt><strong>tmax: float (default None)</strong></dt><dd><p>final time point.</p>
 </dd>
 </dl>
 </dd>
