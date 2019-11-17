@@ -1,12 +1,16 @@
 """util functions."""
-import mne
-import numpy as np
-from mne.source_space import (_ensure_src, _get_morph_src_reordering,
-                              _ensure_src_subject, SourceSpaces)
 import warnings
 import os
-from mne.transforms import _get_trans, apply_trans
+
+import numpy as np
 from sklearn.metrics import euclidean_distances
+
+import mne
+from mne.source_space import (_ensure_src, _get_morph_src_reordering,
+                              _ensure_src_subject, SourceSpaces)
+from mne.utils import check_version
+
+from mne.transforms import _get_trans, apply_trans
 
 
 def get_morph_src_mapping(src_from, src_to, subject_from=None,
@@ -53,7 +57,10 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
         subject_to = src_to[0]['subject_his_id']
     subjects_dir = mne.utils.get_subjects_dir(subjects_dir, raise_error=True)
 
-    src_from = _ensure_src(src_from, kind='surf')
+    if check_version('mne', '0.19'):
+        src_from = _ensure_src(src_from, kind='surface')
+    else:  # older version of mne
+        src_from = _ensure_src(src_from, kind='surf')
     subject_from = _ensure_src_subject(src_from, subject_from)
 
     if isinstance(src_to, SourceSpaces):
