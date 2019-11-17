@@ -57,7 +57,7 @@ def get_morph_src_mapping(src_from, src_to, subject_from=None,
         subject_to = src_to[0]['subject_his_id']
     subjects_dir = mne.utils.get_subjects_dir(subjects_dir, raise_error=True)
 
-    if check_version('mne', '0.20'):
+    if check_version('mne', '0.19'):
         src_from = _ensure_src(src_from, kind='surface')
     else:  # older version of mne
         src_from = _ensure_src(src_from, kind='surf')
