@@ -19,9 +19,9 @@ multi-subject source localization with MNE
 Description:
 ------------
 
-This small package helps perform EEG and MEG source localization jointly on many
-subjects. The inverse problems of all subjects are solved congruently using a
-binding regularization.
+GroupMNE provides off-the-shelf functions to perform EEG and MEG source
+localization jointly on many subjects. The inverse problems of all subjects are
+solved congruently using a binding regularization.
 
 
 Installation
@@ -50,7 +50,3 @@ Documentation
 -------------
 
 For examples, see `the groupmne webpage <https://hichamjanati.github.io/groupmne/>`_.
-
-Contact:
---------
-Please contact hicham.janati@inria.fr for any bug encountered / any further information.

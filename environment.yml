@@ -48,3 +48,4 @@ dependencies:
     - python-picard
     - pylsl>=1.12
     - panel
+    - mutar
