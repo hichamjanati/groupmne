@@ -7,16 +7,146 @@ M-EEG data.
 
 
 import numpy as np
-from joblib import Parallel, delayed
+# from joblib import Parallel, delayed
+from mutar import DirtyModel, IndLasso, ReMTW, MTW, GroupLasso
 
 from . import utils
 from .solvers import _gl_wrapper
 
 
-def compute_group_inverse(gains, M, group_info, method="grouplasso",
-                          depth=0.9, alpha=0.1, return_stc=True, n_jobs=1,
-                          time_independent=False,
-                          **kwargs):
+def _coefs_to_stcs(coefs, group_info):
+    stcs = []
+    hemi = group_info["hemi"]
+    vertices_lh = group_info["vertno_lh"]
+    vertices_rh = group_info["vertno_rh"]
+    subjects = group_info["subjects"]
+    for i, (v_l, v_r, subject) in enumerate(zip(vertices_lh, vertices_rh,
+                                                subjects)):
+        if hemi == "lh":
+            v = [v_l, []]
+        elif hemi == "rh":
+            v = [[], v_r]
+        else:
+            v = [v_l, v_r]
+        stc = utils._make_stc(coefs[:, :, i].T, v, tmin=group_info["tmin"],
+                              tstep=group_info["tstep"], subject=subject)
+        stcs.append(stc)
+    return stcs
+
+
+def _method_to_estimator(method):
+    if method == "lasso":
+        return IndLasso
+    elif method == "mtw":
+        return MTW
+    elif method == "remtw":
+        return ReMTW
+    elif method == "dirty":
+        return DirtyModel
+    elif method == "grouplasso":
+        return GroupLasso
+    else:
+        raise ValueError("Method %s not recognized." % method)
+
+
+def _method_to_str(method):
+    if method == "lasso":
+        return "mutar.IndLasso"
+    elif method == "mtw":
+        return "mutar.MTW"
+    elif method == "remtw":
+        return "mutar.ReMTW"
+    elif method == "dirty":
+        return "mutar.DirtyModel"
+    elif method == "grouplasso":
+        return "mutar.GroupLasso"
+    else:
+        raise ValueError("Method %s not recognized." % method)
+
+
+def _check_estimator_params(method, estimator_kwargs, gains_scaled, meeg):
+    n_subjects, n_channels, n_times = meeg.shape
+    n_features = gains_scaled.shape[-1]
+
+    # alpha is necessary for all models
+    if "alpha" not in estimator_kwargs.keys():
+        raise ValueError("The method %s requires the `alpha` hyperparameter."
+                         "See the documentation of %s for further detail."
+                         % (method, _method_to_str(method)))
+
+    # beta is necessary for dirty and ot models
+    if method not in ["lasso", "grouplasso", "relasso"]:
+        if "beta" not in estimator_kwargs.keys():
+            raise ValueError("The method %s requires the `beta`"
+                             " hyperparameter."
+                             "See the documentation of %s for further detail."
+                             % (method, _method_to_str(method)))
+
+    # ground metric for ot models
+    if method in ["mtw", "remtw"]:
+        if "M" not in estimator_kwargs.keys():
+            raise ValueError("The method %s requires the OT ground metric `M`"
+                             " corresponding to the geodesic distance matrix "
+                             "over the cortical mantle. "
+                             "See the documentation of %s for further detail."
+                             % (method, _method_to_str(method)))
+        else:
+            M = estimator_kwargs["M"]
+            if len(M) != n_features or len(M.T) != n_features:
+                raise ValueError("The ground metric M must be "
+                                 "(n_features, n_features); got %s" % M.shape)
+
+    xty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, meeg)])
+
+    # rescale l12 norm penalty
+    if method in ["grouplasso", "dirty"]:
+        # take L2 over subjects and max over time and space
+        # alphamax (n_times)
+        alphamax = np.linalg.norm(xty, axis=0).max() / n_channels
+        estimator_kwargs["alpha"] *= alphamax
+
+    # rescale l1 norm penalty
+    elif method in ["dirty", "mtw", "remtw", "lasso", "relasso"]:
+        betamax = abs(xty).max() / n_channels
+        if method in ["lasso", "relasso"]:
+            alpha_ = betamax * np.ones(n_subjects)
+            estimator_kwargs["alpha"] *= alpha_
+        else:
+            estimator_kwargs["beta"] *= betamax
+    return estimator_kwargs
+
+
+def compute_time_dependent_gl(gains, meeg, group_info, depth=0.9,
+                              return_stc=True, **estimator_kwargs):
+    """Solves the joint inverse problem with Group Lasso over space and time.
+    """
+    n_subjects, n_channels, n_times = meeg.shape
+    norms = np.linalg.norm(gains, axis=1) ** depth
+    gains_scaled = gains / norms[:, None, :]
+    estimator_kwargs = _check_estimator_params("grouplasso", estimator_kwargs,
+                                               gains_scaled, meeg)
+    # estimator_kwargs["alpha"] = estimator_kwargs["alpha"].max()
+    meeg = np.swapaxes(meeg, 1, 2).reshape(-1, n_channels)
+    gains_scaled = np.tile(gains, (n_times, 1, 1))
+    coefs, residuals, loss, dg = _gl_wrapper(gains_scaled, meeg,
+                                             **estimator_kwargs)
+    coefs = coefs.reshape(-1, n_subjects, n_times).T
+    coefs = np.swapaxes(coefs, 1, 2)
+
+    # re-normalize coefs and change units to nAm
+    coefs = np.array(coefs) * 1e9 / norms.T[None, :, :]
+    log = dict(residuals=residuals, loss=loss, dg=dg)
+    if return_stc:
+        stcs = _coefs_to_stcs(coefs, group_info)
+        return stcs, log
+
+    return coefs, log
+
+
+def compute_group_inverse(gains, meeg, group_info, method="grouplasso",
+                          depth=0.9, return_stc=True,
+                          time_independent=False, verbose=True,
+                          **estimator_kwargs):
     """Solves the joint inverse problem for source localization.
 
     Parameters
@@ -24,7 +154,7 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
     gains: ndarray, shape (n_subjects, n_channels, n_sources).
         Forward data, returned by
         `group_model.compute_gains` or `group_model.compute_inv_data`.
-    M : ndarray, shape (n_subjects, n_channels, n_times)
+    meeg : ndarray, shape (n_subjects, n_channels, n_times)
         M-EEG data
     group_info : dict
         The measurement info.
@@ -35,17 +165,12 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         treated independently.
     depth : float in (0, 1)
         Depth weighting. If 1, no normalization is done.
-    alpha : float in (0, 1)
-        Regularization hyperparameter set as a fraction of
-        alpha_max for which all sources are 0.
     return_stc : bool, (optional, default True)
         If true, source estimates are returned as stc objects, array otherwise.
     time_independent : bool, (optional, default false)
         If True, each time point is solved independently. By default,
         the group lasso is applied on the time and subjects axes.
-    n_jobs : int (default 1)
-        The number of CPUs to use in parallel.
-    kwargs : dict
+    estimator_kwargs : dict
         additional arguments passed to the solver.
 
     Returns
@@ -56,44 +181,40 @@ def compute_group_inverse(gains, M, group_info, method="grouplasso",
         Some info about the convergence.
 
     """
-    n_subjects, n_channels, n_times = M.shape
-    norms = np.linalg.norm(gains, axis=1) ** depth
-    gains_scaled = gains / norms[:, None, :]
-    if time_independent:
-        gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
-        alphamax_s = np.linalg.norm(gty, axis=0).max(axis=0)
-        alpha_s = alpha * alphamax_s
-        it = (delayed(_gl_wrapper)(gains_scaled, M[:, :, i], alpha=alpha_s[i],
-                                   **kwargs) for i in range(n_times))
-        coefs, residuals, loss, dg = list(zip(*Parallel(n_jobs=n_jobs)(it)))
+    if method not in ["grouplasso", "dirty", "mtw", "remtw", "lasso"]:
+        raise ValueError("%s is not a valid method. `method` must be one "
+                         "'grouplasso', 'dirty', 'mtw', 'remtw'." % method)
+    if method != "grouplasso" and not time_independent:
+        raise ValueError("%s is not feasible as a time dependent method."
+                         "Use Group Lasso for an L2 over the time axis or"
+                         " set `time_independent` to `True`." % method)
+    if method == "grouplasso" and not time_independent:
+        return compute_time_dependent_gl(gains, meeg, group_info, depth,
+                                         return_stc, **estimator_kwargs)
     else:
-        M = np.swapaxes(M, 1, 2).reshape(-1, n_channels)
-        gains_scaled = np.tile(gains, (n_times, 1, 1))
-        gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, M)])
-        alphamax = np.linalg.norm(gty, axis=0).max(axis=0)
-        alpha = alpha * alphamax
-        coefs, residuals, loss, dg = _gl_wrapper(gains_scaled, M, alpha=alpha)
-        coefs = coefs.reshape(-1, n_subjects, n_times).T
-        coefs = np.swapaxes(coefs, 1, 2)
+        estimator = _method_to_estimator(method)
+        n_features = gains.shape[-1]
+        n_subjects, n_channels, n_times = meeg.shape
+        norms = np.linalg.norm(gains, axis=1) ** depth
+        gains_scaled = gains / norms[:, None, :]
+        estimator_kwargs = _check_estimator_params(method, estimator_kwargs,
+                                                   gains_scaled, meeg)
+        coefs = np.empty((n_times, n_features, n_subjects))
+        # residuals = np.empty((n_times, n_subjects, n_channels))
+
+    for t in range(n_times):
+        if verbose:
+            print("Solving for time point {} / {}".format(t + 1, n_times))
+        estim = estimator(fit_intercept=False,
+                          normalize=False, **estimator_kwargs)
+        estim.fit(gains_scaled, meeg[:, :, t])
+        coefs[t] = estim.coef_
+        # residuals[:, :, t] = estim.residuals_
     # re-normalize coefs and change units to nAm
     coefs = np.array(coefs) * 1e9 / norms.T[None, :, :]
-    log = dict(residuals=residuals, loss=loss, dg=dg)
-    stcs = []
+    log = dict()
     if return_stc:
-        hemi = group_info["hemi"]
-        vertices_lh = group_info["vertno_lh"]
-        vertices_rh = group_info["vertno_rh"]
-        subjects = group_info["subjects"]
-        for i, (v_l, v_r, subject) in enumerate(zip(vertices_lh, vertices_rh,
-                                                    subjects)):
-            if hemi == "lh":
-                v = [v_l, []]
-            elif hemi == "rh":
-                v = [[], v_r]
-            else:
-                v = [v_l, v_r]
-            stc = utils._make_stc(coefs[:, :, i].T, v, tmin=group_info["tmin"],
-                                  tstep=group_info["tstep"], subject=subject)
-            stcs.append(stc)
+        stcs = _coefs_to_stcs(coefs, group_info)
         return stcs, log
+
     return coefs, log
