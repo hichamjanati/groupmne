@@ -8,7 +8,7 @@ M-EEG data.
 
 import numpy as np
 # from joblib import Parallel, delayed
-from mutar import DirtyModel, IndLasso, ReMTW, MTW, GroupLasso
+from mutar import DirtyModel, IndLasso, ReMTW, MTW, GroupLasso, IndRewLasso
 
 from . import utils
 from .solvers import _gl_wrapper
@@ -37,6 +37,8 @@ def _coefs_to_stcs(coefs, group_info):
 def _method_to_estimator(method):
     if method == "lasso":
         return IndLasso
+    elif method == "relasso":
+        return IndRewLasso
     elif method == "mtw":
         return MTW
     elif method == "remtw":
@@ -52,6 +54,8 @@ def _method_to_estimator(method):
 def _method_to_str(method):
     if method == "lasso":
         return "mutar.IndLasso"
+    if method == "relasso":
+        return "mutar.IndRewLasso"
     elif method == "mtw":
         return "mutar.MTW"
     elif method == "remtw":
@@ -82,7 +86,7 @@ def _check_estimator_params(method, estimator_kwargs, gains_scaled, meeg):
                              "See the documentation of %s for further detail."
                              % (method, _method_to_str(method)))
 
-    # ground metric for ot models
+    # ground metric and ot hyperparameters for ot models
     if method in ["mtw", "remtw"]:
         if "M" not in estimator_kwargs.keys():
             raise ValueError("The method %s requires the OT ground metric `M`"
@@ -93,8 +97,19 @@ def _check_estimator_params(method, estimator_kwargs, gains_scaled, meeg):
         else:
             M = estimator_kwargs["M"]
             if len(M) != n_features or len(M.T) != n_features:
-                raise ValueError("The ground metric M must be "
-                                 "(n_features, n_features); got %s" % M.shape)
+                raise ValueError("The ground metric M must be an array"
+                                 "(n_features, n_features); got (%s, %s)"
+                                 % M.shape)
+            if M.min() < 0.:
+                raise ValueError("The ground metric M must be non-negative"
+                                 "got M.min() = %s"
+                                 % M.min())
+        if "gamma" not in estimator_kwargs.keys():
+            gamma = estimator_kwargs["M"].max()
+            estimator_kwargs["gamma"] = gamma
+        if "epsilon" not in estimator_kwargs.keys():
+            epsilon = 10. / n_features
+            estimator_kwargs["epsilon"] = epsilon
 
     xty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, meeg)])
 
@@ -118,8 +133,7 @@ def _check_estimator_params(method, estimator_kwargs, gains_scaled, meeg):
 
 def compute_time_dependent_gl(gains, meeg, group_info, depth=0.9,
                               return_stc=True, **estimator_kwargs):
-    """Solves the joint inverse problem with Group Lasso over space and time.
-    """
+    """Solves a Group Lasso over subjects, space and time."""
     n_subjects, n_channels, n_times = meeg.shape
     norms = np.linalg.norm(gains, axis=1) ** depth
     gains_scaled = gains / norms[:, None, :]
@@ -145,7 +159,7 @@ def compute_time_dependent_gl(gains, meeg, group_info, depth=0.9,
 
 def compute_group_inverse(gains, meeg, group_info, method="grouplasso",
                           depth=0.9, return_stc=True,
-                          time_independent=False, verbose=True,
+                          time_independent=True, verbose=True,
                           **estimator_kwargs):
     """Solves the joint inverse problem for source localization.
 
@@ -181,9 +195,11 @@ def compute_group_inverse(gains, meeg, group_info, method="grouplasso",
         Some info about the convergence.
 
     """
-    if method not in ["grouplasso", "dirty", "mtw", "remtw", "lasso"]:
-        raise ValueError("%s is not a valid method. `method` must be one "
-                         "'grouplasso', 'dirty', 'mtw', 'remtw'." % method)
+    if method not in ["grouplasso", "dirty", "mtw", "remtw", "lasso",
+                      "relasso"]:
+        raise ValueError("%s is not a valid method. `method` must be one of "
+                         "'grouplasso', 'dirty', 'mtw', 'remtw', 'lasso', "
+                         "'relasso'" % method)
     if method != "grouplasso" and not time_independent:
         raise ValueError("%s is not feasible as a time dependent method."
                          "Use Group Lasso for an L2 over the time axis or"

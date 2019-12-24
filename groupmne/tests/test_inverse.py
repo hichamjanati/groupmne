@@ -5,7 +5,6 @@ import pytest
 
 
 def check_coefs_stc_match(coefs, stcs):
-
     coefs_ = []
     for stc in stcs:
         coefs_.append(stc.data)
@@ -91,3 +90,72 @@ def test_time_dependent_group_lasso(hemi):
                                        time_independent=False,
                                        alpha=alpha)
     check_coefs_stc_match(coefs, stcs_)
+
+
+def test_missing_params():
+    seed = 42
+    rnd = np.random.RandomState(seed)
+    n_features = 10
+    n_samples = 5
+    n_subjects = 2
+    n_times = 3
+    gains = rnd.randn(n_subjects, n_samples, n_features)
+    meeg = rnd.randn(n_subjects, n_samples, n_times)
+
+    group_info = utils._make_fake_group_info(n_sources=n_features,
+                                             n_subjects=n_subjects,
+                                             hemi="lh")
+
+    all_models = ["lasso", "grouplasso", "dirty", "mtw", "remtw", "relasso"]
+    for model in all_models:
+        with pytest.raises(ValueError, match="requires the `alpha`"):
+            compute_group_inverse(gains, meeg, group_info, method=model)
+
+    beta_models = ["dirty", "mtw", "remtw"]
+    for model in beta_models:
+        with pytest.raises(ValueError, match="requires the `beta`"):
+            compute_group_inverse(gains, meeg, group_info, method=model,
+                                  alpha=0.1)
+
+    ot_models = ["mtw", "remtw"]
+    for model in ot_models:
+        with pytest.raises(ValueError, match="requires the OT ground metric"):
+            compute_group_inverse(gains, meeg, group_info, method=model,
+                                  alpha=0.1, beta=0.1)
+        with pytest.raises(ValueError, match="ground metric M must be "):
+            compute_group_inverse(gains, meeg, group_info, method=model,
+                                  alpha=0.1, beta=0.1, M=np.ones((1, 2)))
+        with pytest.raises(ValueError, match="must be non-negative"):
+            compute_group_inverse(gains, meeg, group_info, method=model,
+                                  alpha=0.1, beta=0.1, M=-np.eye(n_features))
+
+
+def test_implemented_models():
+    seed = 42
+    rnd = np.random.RandomState(seed)
+    n_features = 10
+    n_samples = 5
+    n_subjects = 2
+    n_times = 3
+    gains = rnd.randn(n_subjects, n_samples, n_features)
+    meeg = rnd.randn(n_subjects, n_samples, n_times)
+
+    IMPLEMENTED_METHODS = ["lasso", "grouplasso", "dirty", "mtw", "remtw",
+                           "relasso"]
+    group_info = utils._make_fake_group_info(n_sources=n_features,
+                                             n_subjects=n_subjects,
+                                             hemi="lh")
+
+    for model in IMPLEMENTED_METHODS:
+        if model != "grouplasso":
+            with pytest.raises(ValueError,
+                               match="not feasible as a time dependent"
+                                     " method"):
+                compute_group_inverse(gains, meeg, group_info, method=model,
+                                      time_independent=False)
+
+    model = "foo"
+    for time_independent in [True, False]:
+        with pytest.raises(ValueError, match="not a valid method"):
+            compute_group_inverse(gains, meeg, group_info, method=model,
+                                  time_independent=time_independent)
