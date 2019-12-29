@@ -122,9 +122,11 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         ch_names.append(utils._get_channels(fwd, cov))
 
         # find mapping between src_ref and new src space of fwd
+        # src may have less sources than src_ref if they are
+        # outside the inner skull
         mapping = utils.get_morph_src_mapping(src_ref, src)
 
-        # create a gain with the "large" src_ref resolution
+        # create a gain with the full src_ref resolution
         gain = np.ones((fwd["nchan"], sum(n_sources)))
         for i in range(2):
             # pos contains the reference sources of src_ref
@@ -225,67 +227,3 @@ def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
     gains = gains[:, sel, :]
     group_info["hemi"] = hemi
     return gains[:, :, col0:col1], group_info
-
-
-def compute_inv_data(fwds, src_ref, evokeds, noise_cov_s, ch_type="grad",
-                     tmin=None, tmax=None):
-    """Compute aligned gain matrices and M-EEG data of the group of subjects.
-
-    Parameters
-    ----------
-    fwds : list
-        The forward operators computed on the morphed source
-        space `src_ref`.
-    src_ref : instance of SourceSpace instance
-        Reference source model.
-    evokeds : list
-        The Evoked instances, one element for each subject.
-    noise_cov_s : list of instances of Covariance
-        The noise covariances, one element for each subject.
-    ch_type : str (default "grad")
-        Type of channels used for source reconstruction. Can be one
-        of ("mag", "grad", "eeg"). Using more than one type of channels is not
-        yet supported.
-    tmin: float (default None)
-        initial time point.
-    tmax: float (default None)
-        final time point.
-
-    Returns
-    -------
-    gains: ndarray, shape (n_subjects, n_channels, n_sources)
-        The gain matrices.
-    M: ndarray, shape (n_subjects, n_channels, n_times)
-        M-EEG data.
-    group_info: dict
-        Group information (channels, alignments maps across subjects)
-
-    """
-    if len(fwds) != len(noise_cov_s):
-        raise ValueError("""The length of `fwds` and `noise_cov_s`
-                         do not match.""")
-    gains, group_info = _group_filtering(fwds, src_ref, noise_covs=noise_cov_s)
-    info = fwds[0]["info"]
-    ch_names = group_info["ch_names"]
-    sel = utils._filter_channels(info, ch_names, ch_type)
-    group_info["ch_filter"] = True
-    group_info["sel"] = sel
-    gains = gains[:, sel, :]
-    M = []
-    for i, (noise_cov, evoked, gain) \
-            in enumerate(zip(noise_cov_s, evokeds, gains)):
-        ev = evoked.copy()
-        ev.crop(tmin, tmax)
-        whitener, _ = mne.cov.compute_whitener(noise_cov, ev.info,
-                                               sel, pca=False)
-        gains[i] = (ev.nave) ** 0.5 * whitener.dot(gain)
-        M.append((ev.nave) ** 0.5 * whitener.dot(ev.data[sel]))
-    group_info["tmin"] = tmin
-    if len(ev.times) > 1:
-        tstep = ev.times[1] - ev.times[0]
-    else:
-        tstep = 0.
-    group_info["tstep"] = tstep
-    M = np.stack(M, axis=0)
-    group_info["hemi"] = "both"
-    return gains, M, group_info

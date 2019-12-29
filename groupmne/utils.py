@@ -3,6 +3,9 @@ import warnings
 import os
 
 import numpy as np
+
+from numba import jit
+
 from sklearn.metrics import euclidean_distances
 
 import mne
@@ -200,3 +203,68 @@ def _compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
     dist = M[np.arange(len(info_dig)), idx].mean()
 
     return dist
+
+
+def mesh_all_distances(points, tris, verts=None):
+    """Compute all pairwise distances on the mesh based on edges lengths
+    using Floyd-Warshall algorithm
+    """
+    A = mne.surface.mesh_dist(tris, points)
+    if verts is not None:
+        A = A[verts][:, verts]
+    A = A.toarray()
+    A[A == 0.] = 1e6
+    A.flat[::len(A) + 1] = 0.
+    A = floyd_warshall(A)
+    return A
+
+
+@jit(nogil=True, cache=True, nopython=True)
+def floyd_warshall(dist):
+    npoints = dist.shape[0]
+    for k in range(npoints):
+        for i in range(npoints):
+            for j in range(npoints):
+                # If i and j are different nodes and if
+                # the paths between i and k and between
+                # k and j exist, do
+                # d_ikj = min(dist[i, k] + dist[k, j], dist[i, j])
+                d_ikj = dist[i, k] + dist[k, j]
+                if ((d_ikj != 0.) and (i != j)):
+                    # See if you can't get a shorter path
+                    # between i and j by interspacing
+                    # k somewhere along the current
+                    # path
+                    if ((d_ikj < dist[i, j]) or (dist[i, j] == 0)):
+                        dist[i, j] = d_ikj
+    return dist
+
+
+def compute_ground_metric(src, group_info):
+    """Compute geodesic distance matrix on the triangulated mesh of src."""
+    vertnos_filtered = group_info["vertno_ref"]
+    hemis = ["lh", "rh"]
+    Ds_f, Ds = [], []
+    for i, h in enumerate(hemis):
+        tris = src[i]["use_tris"]
+        vertno = src[i]["vertno"]
+        points = src[i]["rr"][vertno]
+
+        vert_used = vertnos_filtered[i]
+
+        D = mesh_all_distances(points, tris)
+        D_filtered = D[vert_used][:, vert_used]
+
+        Ds_f.append(D_filtered)
+        Ds.append(D)
+
+    n1, n2 = len(Ds_f[0]), len(Ds_f[1])
+    D_filtered = (Ds_f[0]).max() * np.ones((n1 + n2, n1 + n2))
+    D_filtered[:n1, :n1] = Ds_f[0]
+    D_filtered[n1:, n1:] = Ds_f[1]
+
+    n1, n2 = len(Ds[0]), len(Ds[1])
+    D = (Ds[0]).max() * np.ones((n1 + n2, n1 + n2))
+    D[:n1, :n1] = Ds[0]
+    D[n1:, n1:] = Ds[1]
+    return D_filtered
