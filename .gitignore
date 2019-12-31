@@ -1,5 +1,8 @@
 docs/auto_examples
 docs/generated
+docs/_images
+docs/_templates
+
 .makedoc
 
 # Byte-compiled / optimized / DLL files
