@@ -21,6 +21,7 @@ ave_fname = op.join(data_path, 'MEG', 'sample',
 os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
+@pytest.mark.filterwarnings("ignore:Objective did not converge")
 @pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
                                     "mtw", "remtw"])
 def test_inverse(src_fwds, method):
@@ -33,9 +34,9 @@ def test_inverse(src_fwds, method):
 
     epsilon = 1.
     gamma = 0.01
-    beta = 0.2
+    beta = 0.9
     alpha_ot = 0.01
-    alpha = 0.2
+    alpha = 0.9
 
     ot_dict = dict(alpha=alpha_ot, beta=beta, epsilon=epsilon,
                    gamma=gamma, tol=100)
@@ -43,7 +44,7 @@ def test_inverse(src_fwds, method):
     solver_params = dict(lasso=lasso_dict,
                          relasso=lasso_dict,
                          grouplasso=lasso_dict,
-                         dirty=dict(alpha=alpha, beta=beta),
+                         dirty=dict(alpha=alpha, beta=beta, tol=100),
                          mtw=ot_dict, remtw=ot_dict)
 
     inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
