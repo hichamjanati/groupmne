@@ -145,7 +145,6 @@ inv_op.compute_group_model()
 solver_params = dict(alpha=0.7)
 stcs = inv_op.solve(evokeds, method="grouplasso", time_independent=False,
                     verbose=False, tmin=0.015, tmax=0.025, **solver_params)
-group_info = inv_op._group_info
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
@@ -157,11 +156,13 @@ group_info = inv_op._group_info
 t = 0.02
 t_idx = stcs[0].time_as_index(t)
 view = "lateral"
+
 for stc, subject in zip(stcs, subjects):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
-    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    n_sources = [stc.vertices[0].size, stc.vertices[1].size]
+    m = abs(stc.data[n_sources[0], t_idx]).max()
     surfer_kwargs = dict(
         background="white", foreground="black",
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
@@ -194,7 +195,8 @@ for subject, evoked, fwd, cov in zip(subjects, evokeds, fwds, noise_covs):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
-    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
+    n_sources = [stc.vertices[0].size, stc.vertices[1].size]
+    m = abs(stc.data[:n_sources[0], t_idx]).max()
     surfer_kwargs = dict(
         background="white", foreground="black",
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),

@@ -123,6 +123,7 @@ class InverseOperator(object):
                                              self.noise_covs)
         self._gains = gains
         self._group_info = group_info
+        self._n_sources = group_info["n_sources"]
         self._reset()
 
     def _reset(self):
