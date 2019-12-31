@@ -206,9 +206,7 @@ def _compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
 
 
 def mesh_all_distances(points, tris, verts=None):
-    """Compute all pairwise distances on the mesh based on edges lengths
-    using Floyd-Warshall algorithm
-    """
+    """Compute all pairwise distances on the mesh."""
     A = mne.surface.mesh_dist(tris, points)
     if verts is not None:
         A = A[verts][:, verts]
@@ -221,6 +219,7 @@ def mesh_all_distances(points, tris, verts=None):
 
 @jit(nogil=True, cache=True, nopython=True)
 def floyd_warshall(dist):
+    """Run Floyd-Warshall algorithm to find shortest path on a mesh."""
     npoints = dist.shape[0]
     for k in range(npoints):
         for i in range(npoints):

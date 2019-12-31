@@ -106,6 +106,7 @@ class InverseOperator(object):
 
     def __init__(self, fwds, noise_covs, src_ref, ch_type="grad", depth=0.9,
                  verbose=True):
+        """Create instance of InverseOperator."""
         self.fwds = fwds
         self.noise_covs = noise_covs
         self.src_ref = src_ref
