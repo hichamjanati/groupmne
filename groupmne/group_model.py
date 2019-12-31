@@ -16,7 +16,7 @@ from . import utils
 
 
 def get_src_reference(subject="fsaverage", spacing="ico4",
-                      subjects_dir=None, fetch_fsaverage=False):
+                      subjects_dir=None, fetch_fsaverage=False, verbose=False):
     """Compute source space of the reference subject.
 
     Parameters
@@ -43,12 +43,12 @@ def get_src_reference(subject="fsaverage", spacing="ico4",
     fname_src = op.join(subjects_dir, subject, 'bem', '%s-%s-src.fif'
                         % (subject, spacing))
     if os.path.isfile(fname_src):
-        src_ref = mne.read_source_spaces(fname_src)
+        src_ref = mne.read_source_spaces(fname_src, verbose=verbose)
     elif os.path.exists(os.path.join(subjects_dir, subject)):
         src_ref = mne.setup_source_space(subject=subject,
                                          spacing=spacing,
                                          subjects_dir=subjects_dir,
-                                         add_dist=False)
+                                         add_dist=False, verbose=verbose)
     elif subject == "fsaverage":
         if fetch_fsaverage:
             mne.datasets.fetch_fsaverage(subjects_dir)
@@ -59,7 +59,8 @@ def get_src_reference(subject="fsaverage", spacing="ico4",
         src_ref = mne.setup_source_space(subject=subject,
                                          spacing=spacing,
                                          subjects_dir=subjects_dir,
-                                         add_dist=False)
+                                         add_dist=False,
+                                         verbose=verbose)
     else:
         raise FileNotFoundError("The data of %s could not be found" % subject)
     return src_ref
@@ -67,7 +68,7 @@ def get_src_reference(subject="fsaverage", spacing="ico4",
 
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 meg=True, eeg=True, mindist=2, subjects_dir=None,
-                n_jobs=1):
+                n_jobs=1, verbose=False):
     """Morph the source space of fsaverage to a subject.
 
     Parameters
@@ -92,11 +93,12 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
     print("Processing subject %s" % subject)
 
     src = mne.morph_source_spaces(src_ref, subject_to=subject,
+                                  verbose=verbose,
                                   subjects_dir=subjects_dir)
-    bem = mne.read_bem_solution(bem_fname)
+    bem = mne.read_bem_solution(bem_fname, verbose=verbose)
     fwd = mne.make_forward_solution(info, trans=trans_fname, src=src,
                                     bem=bem, meg=meg, eeg=eeg,
-                                    mindist=mindist,
+                                    mindist=mindist, verbose=verbose,
                                     n_jobs=n_jobs)
     return fwd
 
@@ -115,7 +117,8 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
     for fwd, cov in zip(fwds, noise_covs):
         fwd = mne.convert_forward_solution(fwd, surf_ori=True,
                                            force_fixed=True,
-                                           use_cps=True)
+                                           use_cps=True,
+                                           verbose=False)
         src = fwd["src"]
         subject = src[0]["subject_his_id"]
         group_info["subjects"].append(subject)

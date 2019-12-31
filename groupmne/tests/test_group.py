@@ -1,4 +1,4 @@
-from groupmne import compute_gains, compute_inv_data, utils
+from groupmne import compute_gains, utils
 import mne
 from mne.datasets import testing
 import numpy as np
@@ -41,23 +41,6 @@ def test_gains(src_fwds, hemi):
         i = int(hemi == "rh")
         n_s = group_info["n_sources"][i]
     assert gains.shape == (2, n_ch, n_s)
-
-
-@testing.requires_testing_data
-def test_inverse_data(src_fwds):
-    src_ref, fwds = src_fwds
-    ev = mne.read_evokeds(ave_fname)[0]
-    cov = mne.read_cov(cov_fname)
-    evoked_s = [ev, ev]
-    covs = [cov, cov]
-    gains, M, group_info = \
-        compute_inv_data(fwds, src_ref, evoked_s, covs,
-                         ch_type="grad", tmin=0.02, tmax=0.04)
-    n_ch = len(group_info["sel"])
-    n_s = sum(group_info["n_sources"])
-    n_t = ev.crop(0.02, 0.04).times.shape[0]
-    assert gains.shape == (2, n_ch, n_s)
-    assert M.shape == (2, n_ch, n_t)
 
 
 @testing.requires_testing_data

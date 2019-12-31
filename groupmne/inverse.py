@@ -72,60 +72,11 @@ def _method_to_str(method):
         raise ValueError("Method %s not recognized." % method)
 
 
-def _prepare_inv_data(fwds, src_ref, noise_covs, ch_type="grad"):
-    """Compute aligned gain matrices of the group of subjects.
-
-    Parameters
-    ----------
-    fwds : list
-        The forward operators computed on the morphed source
-        space `src_ref`.
-    src_ref : instance of SourceSpace instance
-        Reference source model.
-    noise_covs : list of instances of Covariance
-        The noise covariances, one element for each subject.
-    ch_type : str (default "grad")
-        Type of channels used for source reconstruction. Can be one
-        of ("mag", "grad", "eeg"). Using more than one type of channels is not
-        yet supported.
-
-    Returns
-    -------
-    gains: ndarray, shape (n_subjects, n_channels, n_sources)
-        The gain matrices.
-    M: ndarray, shape (n_subjects, n_channels, n_times)
-        M-EEG data.
-    group_info: dict
-        Group information (channels, alignments maps across subjects)
-
-    """
-    if len(fwds) != len(noise_covs):
-        raise ValueError("""The length of `fwds` and `noise_cov_s`
-                         do not match.""")
-    gains, group_info = _group_filtering(fwds, src_ref, noise_covs=noise_covs)
-    info = fwds[0]["info"]
-    ch_names = group_info["ch_names"]
-    sel = utils._filter_channels(info, ch_names, ch_type)
-    group_info["ch_filter"] = True
-    group_info["sel"] = sel
-    gains = gains[:, sel, :]
-    whiteners = []
-    for i, (noise_cov, gain) \
-            in enumerate(zip(noise_covs, gains)):
-        whitener, _ = mne.cov.compute_whitener(noise_cov, info,
-                                               sel, pca=False)
-        whiteners.append(whitener)
-
-    group_info["hemi"] = "both"
-    return gains, group_info, whiteners
-
-
 class InverseOperator(object):
     """InverseOperator class to represent the inverse problem data.
 
     Parameters
     ----------
-
     fwds: list of `mne.Forward`.
         Forward soluton of each subject.
     noise_covs: list of `mne.Covariance`
@@ -150,11 +101,11 @@ class InverseOperator(object):
     ----------
     stcs_: list of `mne.SourceEstimates`.
         Source estimates.
+
     """
 
     def __init__(self, fwds, noise_covs, src_ref, ch_type="grad", depth=0.9,
                  verbose=True):
-
         self.fwds = fwds
         self.noise_covs = noise_covs
         self.src_ref = src_ref
@@ -163,26 +114,46 @@ class InverseOperator(object):
         self.verbose = verbose
         self.method = None
         self.solver_kwargs = dict()
-        self._fitted = False
-        self._compute_group_model()
+        self._reset()
 
-    def _compute_group_model(self):
+    def compute_group_model(self):
         """Compute aligned forwards and whitener operators."""
         self.n_subjects = len(self.fwds)
-        gains, group_info, whiteners = \
-            _prepare_inv_data(self.fwds, self.noise_covs, self.src_ref,
-                              self.ch_type)
+        gains, group_info = _group_filtering(self.fwds, self.src_ref,
+                                             self.noise_covs)
         self._gains = gains
         self._group_info = group_info
-        self._whiteners = whiteners
+        self._reset()
+
+    def _reset(self):
+        self._fitted = False
+        self._stcs = None
 
     def _check_evokeds(self, evokeds, tmin, tmax):
         self.tmin, self.tmax = tmin, tmax
+
+        times = evokeds[0].times
+        tstep = 0.1
+        if len(times) > 1:
+            tstep = times[1] - times[0]
+        if tmin is None:
+            tmin = times[0]
+        if tmax is None:
+            tmax = times[-1]
+        self._group_info["tmin"] = tmin
+        self._group_info["tmax"] = tmax
+        self._group_info["tstep"] = tstep
         if self.n_subjects != len(evokeds):
             raise ValueError("The number of evokeds is not equal to the "
-                             "number of subjects. Expected %d, got %d."
+                             "number of forwards. Expected %d, got %d."
                              % (self.n_subjects, len(evokeds)))
-        times = np.array([ev.times for ev in evokeds])
+        times = [ev.times for ev in evokeds]
+        if len(np.unique([tt.shape for tt in times])) > 1:
+            raise ValueError("The Evokeds have different numbers of time"
+                             " points. Please provide evokeds data with the "
+                             "same shape.")
+
+        times = np.array(times)
         all_equal = np.diff(times, axis=0)
         if (all_equal != 0.).any():
             raise ValueError("The Evokeds have different time coordinates.")
@@ -192,25 +163,34 @@ class InverseOperator(object):
             ev = evokeds[i].copy()
             ev.crop(self.tmin, self.tmax)
             self._evokeds.append(ev)
+        return self._evokeds
 
-    def _whiten_data(self):
+    def _whiten_data(self, evokeds):
         """Whiten the evokeds."""
+        info = self.fwds[0]["info"]
+        ch_names = self._group_info["ch_names"]
+        sel = utils._filter_channels(info, ch_names, self.ch_type)
+        self._group_info["ch_filter"] = True
+        self._group_info["sel"] = sel
+
+        self._group_info["hemi"] = "both"
         meeg_w = []
         gains_w = []
         sel = self._group_info["sel"]
         for i in range(self.n_subjects):
-            ev = self._evokeds[i]
-            W = self._whiteners[i]
-            gains_w.append((ev.nave) ** 0.5 * W.dot(self._gains[i]))
+            ev = evokeds[i]
+            W, _ = mne.cov.compute_whitener(self.noise_covs[i], ev.info, sel,
+                                            pca=False, verbose=False)
+            gains_w.append((ev.nave) ** 0.5 * W.dot(self._gains[i][sel]))
             meeg_w.append((ev.nave) ** 0.5 * W.dot(ev.data[sel]))
 
         meeg_data = np.stack(meeg_w, axis=0)
         gains_w = np.stack(gains_w, axis=0)
-        return meeg_data, gains_w
+        return gains_w, meeg_data
 
-    def _scale_data(self):
-        weights = np.linalg.norm(self._gains_w, axis=1) ** self.depth
-        gains_scaled = self._gains_w / weights[:, None, :]
+    def _scale_data(self, gains):
+        weights = np.linalg.norm(gains, axis=1) ** self.depth
+        gains_scaled = gains / weights[:, None, :]
         return gains_scaled, weights
 
     def _check_solver(self, method, time_independent, **solver_kwargs):
@@ -226,26 +206,18 @@ class InverseOperator(object):
                              "Use Group Lasso for an L2 over the time axis or"
                              " set `time_independent` to `True`." % method)
 
-    def _check_solver_params(self, method, solver_kwargs, gains_scaled, meeg):
+    def _check_solver_params(self, method, solver_kwargs, gains_scaled, meeg,
+                             time_independent):
         n_subjects, n_channels, n_times = meeg.shape
         n_features = gains_scaled.shape[-1]
 
         # alpha is necessary for all models
         if "alpha" not in solver_kwargs.keys():
-            raise ValueError("The method %s requires the `alpha`"
-                             " hyperparameter."
-                             "See the documentation of %s for further detail."
-                             % (method, _method_to_str(method)))
-
+            solver_kwargs["alpha"] = 0.2
         # beta is necessary for dirty and ot models
         if method not in ["lasso", "grouplasso", "relasso"]:
             if "beta" not in solver_kwargs.keys():
-                raise ValueError("The method %s requires the `beta`"
-                                 " hyperparameter."
-                                 "See the documentation of %s for further "
-                                 "detail."
-                                 % (method, _method_to_str(method)))
-
+                solver_kwargs["beta"] = 0.2
         # ground metric and ot hyperparameters for ot models
         if method in ["mtw", "remtw"]:
             if "M" not in solver_kwargs.keys():
@@ -256,8 +228,8 @@ class InverseOperator(object):
                 M = solver_kwargs["M"]
             if len(M) != n_features or len(M.T) != n_features:
                 raise ValueError("The ground metric M must be an array"
-                                 "(n_features, n_features); got (%s, %s)"
-                                 % M.shape)
+                                 "(%s, %s); got (%s, %s)"
+                                 % (n_features, n_features, *M.shape))
             if M.min() < 0.:
                 raise ValueError("The ground metric M must be non-negative"
                                  "got M.min() = %s"
@@ -273,10 +245,9 @@ class InverseOperator(object):
 
         # rescale l12 norm penalty
         if method in ["grouplasso", "dirty"]:
-            # take L2 over subjects and max over time and space
-            # alphamax (n_times)
-            alphamax = np.linalg.norm(xty, axis=0).max() / n_channels
-            solver_kwargs["alpha"] *= alphamax
+            if time_independent:
+                alphamax = np.linalg.norm(xty, axis=0).max() / n_channels
+                solver_kwargs["alpha"] *= alphamax
 
         # rescale l1 norm penalty
         elif method in ["dirty", "mtw", "remtw", "lasso", "relasso"]:
@@ -294,7 +265,6 @@ class InverseOperator(object):
 
         Parameters
         ----------
-
         evokeds: list of mne.Evokeds instances.
         method: str.
             Method to use to compute the source estimates. Must be one of
@@ -305,27 +275,52 @@ class InverseOperator(object):
             Starting time point of the selected evoked response window.
         tmax: flat
             Ending time point of the selected evoked response window.
+        verbose: boolean
+            Verbosity of the solver.
         solver_kwargs : dict
             additional arguments passed to the solver.
+
+        Returns
+        -------
+        stcs: list of mne.SourceEstimates
+            Source estimates of each subject.
+
         """
-        self.tmin, self.tmax = tmin, tmax
-        self._check_solver(method, time_independent, solver_kwargs)
+        self._check_solver(method, time_independent, **solver_kwargs)
+        evokeds_checked = self._check_evokeds(evokeds, tmin, tmax)
+        if hasattr(self, "_evokeds_checked"):
+            data_changed = evokeds_checked != self._evokeds_checked
+        else:
+            data_changed = False
 
-        gains, meeg_data = self._whiten_data()
-        gains_scaled, weights = self._rescale_data(gains)
+        # If first solve or calling solve with different data, whiten and scale
+        # the data
+        if not self._fitted or data_changed:
+            self._evokeds_checked = evokeds_checked
+            gains, meeg_data = self._whiten_data(evokeds_checked)
+            gains_scaled, weights = self._scale_data(gains)
+            self._gains_processed = gains
+            self._meeg_data_processed = meeg_data
+            self._weights = weights
 
-        self._check_evokeds(evokeds, tmin, tmax)
-        self.solver_kwargs = self._check_solver_params(method, solver_kwargs,
-                                                       gains_scaled, meeg_data)
-        stc_data, log = _apply_solver(gains_scaled, self._meeg, method,
+        # Check hyperparameters for all models and rescale them to 0-1
+        self.solver_kwargs = \
+            self._check_solver_params(method, solver_kwargs,
+                                      self._gains_processed,
+                                      self._meeg_data_processed,
+                                      time_independent)
+        stc_data, log = _apply_solver(self._gains_processed,
+                                      self._meeg_data_processed, method,
                                       time_independent, verbose=verbose,
-                                      **self.solver_kwargs)
-        self._stc_data = stc_data
+                                      **solver_kwargs)
         # re-scale coefs and change units to nAm
-        stc_data = np.array(stc_data) * 1e9 / weights.T[None, :, :]
+        stc_data = np.array(stc_data) * 1e9 / self._weights.T[None, :, :]
+        self._stc_data = stc_data
+
         stcs = _coefs_to_stcs(stc_data, self._group_info)
         self.stcs_ = stcs
         self.log_ = log
+        self._fitted = True
         return stcs
 
 
@@ -337,24 +332,29 @@ def _apply_solver(gains_scaled, meeg, method, time_independent, verbose,
     if not time_independent:
         meeg = np.swapaxes(meeg, 1, 2).reshape(-1, n_channels)
         gains_scaled = np.tile(gains_scaled, (n_times, 1, 1))
+        gty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, meeg)])
+        alphamax = np.linalg.norm(gty, axis=0).max(axis=0)
+        solver_kwargs["alpha"] *= alphamax / n_channels
         coefs, residuals, loss, dg = _gl_wrapper(gains_scaled, meeg,
                                                  **solver_kwargs)
         coefs = coefs.reshape(-1, n_subjects, n_times).T
         coefs = np.swapaxes(coefs, 1, 2)
+        log = dict(dualgap=dg, loss=loss, residuals=residuals)
     else:
         solver = _method_to_solver(method)
         n_features = gains_scaled.shape[-1]
         n_subjects, n_channels, n_times = meeg.shape
         coefs = np.empty((n_times, n_features, n_subjects))
-    # residuals = np.empty((n_times, n_subjects, n_channels))
 
-    for t in range(n_times):
-        if verbose:
-            print("Solving for time point {} / {}".format(t + 1, n_times))
-        estim = solver(fit_intercept=False, normalize=False, **solver_kwargs)
-        estim.fit(gains_scaled, meeg[:, :, t])
-        coefs[t] = estim.coef_
+        for t in range(n_times):
+            if verbose:
+                print("Solving for time point {} / {}".format(t + 1, n_times))
+            estim = solver(fit_intercept=False, normalize=False,
+                           **solver_kwargs)
+            estim.fit(gains_scaled, meeg[:, :, t])
+            assert estim.coef_.shape == (n_features, n_subjects)
+            coefs[t] = estim.coef_
 
-    log = dict()
+        log = dict()
 
     return coefs, log

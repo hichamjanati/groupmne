@@ -1,33 +1,36 @@
+import os
+import os.path as op
+
 import numpy as np
-from groupmne.inverse import compute_group_inverse
-from groupmne import utils
+
+import mne
+from mne.datasets import testing
+
+from groupmne.inverse import InverseOperator
+
 import pytest
 
 
-def check_coefs_stc_match(coefs, stcs):
-    coefs_ = []
-    for stc in stcs:
-        coefs_.append(stc.data)
-    coefs_ = np.array(coefs_)
-    coefs_ = np.swapaxes(coefs_, 0, 2)
-    np.testing.assert_equal(coefs_, coefs)
+data_path = testing.data_path()
+subjects_dir = op.join(data_path, 'subjects')
+cov_fname = op.join(data_path, 'MEG', 'sample',
+                    'sample_audvis_trunc-cov.fif')
+ave_fname = op.join(data_path, 'MEG', 'sample',
+                    'sample_audvis_trunc-ave.fif')
+
+os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_inverse(hemi):
-    seed = 42
-    rnd = np.random.RandomState(seed)
-    n_features = 10
-    n_samples = 5
-    n_subjects = 2
-    n_times = 3
-    gains = rnd.randn(n_subjects, n_samples, n_features)
-    meeg = rnd.randn(n_subjects, n_samples, n_times)
+@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
+                                    "mtw", "remtw"])
+def test_inverse(src_fwds, method):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev = ev.crop(tmin=0.1, tmax=0.12)
+    evokeds = [ev, ev]
 
-    group_info = utils._make_fake_group_info(n_sources=n_features,
-                                             n_subjects=n_subjects,
-                                             hemi=hemi)
-    ground_metric = rnd.rand(n_features, n_features)
     epsilon = 1.
     gamma = 0.01
     beta = 0.2
@@ -35,127 +38,189 @@ def test_inverse(hemi):
     alpha = 0.2
 
     ot_dict = dict(alpha=alpha_ot, beta=beta, epsilon=epsilon,
-                   gamma=gamma, M=ground_metric)
-    lasso_dict = dict(alpha=alpha)
-    estim_params = dict(lasso=lasso_dict,
-                        grouplasso=lasso_dict,
-                        dirty=dict(alpha=alpha, beta=beta),
-                        mtw=ot_dict, remtw=ot_dict)
+                   gamma=gamma, tol=100)
+    lasso_dict = dict(alpha=alpha, tol=100)
+    solver_params = dict(lasso=lasso_dict,
+                         relasso=lasso_dict,
+                         grouplasso=lasso_dict,
+                         dirty=dict(alpha=alpha, beta=beta),
+                         mtw=ot_dict, remtw=ot_dict)
 
-    for model in ["lasso", "grouplasso", "dirty", "mtw", "remtw"]:
-        # print("Doing model %s ... " % model)
-        coefs, log = compute_group_inverse(gains, meeg, group_info,
-                                           method=model,
-                                           depth=0.9,
-                                           return_stc=False,
-                                           time_independent=True,
-                                           **estim_params[model])
-        stcs_, log = compute_group_inverse(gains, meeg, group_info,
-                                           method=model,
-                                           depth=0.9,
-                                           return_stc=True,
-                                           time_independent=True,
-                                           **estim_params[model])
-
-        check_coefs_stc_match(coefs, stcs_)
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+    inv_op.solve(evokeds, method=method,
+                 time_independent=True,
+                 verbose=False, **solver_params[method])
+    stc_data = inv_op._stc_data
+    inv_op.solve(evokeds, method=method,
+                 time_independent=True,
+                 verbose=False, **solver_params[method])
+    np.testing.assert_array_equal(inv_op._stc_data, stc_data)
 
 
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_time_dependent_group_lasso(hemi):
-    seed = 42
-    rnd = np.random.RandomState(seed)
-    n_features = 10
-    n_samples = 5
-    n_subjects = 2
-    n_times = 3
-    gains = rnd.randn(n_subjects, n_samples, n_features)
-    meeg = rnd.randn(n_subjects, n_samples, n_times)
+def test_time_gl(src_fwds):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev = ev.crop(tmin=0.1, tmax=0.12)
+    evokeds = [ev, ev]
 
-    group_info = utils._make_fake_group_info(n_sources=n_features,
-                                             n_subjects=n_subjects,
-                                             hemi=hemi)
     alpha = 0.2
 
-    coefs, log = compute_group_inverse(gains, meeg, group_info,
-                                       method="grouplasso",
-                                       depth=0.9,
-                                       return_stc=False,
-                                       time_independent=False,
-                                       alpha=alpha)
+    lasso_dict = dict(alpha=alpha)
 
-    stcs_, log = compute_group_inverse(gains, meeg, group_info,
-                                       method="grouplasso",
-                                       depth=0.9,
-                                       return_stc=True,
-                                       time_independent=False,
-                                       alpha=alpha)
-    check_coefs_stc_match(coefs, stcs_)
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+    inv_op.solve(evokeds, method="grouplasso",
+                 time_independent=False,
+                 verbose=False, **lasso_dict)
 
 
-def test_missing_params():
-    seed = 42
-    rnd = np.random.RandomState(seed)
-    n_features = 10
-    n_samples = 5
-    n_subjects = 2
-    n_times = 3
-    gains = rnd.randn(n_subjects, n_samples, n_features)
-    meeg = rnd.randn(n_subjects, n_samples, n_times)
+@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty"])
+def test_hyperparam_max(src_fwds, method):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev = ev.crop(tmin=0.1, tmax=0.12)
+    evokeds = [ev, ev]
 
-    group_info = utils._make_fake_group_info(n_sources=n_features,
-                                             n_subjects=n_subjects,
-                                             hemi="lh")
+    alpha = 1.1
+    lasso_dict = dict(alpha=alpha)
 
-    all_models = ["lasso", "grouplasso", "dirty", "mtw", "remtw", "relasso"]
-    for model in all_models:
-        with pytest.raises(ValueError, match="requires the `alpha`"):
-            compute_group_inverse(gains, meeg, group_info, method=model)
-
-    beta_models = ["dirty", "mtw", "remtw"]
-    for model in beta_models:
-        with pytest.raises(ValueError, match="requires the `beta`"):
-            compute_group_inverse(gains, meeg, group_info, method=model,
-                                  alpha=0.1)
-
-    ot_models = ["mtw", "remtw"]
-    for model in ot_models:
-        with pytest.raises(ValueError, match="requires the OT ground metric"):
-            compute_group_inverse(gains, meeg, group_info, method=model,
-                                  alpha=0.1, beta=0.1)
-        with pytest.raises(ValueError, match="ground metric M must be "):
-            compute_group_inverse(gains, meeg, group_info, method=model,
-                                  alpha=0.1, beta=0.1, M=np.ones((1, 2)))
-        with pytest.raises(ValueError, match="must be non-negative"):
-            compute_group_inverse(gains, meeg, group_info, method=model,
-                                  alpha=0.1, beta=0.1, M=-np.eye(n_features))
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+    inv_op.solve(evokeds, method="grouplasso",
+                 time_independent=False,
+                 verbose=False, **lasso_dict)
+    assert abs(inv_op._stc_data).max() == 0.
 
 
-def test_implemented_models():
-    seed = 42
-    rnd = np.random.RandomState(seed)
-    n_features = 10
-    n_samples = 5
-    n_subjects = 2
-    n_times = 3
-    gains = rnd.randn(n_subjects, n_samples, n_features)
-    meeg = rnd.randn(n_subjects, n_samples, n_times)
+def test_implemented_models(src_fwds):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev = ev.crop(tmin=0.1, tmax=0.12)
+    evokeds = [ev, ev]
+
+    alpha = 1.
+    lasso_dict = dict(alpha=alpha)
+
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
 
     IMPLEMENTED_METHODS = ["lasso", "grouplasso", "dirty", "mtw", "remtw",
                            "relasso"]
-    group_info = utils._make_fake_group_info(n_sources=n_features,
-                                             n_subjects=n_subjects,
-                                             hemi="lh")
 
-    for model in IMPLEMENTED_METHODS:
-        if model != "grouplasso":
+    for method in IMPLEMENTED_METHODS:
+        if method != "grouplasso":
             with pytest.raises(ValueError,
                                match="not feasible as a time dependent"
                                      " method"):
-                compute_group_inverse(gains, meeg, group_info, method=model,
-                                      time_independent=False)
+                inv_op.solve(evokeds, method=method,
+                             time_independent=False,
+                             verbose=False, **lasso_dict)
 
-    model = "foo"
+    method = "foo"
     for time_independent in [True, False]:
         with pytest.raises(ValueError, match="not a valid method"):
-            compute_group_inverse(gains, meeg, group_info, method=model,
-                                  time_independent=time_independent)
+            inv_op.solve(evokeds, method=method, time_independent=False,
+                         verbose=False, **lasso_dict)
+
+
+@pytest.mark.parametrize("method", ["mtw", "remtw"])
+def test_ot_groundmetric(src_fwds, method):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev = ev.crop(tmin=0.1, tmax=0.12)
+    evokeds = [ev, ev]
+
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+
+    # Test ground metric with a wrong shape
+    M_wrong_shape = np.ones((2, 3))
+    ot_dict = dict(M=M_wrong_shape, tol=100)
+    with pytest.raises(ValueError, match="M must be an array"):
+        inv_op.solve(evokeds, method=method, time_independent=True,
+                     verbose=False, **ot_dict)
+
+    # Test negative ground metric
+    inv_op.compute_group_model()
+    n_features = inv_op._gains.shape[-1]
+    M_negative = - np.ones((n_features, n_features))
+    ot_dict = dict(M=M_negative, tol=100)
+    with pytest.raises(ValueError, match="M must be non-negative"):
+        inv_op.solve(evokeds, method=method, time_independent=True,
+                     verbose=False, **ot_dict)
+
+
+@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
+                                    "mtw", "remtw"])
+def test_evokeds(src_fwds, method):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev0 = ev.copy().crop(tmin=0.1, tmax=0.13)
+    ev1 = ev.copy().crop(tmin=0.1, tmax=0.15)
+    ev3 = ev.copy().crop(tmin=0.12, tmax=0.15)
+
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+
+    evokeds = [ev0, ev0, ev0]
+    with pytest.raises(ValueError, match="The number of evokeds is not equal"):
+        inv_op.solve(evokeds, method=method, verbose=False)
+
+    evokeds = [ev0, ev1]
+    with pytest.raises(ValueError, match="different numbers of time points"):
+        inv_op.solve(evokeds, method=method, verbose=False)
+
+    evokeds = [ev0, ev3]
+    with pytest.raises(ValueError, match="have different time coordinates."):
+        inv_op.solve(evokeds, method=method, verbose=False)
+
+
+def test_resolve(src_fwds):
+    src_ref, fwds = src_fwds
+    cov = mne.read_cov(cov_fname, verbose=False)
+    noise_covs = [cov, cov]
+    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+    ev1 = ev.copy().crop(tmin=0.1, tmax=0.12)
+    ev2 = ev.copy().crop(tmin=0.13, tmax=0.15)
+
+    evokeds = [ev1, ev1]
+    method = "lasso"
+    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                             depth=0.9)
+    inv_op.compute_group_model()
+
+    inv_op.solve(evokeds, method=method, time_independent=True,
+                 verbose=False)
+    _meeg_data_processed = inv_op._meeg_data_processed.copy()
+
+    evokeds2 = [ev2, ev2]
+    inv_op.solve(evokeds2, method=method, time_independent=True,
+                 verbose=False)
+    # test that the data whitening changed when changing evokeds
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal,
+                             _meeg_data_processed, inv_op._meeg_data_processed)
+
+    # test that a second call to solve is reliable
+    inv_op_2 = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                               depth=0.9)
+    inv_op_2.compute_group_model()
+    inv_op_2.solve(evokeds2, method=method, time_independent=True,
+                   verbose=False)
+    np.testing.assert_array_equal(inv_op_2._stc_data, inv_op._stc_data)
