@@ -1,6 +1,7 @@
 docs/auto_examples
 docs/generated
 docs/_images
+docs/_static
 docs/_templates
 
 .makedoc
