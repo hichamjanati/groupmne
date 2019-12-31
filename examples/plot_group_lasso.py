@@ -19,8 +19,7 @@ from mne.parallel import parallel_func
 from mne.datasets import hf_sef
 from matplotlib import pyplot as plt
 
-from groupmne import group_model
-from groupmne.inverse import compute_group_inverse
+from groupmne import group_model, InverseOperator
 
 ##########################################################
 # Download and process MEG data
@@ -70,10 +69,10 @@ def process_meg(raw_name):
 
 
 epochs_s = [process_meg(raw_name) for raw_name in raw_name_s]
-evoked_s = [ep.average() for ep in epochs_s]
+evokeds = [ep.average() for ep in epochs_s]
 
 # compute noise covariance (takes a few minutes)
-noise_cov_s = []
+noise_covs = []
 for subj, ep in zip(["a", "b"], epochs_s):
     cov_fname = meg_path + f"subject_{subj}/sef-cov.fif"
     if os.path.exists(cov_fname):
@@ -81,11 +80,11 @@ for subj, ep in zip(["a", "b"], epochs_s):
     else:
         cov = mne.compute_covariance(ep, tmin=None, tmax=0.)
         mne.write_cov(cov_fname, cov)
-    noise_cov_s.append(cov)
+    noise_covs.append(cov)
 
 
 f, axes = plt.subplots(1, 2, sharey=True)
-for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+for ax, ev, nc, ll in zip(axes.ravel(), evokeds, noise_covs, ["a", "b"]):
     picks = mne.pick_types(ev.info, meg="grad")
     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
     ax.set_title("Subject %s" % ll, fontsize=15)
@@ -110,7 +109,7 @@ src_ref = group_model.get_src_reference(spacing=spacing,
 # and computes their forward operators.
 
 subjects = ["subject_a", "subject_b"]
-trans_fname_s = [meg_path + "%s/%s-trans.fif" % (s, s) for s in subjects]
+trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
 n_jobs = 2
@@ -129,12 +128,6 @@ fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 
-gains, M, group_info = \
-    group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
-                                 ch_type="grad", tmin=0.015, tmax=0.025)
-print("(# subjects, # channels, # sources) = ", gains.shape)
-print("(# subjects, # channels, # time points) = ", M.shape)
-
 ###########################################
 # Solve the inverse problems with groupmne
 # ----------------------------------------
@@ -145,11 +138,14 @@ print("(# subjects, # channels, # time points) = ", M.shape)
 # it must be set as a positive number between 0 and 1. With alpha = 1, all
 # the sources are 0.
 
-stcs, log = compute_group_inverse(gains, M, group_info,
-                                  method="grouplasso",
-                                  depth=0.9, alpha=0.7, return_stc=True,
-                                  n_jobs=4)
+inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
+                         depth=0.9)
+inv_op.compute_group_model()
 
+solver_params = dict(alpha=0.7)
+stcs = inv_op.solve(evokeds, method="grouplasso", time_independent=False,
+                    verbose=False, tmin=0.015, tmax=0.025, **solver_params)
+group_info = inv_op._group_info
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
@@ -167,10 +163,11 @@ for stc, subject in zip(stcs, subjects):
                                                 regexp="G_postcentral-lh")[0]
     m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
     surfer_kwargs = dict(
+        background="white", foreground="black",
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
         hemi='lh', subjects_dir=subjects_dir,
         initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5)
+        smoothing_steps=5, cortex=("gray", -1, 6, True))
     brain = stc.plot(**surfer_kwargs, views=view)
     brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
@@ -188,21 +185,22 @@ from mne.inverse_sparse import mixed_norm  # noqa: E402
 t = 0.02
 t_idx = stcs[0].time_as_index(t)
 view = "lateral"
-for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
+for subject, evoked, fwd, cov in zip(subjects, evokeds, fwds, noise_covs):
     ev = evoked.copy()
     ev.pick_types(meg="grad")
     ev.crop(0.015, 0.025)
-    stc = mixed_norm(ev, fwd, cov, alpha=60., loose=0., depth=0.9)
+    stc = mixed_norm(ev, fwd, cov, alpha=70., loose=0., depth=0.9)
     stc.subject = subject
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
     m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
     surfer_kwargs = dict(
+        background="white", foreground="black",
         clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
         hemi='lh', subjects_dir=subjects_dir,
         initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5)
+        smoothing_steps=5, cortex=("gray", -1, 6, True))
     brain = stc.plot(**surfer_kwargs, views=view)
     brain.add_text(0.1, 0.9, subject + "_mxne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
