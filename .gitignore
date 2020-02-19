@@ -1,9 +1,9 @@
-docs/auto_examples
-docs/generated
-docs/_images
-docs/_static
-docs/_templates
-
+docsrc/auto_examples
+docsrc/generated
+docsrc/_images
+docsrc/_static
+docsrc/_templates
+docs/
 .makedoc
 
 # Byte-compiled / optimized / DLL files

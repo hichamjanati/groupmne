@@ -19,7 +19,8 @@ from mne.parallel import parallel_func
 from mne.datasets import hf_sef
 from matplotlib import pyplot as plt
 
-from groupmne import group_model, InverseOperator
+from groupmne import (compute_group_inverse, prepare_fwds, get_src_reference,
+                      compute_fwd)
 
 ##########################################################
 # Download and process MEG data
@@ -100,51 +101,46 @@ plt.show()
 
 resolution = 4
 spacing = "ico%d" % resolution
-src_ref = group_model.get_src_reference(spacing=spacing,
-                                        subjects_dir=subjects_dir)
+src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
 
 ###################################################################
-# the function group_model.compute_fwd morphs the source space src_ref to the
+# the function `compute_fwd` morphs the source space src_ref to the
 # surface of each subject by mapping the sulci and gyri patterns
-# and computes their forward operators.
+# and computes their forward operators. Next we prepare the forward operators
+# to be aligned across subjects
 
 subjects = ["subject_a", "subject_b"]
 trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
 n_jobs = 2
-parallel, run_func, _ = parallel_func(group_model.compute_fwd, n_jobs=n_jobs)
+parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
 fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
                 for s, info, trans, bem in zip(subjects, raw_name_s,
                                                trans_fname_s, bem_fname_s))
 
-
-###################################################
+fwds = prepare_fwds(fwds, src_ref)
+evokeds = [ev.crop(0.015, 0.025).copy()
+           for ev in evokeds]
 # We can now compute the data of the inverse problem.
-# `group_info` is a dictionary that contains the selected channels and the
-# alignment maps between src_ref and the subjects which are required if you
-# want to plot source estimates on the brain surface of each subject. The
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 
 ###########################################
 # Solve the inverse problems with groupmne
 # ----------------------------------------
-# For now, only the group lasso model [1] is supported.
-# It assumes the source locations are the same across subjects for all instants
-# i.e if a source is zero for one subject, it will be zero for all subjects.
-# "alpha" is a hyperparameter that controls this structured sparsity prior.
-# it must be set as a positive number between 0 and 1. With alpha = 1, all
-# the sources are 0.
 
-inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                         depth=0.9)
-inv_op.compute_group_model()
+# The Group Lasso assumes the source locations are the same across subjects
+# for all instants i.e if a source is zero for one subject, it will be zero
+# for all subjects. "alpha" is a hyperparameter that controls this structured
+# sparsity prior. it must be set as a positive number between 0 and 1.
+# With alpha = 1, all the sources are 0.
 
-solver_params = dict(alpha=0.7)
-stcs = inv_op.solve(evokeds, method="grouplasso", time_independent=False,
-                    verbose=False, tmin=0.015, tmax=0.025, **solver_params)
+stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                             method='grouplasso',
+                             spatiotemporal=True,
+                             alpha=0.8)
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
@@ -162,10 +158,10 @@ for stc, subject in zip(stcs, subjects):
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
     n_sources = [stc.vertices[0].size, stc.vertices[1].size]
-    m = abs(stc.data[n_sources[0], t_idx]).max()
+    m = abs(stc.data[:n_sources[0], t_idx]).max()
     surfer_kwargs = dict(
         background="white", foreground="black",
-        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
+        clim=dict(kind='value', pos_lims=[0., 0.2 * m, m]),
         hemi='lh', subjects_dir=subjects_dir,
         initial_time=t * 1e3, time_unit='ms', size=(500, 500),
         smoothing_steps=5, cortex=("gray", -1, 6, True))
@@ -190,7 +186,7 @@ for subject, evoked, fwd, cov in zip(subjects, evokeds, fwds, noise_covs):
     ev = evoked.copy()
     ev.pick_types(meg="grad")
     ev.crop(0.015, 0.025)
-    stc = mixed_norm(ev, fwd, cov, alpha=70., loose=0., depth=0.9)
+    stc = mixed_norm(ev, fwd, cov, alpha=80., loose=0.)
     stc.subject = subject
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
