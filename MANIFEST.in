@@ -19,4 +19,6 @@ exclude *.yml
 exclude .mailmap
 recursive-exclude groupmne *.pyc
 
-recursive-exclude docs *
+recursive-include docsrc *.bat
+recursive-include docsrc *.py
+recursive-include docsrc *.rst
