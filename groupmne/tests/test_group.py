@@ -1,4 +1,4 @@
-from groupmne import compute_gains, utils
+from groupmne import prepare_fwds
 import mne
 from mne.datasets import testing
 import numpy as np
@@ -29,32 +29,13 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
 @testing.requires_testing_data
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_gains(src_fwds, hemi):
+def test_different_gains(src_fwds):
     src_ref, fwds = src_fwds
-    gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
-                                      hemi=hemi)
-    n_ch = len(group_info["sel"])
-    if hemi == "both":
-        n_s = sum(group_info["n_sources"])
-    else:
-        i = int(hemi == "rh")
-        n_s = group_info["n_sources"][i]
-    assert gains.shape == (2, n_ch, n_s)
-
-
-@testing.requires_testing_data
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_different_gains(src_fwds, hemi):
-    src_ref, fwds = src_fwds
-    gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
-                                      hemi=hemi)
-    n_ch = len(group_info["sel"])
-    if hemi == "both":
-        n_s = sum(group_info["n_sources"])
-    else:
-        i = int(hemi == "rh")
-        n_s = group_info["n_sources"][i]
+    fwds = prepare_fwds(fwds, src_ref)
+    gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds])
+    group_info = fwds[0]["sol_group"]["group_info"]
+    n_ch = fwds[0]["nchan"]
+    n_s = sum(group_info["n_sources"])
     assert gains.shape == (2, n_ch, n_s)
     with pytest.raises(AssertionError):
         gains /= abs(gains).max()
@@ -62,29 +43,15 @@ def test_different_gains(src_fwds, hemi):
 
 
 @testing.requires_testing_data
-@pytest.mark.parametrize("hemi", ["lh", "rh", "both"])
-def test_filtering_fsaverage(src_fwds, hemi):
+def test_filtering_fsaverage(src_fwds):
     src_ref, (fwd0, fwd1) = src_fwds
     fwds = [fwd1, fwd1]
-    gains, group_info = compute_gains(fwds, src_ref, ch_type="grad",
-                                      hemi=hemi)
+    fwds_prep = prepare_fwds(fwds, src_ref)
+    gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds_prep])
 
-    n_lh = fwds[0]["src"][0]["nuse"]
-    if hemi == "lh":
-        col0 = 0
-        col1 = n_lh
-    elif hemi == "rh":
-        col0 = n_lh
-        col1 = None
-    elif hemi == "both":
-        col0 = 0
-        col1 = None
     for fwd, gain in zip(fwds, gains):
         fwd = mne.convert_forward_solution(fwd, surf_ori=True,
                                            force_fixed=True,
                                            use_cps=True)
-        ch_names = utils._get_channels(fwd)
-        sel = utils._filter_channels(fwd["info"], ch_names, "grad")
-        fwd_gain = fwd["sol"]["data"][sel]
-        fwd_gain = fwd_gain[:, col0:col1]
+        fwd_gain = fwd["sol"]["data"]
         np.testing.assert_allclose(gain, fwd_gain)

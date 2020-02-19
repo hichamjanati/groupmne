@@ -6,7 +6,7 @@ import numpy as np
 import mne
 from mne.datasets import testing
 
-from groupmne.inverse import InverseOperator
+from groupmne import prepare_fwds, compute_group_inverse
 
 import pytest
 
@@ -31,53 +31,55 @@ def test_inverse(src_fwds, method):
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
-
+    fwds = prepare_fwds(fwds, src_ref)
     epsilon = 1.
     gamma = 0.01
-    beta = 0.9
+    beta = 0.1
     alpha_ot = 0.01
-    alpha = 0.9
+    alpha = 0.2
 
+    n_sources = fwds[0]["sol_group"]["data"].shape[1]
+    n_times = ev.times.size
     ot_dict = dict(alpha=alpha_ot, beta=beta, epsilon=epsilon,
-                   gamma=gamma, tol=100)
-    lasso_dict = dict(alpha=alpha, tol=100)
+                   gamma=gamma, tol=100.)
+    lasso_dict = dict(alpha=alpha, tol=100.)
     solver_params = dict(lasso=lasso_dict,
                          relasso=lasso_dict,
                          grouplasso=lasso_dict,
-                         dirty=dict(alpha=alpha, beta=beta, tol=100),
+                         dirty=dict(alpha=alpha, beta=beta, tol=100.),
                          mtw=ot_dict, remtw=ot_dict)
 
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
-    inv_op.solve(evokeds, method=method,
-                 time_independent=True,
-                 verbose=False, **solver_params[method])
-    stc_data = inv_op._stc_data
-    inv_op.solve(evokeds, method=method,
-                 time_independent=True,
-                 verbose=False, **solver_params[method])
-    np.testing.assert_array_equal(inv_op._stc_data, stc_data)
+    stcs = compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                                 spatiotemporal=False,
+                                 **solver_params[method])
+    assert len(stcs) == len(fwds)
+    for stc in stcs:
+        assert (stc.data.shape == (n_sources, n_times))
 
 
-def test_time_gl(src_fwds):
+def test_spatiotemporal_grouplasso(src_fwds):
     src_ref, fwds = src_fwds
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
-
+    fwds = prepare_fwds(fwds, src_ref)
     alpha = 0.2
 
     lasso_dict = dict(alpha=alpha)
 
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
-    inv_op.solve(evokeds, method="grouplasso",
-                 time_independent=False,
-                 verbose=False, **lasso_dict)
+    stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                                 method='grouplasso',
+                                 spatiotemporal=True,
+                                 **lasso_dict)
+
+    # check group l21 norm works as expected
+    for stc in stcs:
+        data = stc.data
+        positive_any = (data != 0).any(1)
+        positive_all = (data != 0).all(1)
+        assert (positive_any == positive_all).all()
 
 
 @pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty"])
@@ -88,17 +90,18 @@ def test_hyperparam_max(src_fwds, method):
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
+    fwds = prepare_fwds(fwds, src_ref)
 
     alpha = 1.1
-    lasso_dict = dict(alpha=alpha)
-
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
-    inv_op.solve(evokeds, method="grouplasso",
-                 time_independent=False,
-                 verbose=False, **lasso_dict)
-    assert abs(inv_op._stc_data).max() == 0.
+    d1 = dict(alpha=alpha)
+    d2 = dict(alpha=alpha, beta=alpha)
+    params = dict(lasso=d1, grouplasso=d1, relasso=d1, dirty=d2)
+    stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                                 method=method,
+                                 spatiotemporal=False,
+                                 **params[method])
+    for stc in stcs:
+        assert abs(stc.data).max() == 0.
 
 
 def test_implemented_models(src_fwds):
@@ -108,13 +111,10 @@ def test_implemented_models(src_fwds):
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
+    fwds = prepare_fwds(fwds, src_ref)
 
     alpha = 1.
     lasso_dict = dict(alpha=alpha)
-
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
 
     IMPLEMENTED_METHODS = ["lasso", "grouplasso", "dirty", "mtw", "remtw",
                            "relasso"]
@@ -124,15 +124,14 @@ def test_implemented_models(src_fwds):
             with pytest.raises(ValueError,
                                match="not feasible as a time dependent"
                                      " method"):
-                inv_op.solve(evokeds, method=method,
-                             time_independent=False,
-                             verbose=False, **lasso_dict)
+                compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                                      spatiotemporal=True, **lasso_dict)
 
     method = "foo"
     for time_independent in [True, False]:
         with pytest.raises(ValueError, match="not a valid method"):
-            inv_op.solve(evokeds, method=method, time_independent=False,
-                         verbose=False, **lasso_dict)
+            compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                                  spatiotemporal=False, **lasso_dict)
 
 
 @pytest.mark.parametrize("method", ["mtw", "remtw"])
@@ -143,26 +142,22 @@ def test_ot_groundmetric(src_fwds, method):
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
-
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
+    fwds = prepare_fwds(fwds, src_ref)
 
     # Test ground metric with a wrong shape
     M_wrong_shape = np.ones((2, 3))
-    ot_dict = dict(M=M_wrong_shape, tol=100)
+    ot_dict = dict(M=M_wrong_shape, tol=100.)
     with pytest.raises(ValueError, match="M must be an array"):
-        inv_op.solve(evokeds, method=method, time_independent=True,
-                     verbose=False, **ot_dict)
+        compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                              spatiotemporal=False, **ot_dict)
 
     # Test negative ground metric
-    inv_op.compute_group_model()
-    n_features = inv_op._gains.shape[-1]
+    n_features = fwds[0]["sol_group"]["data"].shape[1]
     M_negative = - np.ones((n_features, n_features))
-    ot_dict = dict(M=M_negative, tol=100)
+    ot_dict = dict(M=M_negative, tol=100.)
     with pytest.raises(ValueError, match="M must be non-negative"):
-        inv_op.solve(evokeds, method=method, time_independent=True,
-                     verbose=False, **ot_dict)
+        compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                              spatiotemporal=False, **ot_dict)
 
 
 @pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
@@ -175,53 +170,16 @@ def test_evokeds(src_fwds, method):
     ev0 = ev.copy().crop(tmin=0.1, tmax=0.13)
     ev1 = ev.copy().crop(tmin=0.1, tmax=0.15)
     ev3 = ev.copy().crop(tmin=0.12, tmax=0.15)
-
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
+    fwds = prepare_fwds(fwds, src_ref)
 
     evokeds = [ev0, ev0, ev0]
     with pytest.raises(ValueError, match="The number of evokeds is not equal"):
-        inv_op.solve(evokeds, method=method, verbose=False)
-
+        compute_group_inverse(fwds, evokeds, noise_covs, method=method)
     evokeds = [ev0, ev1]
-    with pytest.raises(ValueError, match="different numbers of time points"):
-        inv_op.solve(evokeds, method=method, verbose=False)
+    with pytest.raises(ValueError,
+                       match="times array with a different length"):
+        compute_group_inverse(fwds, evokeds, noise_covs, method=method)
 
     evokeds = [ev0, ev3]
-    with pytest.raises(ValueError, match="have different time coordinates."):
-        inv_op.solve(evokeds, method=method, verbose=False)
-
-
-def test_resolve(src_fwds):
-    src_ref, fwds = src_fwds
-    cov = mne.read_cov(cov_fname, verbose=False)
-    noise_covs = [cov, cov]
-    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
-    ev1 = ev.copy().crop(tmin=0.1, tmax=0.12)
-    ev2 = ev.copy().crop(tmin=0.13, tmax=0.15)
-
-    evokeds = [ev1, ev1]
-    method = "lasso"
-    inv_op = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                             depth=0.9)
-    inv_op.compute_group_model()
-
-    inv_op.solve(evokeds, method=method, time_independent=True,
-                 verbose=False)
-    _meeg_data_processed = inv_op._meeg_data_processed.copy()
-
-    evokeds2 = [ev2, ev2]
-    inv_op.solve(evokeds2, method=method, time_independent=True,
-                 verbose=False)
-    # test that the data whitening changed when changing evokeds
-    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal,
-                             _meeg_data_processed, inv_op._meeg_data_processed)
-
-    # test that a second call to solve is reliable
-    inv_op_2 = InverseOperator(fwds, noise_covs, src_ref, ch_type="grad",
-                               depth=0.9)
-    inv_op_2.compute_group_model()
-    inv_op_2.solve(evokeds2, method=method, time_independent=True,
-                   verbose=False)
-    np.testing.assert_array_equal(inv_op_2._stc_data, inv_op._stc_data)
+    with pytest.raises(ValueError, match="different time coordinates"):
+        compute_group_inverse(fwds, evokeds, noise_covs, method=method)
