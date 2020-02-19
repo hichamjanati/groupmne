@@ -1,0 +1,6 @@
+groupmne.compute\_gains
+=======================
+
+.. currentmodule:: groupmne
+
+.. autofunction:: compute_gains

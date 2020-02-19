@@ -3,7 +3,6 @@ docsrc/generated
 docsrc/_images
 docsrc/_static
 docsrc/_templates
-docs/
 .makedoc
 
 # Byte-compiled / optimized / DLL files

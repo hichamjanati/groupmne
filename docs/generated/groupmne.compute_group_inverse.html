@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>groupmne.compute_group_inverse &#8212; groupmne 0.0.1dev documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="General examples" href="../auto_examples/index.html" />
+    <link rel="prev" title="groupmne.prepare_fwds" href="groupmne.prepare_fwds.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          groupmne</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.1dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../auto_examples/index.html">Examples</a></li>
+                <li><a href="../api.html">API</a></li>
+                <li><a href="https://github.com/hichamjanati/groupmne">GitHub</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Documentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial - Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">General examples</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">groupmne.compute_group_inverse</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/generated/groupmne.compute_group_inverse.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="groupmne-compute-group-inverse">
+<h1>groupmne.compute_group_inverse<a class="headerlink" href="#groupmne-compute-group-inverse" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="groupmne.compute_group_inverse">
+<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_group_inverse</code><span class="sig-paren">(</span><em class="sig-param">fwds</em>, <em class="sig-param">evokeds</em>, <em class="sig-param">noise_covs</em>, <em class="sig-param">method='grouplasso'</em>, <em class="sig-param">depth=0.8</em>, <em class="sig-param">spatiotemporal=False</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">**solver_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/inverse.html#compute_group_inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_group_inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute inverse solution for a group of subjects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fwds: list of `mne.Forward`.</strong></dt><dd><p>Forward soluton of each subject.</p>
+</dd>
+<dt><strong>evokeds: list of `mne.Evokeds`</strong></dt><dd><p>Evoked object of each subject.</p>
+</dd>
+<dt><strong>noise_covs: list of `mne.Covariance`</strong></dt><dd><p>Noise covariance of each subject.</p>
+</dd>
+<dt><strong>method: str</strong></dt><dd><p>Model used for the joint prior. Must be one of (‘lasso’, ‘relasso’,
+‘grouplasso’, ‘dirty’, ‘mtw’, ‘remtw’).</p>
+</dd>
+<dt><strong>depth: float.</strong></dt><dd><p>How to weight (or normalize) the forward using a depth prior.
+If float (default 0.8), it acts as the depth weighting exponent (exp)
+to use, which must be between 0 and 1. None is equivalent to 0,
+meaning no depth weighting is performed.</p>
+</dd>
+<dt><strong>spatiotemporal: boolean.</strong></dt><dd><p>If True, apply a spatiotemporal prior on the source estimates.
+Only for method = <cite>grouplasso</cite>.</p>
+</dd>
+<dt><strong>solvers_kwargs: additional keyword arguments passed to the solver.</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>stcs: list of <cite>mne.SourceEstimates</cite>.</dt><dd><p>Source estimates.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Hicham Janati.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
