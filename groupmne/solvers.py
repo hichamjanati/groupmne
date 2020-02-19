@@ -131,7 +131,7 @@ def _gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
     return theta, R, loss, dg, flag
 
 
-def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
+def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-5, verbose=False,
                 computeobj=False):
     """Group lasso solver wrapper."""
     X = np.asfortranarray(X)

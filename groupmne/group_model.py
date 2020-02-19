@@ -103,18 +103,31 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
     return fwd
 
 
-def _group_filtering(fwds, src_ref, noise_covs=None):
-    """Get common vertices across subjects."""
+def prepare_fwds(fwds, src_ref):
+    """Compute the group alignement of the forward operators.
+
+    Parameters
+    ----------
+    fwds : list of `mne.Forward`
+        The forward operators computed on the morphed source
+        space `src_ref`.
+    src_ref : instance of SourceSpace instance
+        Reference source model.
+
+    Returns
+    -------
+    fwds : list of `mne.Forward`
+        Prepared forward operators.
+
+    """
     n_sources = [src_ref[i]["nuse"] for i in [0, 1]]
     vertices = [], []
     positions = [], []
     gains = []
-    ch_names = []
     group_info = dict(subjects=[])
-    if noise_covs is None:
-        noise_covs = len(fwds) * [None]
+
     # compute gain matrices
-    for fwd, cov in zip(fwds, noise_covs):
+    for fwd in fwds:
         fwd = mne.convert_forward_solution(fwd, surf_ori=True,
                                            force_fixed=True,
                                            use_cps=True,
@@ -122,7 +135,6 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         src = fwd["src"]
         subject = src[0]["subject_his_id"]
         group_info["subjects"].append(subject)
-        ch_names.append(utils._get_channels(fwd, cov))
 
         # find mapping between src_ref and new src space of fwd
         # src may have less sources than src_ref if they are
@@ -169,64 +181,13 @@ def _group_filtering(fwds, src_ref, noise_covs=None):
         gains[i] = gains[i][:, common_pos]
         for j, common in enumerate(vertno_ref):
             vertices[j][i] = vertices[j][i][common.astype(int)]
-    gains = np.stack(gains, axis=0)
 
-    ch_names = set(ch_names[0]).intersection(*ch_names)
-    group_info["ch_names"] = list(ch_names)
     group_info["vertno_lh"] = vertices[0]
     group_info["vertno_rh"] = vertices[1]
     group_info["vertno_ref"] = vertno_ref
-    group_info["ch_filter"] = False
     group_info["n_sources"] = [len(common_pos_lh), len(common_pos_rh)]
 
-    return gains, group_info
-
-
-def compute_gains(fwds, src_ref, ch_type="grad", hemi="lh"):
-    """Compute aligned gain matrices of the group of subjects.
-
-    Computation is done with respect to a reference source space.
-
-    Parameters
-    ----------
-    fwds : list
-        The forward operators computed on the morphed source
-        space `src_ref`.
-    src_ref : instance of SourceSpace instance
-        Reference source model.
-    ch_type : str
-        Type of channels used for source reconstruction. Can be one
-        of ("mag", "grad", "eeg"). Using more than one type of channels is not
-        yet supported.
-    hemi : str
-        Hemisphere, "lh", "rh" or "both".
-
-    Returns
-    -------
-    gains: ndarray, shape (n_subjects, n_channels, n_sources)
-        The gain matrices.
-    group_info: dict
-        Group information (channels, alignments maps across subjects)
-
-    """
-    gains, group_info = _group_filtering(fwds, src_ref, noise_covs=None)
-    n_lh = group_info["n_sources"][0]
-    if hemi == "lh":
-        col0 = 0
-        col1 = n_lh
-    elif hemi == "rh":
-        col0 = n_lh
-        col1 = None
-    elif hemi == "both":
-        col0 = 0
-        col1 = None
-    else:
-        raise ValueError("hemi must be in ('lh', 'rh', 'both')")
-    info = fwds[0]["info"]
-    ch_names = group_info["ch_names"]
-    sel = utils._filter_channels(info, ch_names, ch_type)
-    group_info["ch_filter"] = True
-    group_info["sel"] = sel
-    gains = gains[:, sel, :]
-    group_info["hemi"] = hemi
-    return gains[:, :, col0:col1], group_info
+    for fwd, gain in zip(fwds, gains):
+        fwd["sol_group"] = dict(data=gain, group_info=group_info,
+                                src_ref=src_ref, n_subjects=len(fwds))
+    return fwds

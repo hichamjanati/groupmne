@@ -118,7 +118,7 @@ def _make_stc(data, vertices, tstep=0.1, tmin=0., subject=None):
     return stc
 
 
-def _get_channels(forward, noise_cov=None):
+def _get_channels(forward, noise_cov=None, evoked=None):
     """Get channels from a forward object and exclude bad ones."""
     fwd_sol_ch_names = forward['sol']['row_names']
     info = forward["info"]
@@ -127,27 +127,20 @@ def _get_channels(forward, noise_cov=None):
     if noise_cov is not None:
         all_ch_names &= set(noise_cov['names'])
         all_bads |= set(noise_cov['bads'])
+    if evoked is not None:
+        all_ch_names &= set(evoked.info["ch_names"])
+        all_bads |= set(evoked.info['bads'])
     ch_names = [c['ch_name'] for c in info['chs']
                 if c['ch_name'] not in all_bads and
                 c['ch_name'] in all_ch_names]
     return ch_names
 
 
-def _filter_channels(info, ch_names, ch_type):
-    """Filter bad channels and keep only ch_type."""
-    if ch_type in ["mag", "grad"]:
-        meg = ch_type
-        eeg = False
-    elif ch_type == "eeg":
-        meg = False
-        eeg = True
-    else:
-        raise ValueError("""ch_type must be in ("mag", "grad", "eeg").
-                         Got %s""" % ch_type)
-    sel_type = mne.pick_types(info, eeg=eeg, meg=meg)
-    all_channels = info["ch_names"]
-    sel = [all_channels.index(name) for name in ch_names]
-    sel = list(set(sel).intersection(sel_type))
+def _ch_names_to_sel(ch_names, all_channels):
+    """Filter channels."""
+    sel = [all_channels.index(name) for name in ch_names
+           if name in all_channels]
+    sel = list(set(sel))
     return sel
 
 
@@ -205,7 +198,7 @@ def _compute_coreg_dist(subject, trans_fname, info_fname, subjects_dir):
     return dist
 
 
-def mesh_all_distances(points, tris, verts=None):
+def _mesh_all_distances(points, tris, verts=None):
     """Compute all pairwise distances on the mesh."""
     A = mne.surface.mesh_dist(tris, points)
     if verts is not None:
@@ -213,12 +206,12 @@ def mesh_all_distances(points, tris, verts=None):
     A = A.toarray()
     A[A == 0.] = 1e6
     A.flat[::len(A) + 1] = 0.
-    A = floyd_warshall(A)
+    A = _floyd_warshall(A)
     return A
 
 
 @jit(nogil=True, cache=True, nopython=True)
-def floyd_warshall(dist):
+def _floyd_warshall(dist):
     """Run Floyd-Warshall algorithm to find shortest path on a mesh."""
     npoints = dist.shape[0]
     for k in range(npoints):
@@ -239,7 +232,7 @@ def floyd_warshall(dist):
     return dist
 
 
-def compute_ground_metric(src, group_info):
+def _compute_ground_metric(src, group_info):
     """Compute geodesic distance matrix on the triangulated mesh of src."""
     vertnos_filtered = group_info["vertno_ref"]
     hemis = ["lh", "rh"]
@@ -251,7 +244,7 @@ def compute_ground_metric(src, group_info):
 
         vert_used = vertnos_filtered[i]
 
-        D = mesh_all_distances(points, tris)
+        D = _mesh_all_distances(points, tris)
         D_filtered = D[vert_used][:, vert_used]
 
         Ds_f.append(D_filtered)
