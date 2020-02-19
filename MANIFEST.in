@@ -21,4 +21,11 @@ recursive-exclude groupmne *.pyc
 
 recursive-include docsrc *.bat
 recursive-include docsrc *.py
+recursive-include docs *.py
 recursive-include docsrc *.rst
+recursive-include docs *.nojekyll
+recursive-include docs *.png
+recursive-include docs *.svg
+recursive-include docs *.css
+recursive-include docs *.js
+recursive-include docs *.html

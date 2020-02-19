@@ -5,6 +5,8 @@ docsrc/_static
 docsrc/_templates
 .makedoc
 
+.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -79,6 +81,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.ipynb
 
 # pyenv
 .python-version
@@ -110,3 +113,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+# doc stuff
+.ttf
+.txt
+.woff
+.woff2
+.zip
+.buildinfo
+.eot
+.inv
+.map
