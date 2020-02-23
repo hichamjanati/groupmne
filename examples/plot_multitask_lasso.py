@@ -19,8 +19,7 @@ from mne.parallel import parallel_func
 from mne.datasets import hf_sef
 from matplotlib import pyplot as plt
 
-from groupmne import (compute_group_inverse, prepare_fwds, get_src_reference,
-                      compute_fwd)
+from groupmne import compute_group_inverse, prepare_fwds, compute_fwd
 
 ##########################################################
 # Download and process MEG data
@@ -95,15 +94,19 @@ plt.show()
 # Source and forward modeling
 # ---------------------------
 # To guarantee an alignment across subjects, we start by
-# computing (or reading if available) the source space of the average
-# subject of freesurfer `fsaverage`
-# If fsaverage is not available, it will be fetched to the data_path
+# computing the source space of `fsaverage`
 
 resolution = 4
 spacing = "ico%d" % resolution
-src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
+src_ref = mne.setup_source_space(subject="fsaverage",
+                                 spacing=spacing,
+                                 subjects_dir=subjects_dir,
+                                 add_dist=False)
 
-###################################################################
+
+######################################################
+# Compute forward models with a reference source space
+# ----------------------------------------------------
 # the function `compute_fwd` morphs the source space src_ref to the
 # surface of each subject by mapping the sulci and gyri patterns
 # and computes their forward operators. Next we prepare the forward operators
@@ -116,56 +119,57 @@ bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
 n_jobs = 2
 parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
-fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
-                for s, info, trans, bem in zip(subjects, raw_name_s,
-                                               trans_fname_s, bem_fname_s))
+fwds_ = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
+                 for s, info, trans, bem in zip(subjects, raw_name_s,
+                                                trans_fname_s, bem_fname_s))
 
-fwds = prepare_fwds(fwds, src_ref)
-evokeds = [ev.crop(0.015, 0.025).copy()
-           for ev in evokeds]
-# We can now compute the data of the inverse problem.
+fwds = prepare_fwds(fwds_, src_ref)
+
+
+##################################################
+# Solve the inverse problems with Multi-task Lasso
+# ------------------------------------------------
+
+# The Multi-task Lasso assumes the source locations are the same across
+# subjects for all instants i.e if a source is zero for one subject, it will
+# be zero for all subjects. "alpha" is a hyperparameter that controls this
+# structured sparsity prior. it must be set as a positive number between 0
+# and 1. With alpha = 1, all the sources are 0.
+
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
-
-###########################################
-# Solve the inverse problems with groupmne
-# ----------------------------------------
-
-# The Group Lasso assumes the source locations are the same across subjects
-# for all instants i.e if a source is zero for one subject, it will be zero
-# for all subjects. "alpha" is a hyperparameter that controls this structured
-# sparsity prior. it must be set as a positive number between 0 and 1.
-# With alpha = 1, all the sources are 0.
+evokeds = [ev.crop(0.015, 0.025).copy()
+           for ev in evokeds]
 
 stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                             method='grouplasso',
+                             method='multitasklasso',
                              spatiotemporal=True,
                              alpha=0.8)
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
 # hand, thus we only show the left hemisphere. The activation is exactly in
-# the Primary somatosensory cortex. We highlight the borders of the post
+# the primary somatosensory cortex. We highlight the borders of the post
 # central gyrus.
 
 
 t = 0.02
-t_idx = stcs[0].time_as_index(t)
-view = "lateral"
+plot_kwargs = dict(
+    background="white", foreground="black",
+    hemi='lh', subjects_dir=subjects_dir, views="lateral",
+    initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+    smoothing_steps=5, cortex=("gray", -1, 6, True))
 
-for stc, subject in zip(stcs, subjects):
+t_idx = stcs[0].time_as_index(t)
+
+for stc, subject in zip(stcs, subjects[:1]):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
     n_sources = [stc.vertices[0].size, stc.vertices[1].size]
     m = abs(stc.data[:n_sources[0], t_idx]).max()
-    surfer_kwargs = dict(
-        background="white", foreground="black",
-        clim=dict(kind='value', pos_lims=[0., 0.2 * m, m]),
-        hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5, cortex=("gray", -1, 6, True))
-    brain = stc.plot(**surfer_kwargs, views=view)
+    plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
+    brain = stc.plot(**plot_kwargs)
     brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
@@ -173,33 +177,23 @@ for stc, subject in zip(stcs, subjects):
 # Group MNE leads to better accuracy
 # ----------------------------------
 # To evaluate the effect of the joint inverse solution, we compute the
-# individual solutions using `mne.inverse_sparse.mixed_norm` for each subject.
-# The group solutions are better located in S1.
+# individual solutions independently for each subject
 
 
-from mne.inverse_sparse import mixed_norm  # noqa: E402
-
-t = 0.02
-t_idx = stcs[0].time_as_index(t)
-view = "lateral"
-for subject, evoked, fwd, cov in zip(subjects, evokeds, fwds, noise_covs):
-    ev = evoked.copy()
-    ev.pick_types(meg="grad")
-    ev.crop(0.015, 0.025)
-    stc = mixed_norm(ev, fwd, cov, alpha=80., loose=0.)
+for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
+    fwd_ = prepare_fwds([fwd], src_ref)
+    stc = compute_group_inverse(fwd_, [ev], [cov],
+                                method='multitasklasso',
+                                spatiotemporal=True,
+                                alpha=0.8)[0]
     stc.subject = subject
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
     n_sources = [stc.vertices[0].size, stc.vertices[1].size]
     m = abs(stc.data[:n_sources[0], t_idx]).max()
-    surfer_kwargs = dict(
-        background="white", foreground="black",
-        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-        hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5, cortex=("gray", -1, 6, True))
-    brain = stc.plot(**surfer_kwargs, views=view)
+    plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
+    brain = stc.plot(**plot_kwargs)
     brain.add_text(0.1, 0.9, subject + "_mxne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
@@ -207,8 +201,9 @@ for subject, evoked, fwd, cov in zip(subjects, evokeds, fwds, noise_covs):
 ###########################################
 # References
 # ----------
-# [1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
-# 2017
+# [1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
+# Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
+# PLOS ONE, 2017
 #
 # [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 # somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
