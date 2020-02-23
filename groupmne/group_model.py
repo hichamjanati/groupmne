@@ -15,57 +15,6 @@ import numpy as np
 from . import utils
 
 
-def get_src_reference(subject="fsaverage", spacing="ico4",
-                      subjects_dir=None, fetch_fsaverage=False, verbose=False):
-    """Compute source space of the reference subject.
-
-    Parameters
-    ----------
-    subject : str
-        Name of the reference subject.
-    spacing : str
-        The spacing to use. Can be ``'ico#'`` for a recursively
-        subdivided icosahedron, ``'oct#'`` for a recursively subdivided
-        octahedron, ``'all'`` for all points, or an integer to use
-        appoximate distance-based spacing (in mm).
-    fetch_fsaverage : bool
-        If `True` and `subject` is fsaverage the data of fsaverage is fetched
-        if not found.
-
-    Returns
-    -------
-    src : SourceSpaces
-        The source space for each hemisphere.
-
-    """
-    subjects_dir = \
-        mne.utils.get_subjects_dir(subjects_dir=subjects_dir, raise_error=True)
-    fname_src = op.join(subjects_dir, subject, 'bem', '%s-%s-src.fif'
-                        % (subject, spacing))
-    if os.path.isfile(fname_src):
-        src_ref = mne.read_source_spaces(fname_src, verbose=verbose)
-    elif os.path.exists(os.path.join(subjects_dir, subject)):
-        src_ref = mne.setup_source_space(subject=subject,
-                                         spacing=spacing,
-                                         subjects_dir=subjects_dir,
-                                         add_dist=False, verbose=verbose)
-    elif subject == "fsaverage":
-        if fetch_fsaverage:
-            mne.datasets.fetch_fsaverage(subjects_dir)
-        else:
-            raise FileNotFoundError("The fsaverage data could not be found." +
-                                    "To download the fsaverage data, set " +
-                                    "`fetch_fsaverage` to True")
-        src_ref = mne.setup_source_space(subject=subject,
-                                         spacing=spacing,
-                                         subjects_dir=subjects_dir,
-                                         add_dist=False,
-                                         verbose=verbose)
-    else:
-        raise FileNotFoundError("The data of %s could not be found" % subject)
-    return src_ref
-
-
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 meg=True, eeg=True, mindist=2, subjects_dir=None,
                 n_jobs=1, verbose=False):

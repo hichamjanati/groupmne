@@ -3,7 +3,10 @@ import os.path as op
 
 import numpy as np
 
+# from numpy.testing import assert_array_equal
+
 import mne
+# from mne.inverse_sparse import mixed_norm
 from mne.datasets import testing
 
 from groupmne import prepare_fwds, compute_group_inverse
@@ -22,8 +25,8 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
 @pytest.mark.filterwarnings("ignore:Objective did not converge")
-@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
-                                    "mtw", "remtw"])
+@pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
+                                    "dirty", "mtw", "remtw"])
 def test_inverse(src_fwds, method):
     src_ref, fwds = src_fwds
     cov = mne.read_cov(cov_fname, verbose=False)
@@ -45,7 +48,7 @@ def test_inverse(src_fwds, method):
     lasso_dict = dict(alpha=alpha, tol=100.)
     solver_params = dict(lasso=lasso_dict,
                          relasso=lasso_dict,
-                         grouplasso=lasso_dict,
+                         multitasklasso=lasso_dict,
                          dirty=dict(alpha=alpha, beta=beta, tol=100.),
                          mtw=ot_dict, remtw=ot_dict)
 
@@ -57,7 +60,7 @@ def test_inverse(src_fwds, method):
         assert (stc.data.shape == (n_sources, n_times))
 
 
-def test_spatiotemporal_grouplasso(src_fwds):
+def test_spatiotemporal_multitasklasso(src_fwds):
     src_ref, fwds = src_fwds
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
@@ -70,7 +73,7 @@ def test_spatiotemporal_grouplasso(src_fwds):
     lasso_dict = dict(alpha=alpha)
 
     stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                                 method='grouplasso',
+                                 method='multitasklasso',
                                  spatiotemporal=True,
                                  **lasso_dict)
 
@@ -82,7 +85,8 @@ def test_spatiotemporal_grouplasso(src_fwds):
         assert (positive_any == positive_all).all()
 
 
-@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty"])
+@pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
+                                    "dirty"])
 def test_hyperparam_max(src_fwds, method):
     src_ref, fwds = src_fwds
     cov = mne.read_cov(cov_fname, verbose=False)
@@ -95,7 +99,7 @@ def test_hyperparam_max(src_fwds, method):
     alpha = 1.1
     d1 = dict(alpha=alpha)
     d2 = dict(alpha=alpha, beta=alpha)
-    params = dict(lasso=d1, grouplasso=d1, relasso=d1, dirty=d2)
+    params = dict(lasso=d1, multitasklasso=d1, relasso=d1, dirty=d2)
     stcs = compute_group_inverse(fwds, evokeds, noise_covs,
                                  method=method,
                                  spatiotemporal=False,
@@ -116,11 +120,11 @@ def test_implemented_models(src_fwds):
     alpha = 1.
     lasso_dict = dict(alpha=alpha)
 
-    IMPLEMENTED_METHODS = ["lasso", "grouplasso", "dirty", "mtw", "remtw",
+    IMPLEMENTED_METHODS = ["lasso", "multitasklasso", "dirty", "mtw", "remtw",
                            "relasso"]
 
     for method in IMPLEMENTED_METHODS:
-        if method != "grouplasso":
+        if method != "multitasklasso":
             with pytest.raises(ValueError,
                                match="not feasible as a time dependent"
                                      " method"):
@@ -160,8 +164,8 @@ def test_ot_groundmetric(src_fwds, method):
                               spatiotemporal=False, **ot_dict)
 
 
-@pytest.mark.parametrize("method", ["lasso", "relasso", "grouplasso", "dirty",
-                                    "mtw", "remtw"])
+@pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
+                                    "dirty", "mtw", "remtw"])
 def test_evokeds(src_fwds, method):
     src_ref, fwds = src_fwds
     cov = mne.read_cov(cov_fname, verbose=False)
@@ -183,3 +187,31 @@ def test_evokeds(src_fwds, method):
     evokeds = [ev0, ev3]
     with pytest.raises(ValueError, match="different time coordinates"):
         compute_group_inverse(fwds, evokeds, noise_covs, method=method)
+
+
+# def test_vs_mixed_norm(src_fwds):
+#     src_ref, fwds = src_fwds
+#     cov = mne.read_cov(cov_fname, verbose=False)
+#     noise_covs = [cov]
+#     fwds_prepared = prepare_fwds(fwds[:1], src_ref)
+#     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+#     ev.crop(tmin=0.1, tmax=0.12)
+#
+#     stc_gl = compute_group_inverse(fwds_prepared, [ev], noise_covs,
+#                                    method="multitasklasso",
+#                                    spatiotemporal=True,
+#                                    alpha=0.5)[0]
+#     stc_mx = mixed_norm(ev, fwds_prepared[0], cov, alpha=50, loose=0.,
+#                         debias=False)
+#     stc_mx.data *= 1e9
+#     stc_mx.subject = "fsaverage"
+#
+#     support_gl = np.where(stc_gl.data.any(1))[0]
+#     support_mx = np.where(stc_mx.data.any(1))[0]
+#     ampl_gl = stc_gl.data[support_gl]
+#     ampl_mx = stc_mx.data[support_mx]
+#     # vertices_gl = stc_gl.vertices[0][support_gl]
+#     # vertices_mx = stc_mx.vertices[0][support_mx]
+#
+#     # assert_array_equal(vertices_gl, vertices_mx)
+#     assert abs(ampl_gl - ampl_mx).max() < 1e-4

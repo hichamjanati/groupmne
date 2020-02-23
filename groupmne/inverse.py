@@ -22,10 +22,11 @@ def _coefs_to_stcs(coefs, group_info, tmin, tstep):
     vertices_lh = group_info["vertno_lh"]
     vertices_rh = group_info["vertno_rh"]
     subjects = group_info["subjects"]
-    for i, (v_l, v_r, subject) in enumerate(zip(vertices_lh, vertices_rh,
-                                                subjects)):
-        v = [v_l, v_r]
-        stc = utils._make_stc(coefs[:, :, i].T, v, tmin=tmin,
+    n_subjects = coefs.shape[-1]
+    for ii in range(n_subjects):
+        v = [vertices_lh[ii], vertices_rh[ii]]
+        subject = subjects[ii]
+        stc = utils._make_stc(coefs[:, :, ii].T, v, tmin=tmin,
                               tstep=tstep, subject=subject)
         stcs.append(stc)
     return stcs
@@ -42,7 +43,7 @@ def _method_to_solver(method):
         return ReMTW
     elif method == "dirty":
         return DirtyModel
-    elif method == "grouplasso":
+    elif method == "multitasklasso":
         return GroupLasso
     else:
         raise ValueError("Method %s not recognized." % method)
@@ -59,7 +60,7 @@ def _method_to_str(method):
         return "mutar.ReMTW"
     elif method == "dirty":
         return "mutar.DirtyModel"
-    elif method == "grouplasso":
+    elif method == "multitasklasso":
         return "mutar.GroupLasso"
     else:
         raise ValueError("Method %s not recognized." % method)
@@ -118,12 +119,12 @@ def _whiten_data(fwds, evokeds, noise_covs, depth):
 
 
 def _check_solver(method, spatiotemporal):
-    if method not in ["grouplasso", "dirty", "mtw", "remtw", "lasso",
+    if method not in ["multitasklasso", "dirty", "mtw", "remtw", "lasso",
                       "relasso"]:
         raise ValueError("%s is not a valid method. `method` must be one "
-                         "of 'grouplasso', 'dirty', 'mtw', 'remtw',"
+                         "of 'multitasklasso', 'dirty', 'mtw', 'remtw',"
                          " 'lasso', 'relasso'" % method)
-    if method != "grouplasso" and spatiotemporal:
+    if method != "multitasklasso" and spatiotemporal:
         raise ValueError("%s is not feasible as a time dependent method."
                          "Use Group Lasso for an L2 over the time axis or"
                          " set `spatiotemporal` to `True`." % method)
@@ -138,7 +139,7 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
     if "alpha" not in solver_kwargs.keys():
         solver_kwargs["alpha"] = 0.2
     # beta is necessary for dirty and ot models
-    if method not in ["lasso", "grouplasso", "relasso"]:
+    if method not in ["lasso", "multitasklasso", "relasso"]:
         if "beta" not in solver_kwargs.keys():
             solver_kwargs["beta"] = 0.2
     # ground metric and ot hyperparameters for ot models
@@ -169,7 +170,7 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
     xty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, meeg)])
 
     # rescale l12 norm penalty
-    if method in ["grouplasso", "dirty"]:
+    if method in ["multitasklasso", "dirty"]:
         if not spatiotemporal:
             alphamax = np.linalg.norm(xty, axis=0).max() / n_channels
             solver_kwargs["alpha"] *= alphamax
@@ -228,7 +229,7 @@ def _check_fwds(fwds):
                              "to compute a group inverse.")
 
 
-def compute_group_inverse(fwds, evokeds, noise_covs, method="grouplasso",
+def compute_group_inverse(fwds, evokeds, noise_covs, method="multitasklasso",
                           depth=0.8, spatiotemporal=False, verbose=True,
                           **solver_kwargs):
     """Compute inverse solution for a group of subjects.
@@ -243,7 +244,7 @@ def compute_group_inverse(fwds, evokeds, noise_covs, method="grouplasso",
         Noise covariance of each subject.
     method: str
         Model used for the joint prior. Must be one of ('lasso', 'relasso',
-        'grouplasso', 'dirty', 'mtw', 'remtw').
+        'multitasklasso', 'dirty', 'mtw', 'remtw').
     depth: float.
         How to weight (or normalize) the forward using a depth prior.
         If float (default 0.8), it acts as the depth weighting exponent (exp)
@@ -251,7 +252,7 @@ def compute_group_inverse(fwds, evokeds, noise_covs, method="grouplasso",
         meaning no depth weighting is performed.
     spatiotemporal: boolean.
         If True, apply a spatiotemporal prior on the source estimates.
-        Only for method = `grouplasso`.
+        Only for method = `multitasklasso`.
     solvers_kwargs: additional keyword arguments passed to the solver.
 
     Returns
