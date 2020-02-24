@@ -7,8 +7,6 @@ head model (fsaverage by default) to the surface of each subject.
 """
 
 import mne
-import os
-import os.path as op
 
 import numpy as np
 
