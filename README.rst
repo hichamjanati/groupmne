@@ -31,7 +31,7 @@ On a working `mne-python <https://mne.tools/stable/install/mne_python.html#insta
 
 .. code-block:: bash
 
-    pip install -U mutar
+    pip install -U cython mutar
     pip install -U https://api.github.com/repos/hichamjanati/groupmne/zipball/master
 
 
