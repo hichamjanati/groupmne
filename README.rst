@@ -27,24 +27,16 @@ solved congruently using a binding regularization.
 Installation
 ------------
 
-On a working `mne-python <https://github.com/mne-tools/mne-python>`_ environment:
+On a working `mne-python <https://mne.tools/stable/install/mne_python.html#installing-python>`_ environment:
 
-::
+.. code-block:: bash
 
-    git clone https://github.com/hichamjanati/groupmne
-    cd groupmne
-    python setup.py develop
+    pip install -U mutar
+    pip install -U https://api.github.com/repos/hichamjanati/groupmne/zipball/master
 
-Otherwise, we recommend creating this minimal `conda env <https://raw.githubusercontent.com/hichamjanati/groupmne/master/environment.yml>`_
 
-::
-
-    conda env create --file environment.yml
-    conda activate groupmne-env
-    git clone https://github.com/hichamjanati/groupmne
-    cd groupmne
-    python setup.py develop
-
+GroupMNE uses under the hood the `MUTAR package <https://hichamjanati.github.io/mutar/>`_
+to solve the underlying multi-task optimization problems.
 
 Documentation
 -------------

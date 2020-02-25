@@ -30,11 +30,6 @@ before_install:
     fi;
   - git clone https://github.com/astropy/ci-helpers.git;
   - source ci-helpers/travis/setup_conda.sh;
-  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
-        pip install --upgrade pyqt5>=5.10 pylsl;
-    else
-        conda install -c tstenner pylsl;
-    fi
   - pip install flake8 check-manifest pydocstyle
   - pip install codecov
 
