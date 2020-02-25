@@ -131,7 +131,7 @@ def _gl_solver(X, y, theta, R, alpha, maxiter, tol, verbose, compute_obj):
     return theta, R, loss, dg, flag
 
 
-def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
+def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-5, verbose=False,
                 computeobj=False):
     """Group lasso solver wrapper."""
     X = np.asfortranarray(X)
@@ -139,12 +139,13 @@ def _gl_wrapper(X, y, alpha=0.1, maxiter=2000, tol=1e-4, verbose=False,
 
     R = y.copy()
     n_tasks = len(X)
-    n_features = X[0].shape[-1]
+    n_samples, n_features = X[0].shape
     coefs0 = np.zeros((n_features, n_tasks))
     coefs0 = np.asfortranarray(coefs0)
+    alpha_ = alpha * n_samples
 
     R = np.asfortranarray(R)
-    theta, R, loss, dg, flag = _gl_solver(X, y, coefs0, R, alpha,
+    theta, R, loss, dg, flag = _gl_solver(X, y, coefs0, R, alpha_,
                                           maxiter, tol, verbose, computeobj)
     theta = np.ascontiguousarray(theta)
     if flag:

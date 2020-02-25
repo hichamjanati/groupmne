@@ -1,6 +1,5 @@
-.. _general_examples:
-
-General examples
+Examples Gallery
 ================
 
-Introductory examples.
+The examples gallery provides working code samples demonstrating various
+usage of the package.

@@ -2,9 +2,11 @@
 import pytest
 import os
 import os.path as op
+
+import mne
 from mne.datasets import testing
 
-from groupmne import compute_fwd, get_src_reference
+from groupmne import compute_fwd
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -25,7 +27,10 @@ def src_fwds(request):
     spacing = "ico%d" % resolution
     os.environ['SUBJECTS_DIR'] = subjects_dir
 
-    src_ref = get_src_reference(spacing=spacing, subjects_dir=subjects_dir)
+    src_ref = mne.setup_source_space(subject="fsaverage",
+                                     spacing=spacing,
+                                     subjects_dir=subjects_dir,
+                                     add_dist=False)
     fwd0 = compute_fwd("sample", src_ref, raw_fname, trans_fname, bem_fname,
                        mindist=5)
     fwd1 = compute_fwd("fsaverage", src_ref, raw_fname, trans_fname, bem_fname,

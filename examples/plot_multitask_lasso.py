@@ -19,8 +19,7 @@ from mne.parallel import parallel_func
 from mne.datasets import hf_sef
 from matplotlib import pyplot as plt
 
-from groupmne import group_model
-from groupmne.inverse import compute_group_inverse
+from groupmne import compute_group_inverse, prepare_fwds, compute_fwd
 
 ##########################################################
 # Download and process MEG data
@@ -70,10 +69,10 @@ def process_meg(raw_name):
 
 
 epochs_s = [process_meg(raw_name) for raw_name in raw_name_s]
-evoked_s = [ep.average() for ep in epochs_s]
+evokeds = [ep.average() for ep in epochs_s]
 
 # compute noise covariance (takes a few minutes)
-noise_cov_s = []
+noise_covs = []
 for subj, ep in zip(["a", "b"], epochs_s):
     cov_fname = meg_path + f"subject_{subj}/sef-cov.fif"
     if os.path.exists(cov_fname):
@@ -81,11 +80,11 @@ for subj, ep in zip(["a", "b"], epochs_s):
     else:
         cov = mne.compute_covariance(ep, tmin=None, tmax=0.)
         mne.write_cov(cov_fname, cov)
-    noise_cov_s.append(cov)
+    noise_covs.append(cov)
 
 
 f, axes = plt.subplots(1, 2, sharey=True)
-for ax, ev, nc, ll in zip(axes.ravel(), evoked_s, noise_cov_s, ["a", "b"]):
+for ax, ev, nc, ll in zip(axes.ravel(), evokeds, noise_covs, ["a", "b"]):
     picks = mne.pick_types(ev.info, meg="grad")
     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
     ax.set_title("Subject %s" % ll, fontsize=15)
@@ -95,83 +94,82 @@ plt.show()
 # Source and forward modeling
 # ---------------------------
 # To guarantee an alignment across subjects, we start by
-# computing (or reading if available) the source space of the average
-# subject of freesurfer `fsaverage`
-# If fsaverage is not available, it will be fetched to the data_path
+# computing the source space of `fsaverage`
 
 resolution = 4
 spacing = "ico%d" % resolution
-src_ref = group_model.get_src_reference(spacing=spacing,
-                                        subjects_dir=subjects_dir)
+src_ref = mne.setup_source_space(subject="fsaverage",
+                                 spacing=spacing,
+                                 subjects_dir=subjects_dir,
+                                 add_dist=False)
 
-###################################################################
-# the function group_model.compute_fwd morphs the source space src_ref to the
+
+######################################################
+# Compute forward models with a reference source space
+# ----------------------------------------------------
+# the function `compute_fwd` morphs the source space src_ref to the
 # surface of each subject by mapping the sulci and gyri patterns
-# and computes their forward operators.
+# and computes their forward operators. Next we prepare the forward operators
+# to be aligned across subjects
 
 subjects = ["subject_a", "subject_b"]
-trans_fname_s = [meg_path + "%s/%s-trans.fif" % (s, s) for s in subjects]
+trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
 n_jobs = 2
-parallel, run_func, _ = parallel_func(group_model.compute_fwd, n_jobs=n_jobs)
+parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
-fwds = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
-                for s, info, trans, bem in zip(subjects, raw_name_s,
-                                               trans_fname_s, bem_fname_s))
+fwds_ = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
+                 for s, info, trans, bem in zip(subjects, raw_name_s,
+                                                trans_fname_s, bem_fname_s))
+
+fwds = prepare_fwds(fwds_, src_ref)
 
 
-###################################################
-# We can now compute the data of the inverse problem.
-# `group_info` is a dictionary that contains the selected channels and the
-# alignment maps between src_ref and the subjects which are required if you
-# want to plot source estimates on the brain surface of each subject. The
+##################################################
+# Solve the inverse problems with Multi-task Lasso
+# ------------------------------------------------
+
+# The Multi-task Lasso assumes the source locations are the same across
+# subjects for all instants i.e if a source is zero for one subject, it will
+# be zero for all subjects. "alpha" is a hyperparameter that controls this
+# structured sparsity prior. it must be set as a positive number between 0
+# and 1. With alpha = 1, all the sources are 0.
+
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
+evokeds = [ev.crop(0.015, 0.025).copy()
+           for ev in evokeds]
 
-gains, M, group_info = \
-    group_model.compute_inv_data(fwds, src_ref, evoked_s, noise_cov_s,
-                                 ch_type="grad", tmin=0.015, tmax=0.025)
-print("(# subjects, # channels, # sources) = ", gains.shape)
-print("(# subjects, # channels, # time points) = ", M.shape)
-
-###########################################
-# Solve the inverse problems with groupmne
-# ----------------------------------------
-# For now, only the group lasso model [1] is supported.
-# It assumes the source locations are the same across subjects for all instants
-# i.e if a source is zero for one subject, it will be zero for all subjects.
-# "alpha" is a hyperparameter that controls this structured sparsity prior.
-# it must be set as a positive number between 0 and 1. With alpha = 1, all
-# the sources are 0.
-
-stcs, log = compute_group_inverse(gains, M, group_info,
-                                  method="grouplasso",
-                                  depth=0.9, alpha=0.6, return_stc=True,
-                                  n_jobs=4)
-
+stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                             method='multitasklasso',
+                             spatiotemporal=True,
+                             alpha=0.8)
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
 # hand, thus we only show the left hemisphere. The activation is exactly in
-# the Primary somatosensory cortex. We highlight the borders of the post
+# the primary somatosensory cortex. We highlight the borders of the post
 # central gyrus.
 
 
 t = 0.02
+plot_kwargs = dict(
+    background="white", foreground="black",
+    hemi='lh', subjects_dir=subjects_dir, views="lateral",
+    initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+    smoothing_steps=5, cortex=("gray", -1, 6, True))
+
 t_idx = stcs[0].time_as_index(t)
-view = "lateral"
-for stc, subject in zip(stcs, subjects):
+
+for stc, subject in zip(stcs, subjects[:1]):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
-    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-    surfer_kwargs = dict(
-        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-        hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5)
-    brain = stc.plot(**surfer_kwargs, views=view)
+    n_sources = [stc.vertices[0].size, stc.vertices[1].size]
+    m = abs(stc.data[:n_sources[0], t_idx]).max()
+    plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
+    brain = stc.plot(**plot_kwargs)
     brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
@@ -179,31 +177,23 @@ for stc, subject in zip(stcs, subjects):
 # Group MNE leads to better accuracy
 # ----------------------------------
 # To evaluate the effect of the joint inverse solution, we compute the
-# individual solutions using `mne.inverse_sparse.mixed_norm` for each subject.
-# The group solutions are better located in S1.
+# individual solutions independently for each subject
 
 
-from mne.inverse_sparse import mixed_norm  # noqa: E402
-
-t = 0.02
-t_idx = stcs[0].time_as_index(t)
-view = "lateral"
-for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
-    ev = evoked.copy()
-    ev.pick_types(meg="grad")
-    ev.crop(0.015, 0.025)
-    stc = mixed_norm(ev, fwd, cov, alpha=60., loose=0., depth=0.9)
+for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
+    fwd_ = prepare_fwds([fwd], src_ref)
+    stc = compute_group_inverse(fwd_, [ev], [cov],
+                                method='multitasklasso',
+                                spatiotemporal=True,
+                                alpha=0.8)[0]
     stc.subject = subject
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
-    m = abs(stc.data[:group_info["n_sources"][0], t_idx]).max()
-    surfer_kwargs = dict(
-        clim=dict(kind='value', pos_lims=[0., 0.1 * m, m]),
-        hemi='lh', subjects_dir=subjects_dir,
-        initial_time=t * 1e3, time_unit='ms', size=(500, 500),
-        smoothing_steps=5)
-    brain = stc.plot(**surfer_kwargs, views=view)
+    n_sources = [stc.vertices[0].size, stc.vertices[1].size]
+    m = abs(stc.data[:n_sources[0], t_idx]).max()
+    plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
+    brain = stc.plot(**plot_kwargs)
     brain.add_text(0.1, 0.9, subject + "_mxne", "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
@@ -211,8 +201,9 @@ for subject, evoked, fwd, cov in zip(subjects, evoked_s, fwds, noise_cov_s):
 ###########################################
 # References
 # ----------
-# [1] Lim et al, Sparse EEG/MEG source estimation via a group lasso, PLOS ONE,
-# 2017
+# [1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
+# Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
+# PLOS ONE, 2017
 #
 # [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 # somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].

@@ -15,5 +15,5 @@ Functions
    :toctree: generated/
 
    compute_fwd
-   compute_inv_data
+   prepare_fwds
    compute_group_inverse

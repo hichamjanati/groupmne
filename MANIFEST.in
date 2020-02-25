@@ -19,4 +19,13 @@ exclude *.yml
 exclude .mailmap
 recursive-exclude groupmne *.pyc
 
-recursive-exclude docs *
+recursive-exclude docsrc *.bat
+recursive-exclude docsrc *.py
+recursive-exclude docs *.py
+recursive-exclude docsrc *.rst
+recursive-exclude docs *.nojekyll
+recursive-exclude docs *.png
+recursive-exclude docs *.svg
+recursive-exclude docs *.css
+recursive-exclude docs *.js
+recursive-exclude docs *.html
