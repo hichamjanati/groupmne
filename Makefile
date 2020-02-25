@@ -61,4 +61,4 @@ doc:
 	make -C docs html-noplot
 
 test-manifest:
-	check-manifest --ignore docsrc/*,docs/*;
+	check-manifest --ignore docsrc,docs;
