@@ -18,7 +18,8 @@ install:
   # install the dependencies
   - conda env update --file environment.yml
   - conda install pip
-  - pip install -U cython mutar
+  - pip install -U Cython
+  - pip install -U mutar
   - pip install codecov pytest pytest-cov https://api.github.com/repos/enthought/mayavi/zipball/e2569be1096be3deecb15f8fa8581a3ae3fb77d3
   - pip install PySurfer[save_movie]
   - python setup.py build_ext --inplace

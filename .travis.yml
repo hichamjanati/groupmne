@@ -31,7 +31,8 @@ before_install:
   - wget https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml
   - git clone https://github.com/astropy/ci-helpers.git;
   - source ci-helpers/travis/setup_conda.sh;
-  - pip install -U cython mutar
+  - pip install -U Cython
+  - pip install -U mutar
   - pip install flake8 check-manifest pydocstyle
   - pip install codecov
 
