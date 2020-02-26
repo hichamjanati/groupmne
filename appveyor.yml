@@ -25,6 +25,7 @@ install:
   - conda env create --file environment.yml python=${PYTHON_VERSION}
   - activate groupmne-env
   - conda install pip
+  - pip install -U cython mutar
   - pip install codecov pytest pytest-cov https://api.github.com/repos/enthought/mayavi/zipball/e2569be1096be3deecb15f8fa8581a3ae3fb77d3
   - pip install PySurfer[save_movie]
   - python setup.py build_ext --inplace

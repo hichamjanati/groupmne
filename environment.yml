@@ -45,4 +45,3 @@ dependencies:
   - pydocstyle
   - codespell
   - python-picard
-  - mutar
