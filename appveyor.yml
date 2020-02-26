@@ -10,6 +10,7 @@ environment:
       SKLEARN_VERSION: "*"
 
 install:
+  - ps: Start-FileDownload 'https://raw.githubusercontent.com/mne-tools/mne-python/master/environment.yml'
   # Prepend miniconda installed Python to the PATH of this build
   # Add Library/bin directory to fix issue
   # https://github.com/conda/conda/issues/1753
