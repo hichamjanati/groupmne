@@ -1,9 +1,13 @@
-from groupmne import prepare_fwds
-import mne
-from mne.datasets import testing
-import numpy as np
 import os.path as op
 import os
+
+import numpy as np
+
+import mne
+from mne.datasets import testing
+
+from groupmne import prepare_fwds
+
 import pytest
 
 

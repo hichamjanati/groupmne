@@ -1,7 +1,9 @@
-from groupmne.utils import _compute_coreg_dist
-from mne.datasets import testing
 import os.path as op
 import os
+
+from mne.datasets import testing
+
+from groupmne.utils import _compute_coreg_dist
 
 
 data_path = testing.data_path(download=True)
