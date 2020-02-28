@@ -22,3 +22,6 @@ recursive-exclude groupmne *.pyc
 recursive-exclude doc *.bat
 recursive-exclude doc *.py
 recursive-exclude doc *.rst
+
+exclude .circleci
+recursive-exclude .circleci *
