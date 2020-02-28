@@ -87,7 +87,8 @@ jobs:
               git fetch upstream
               git branch -a
               mkdir -p ~/mne_data
-              python -c "import mne; print(mne.datasets.hf_sef.data_path(update_path=True))";
+              python -c "import mne; print(mne.datasets.hf_sef.data_path("raw", update_path=True))";
+              python -c "import mne; print(mne.datasets.hf_sef.data_path("evoked", update_path=True))";
               python -c "import mne; print(mne.datasets.fetch_fsaverage(verbose=True))";
 
         # Build docs
