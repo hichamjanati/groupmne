@@ -57,7 +57,8 @@ jobs:
               wget https://raw.githubusercontent.com/mne-tools/mne-python/master/requirements.txt
               python -m pip install --user --upgrade --progress-bar off -r requirements.txt
               python -m pip install --user --upgrade --progress-bar off ipython sphinx_fontawesome sphinx_bootstrap_theme "https://api.github.com/repos/sphinx-gallery/sphinx-gallery/zipball/master" memory_profiler "https://api.github.com/repos/nipy/PySurfer/zipball/master"
-              python -m pip install --user --upgrade --progress-bar off Cython mutar
+              python -m pip install --user --upgrade --progress-bar off Cython
+              python -m pip install --user --upgrade --progress-bar off mutar
               python -m pip install --user -e .
 
         - save_cache:
