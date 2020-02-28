@@ -1,0 +1,174 @@
+# Tagging a commit with [circle front] will build the front page and perform test-doc.
+# Tagging a commit with [circle full] will build everything.
+version: 2
+jobs:
+    build_docs:
+      docker:
+        - image: circleci/python:3.7-stretch
+      steps:
+        - checkout
+        - run:
+            name: Set BASH_ENV
+            command: |
+              echo "set -e" >> $BASH_ENV
+              # echo "export SUBJECTS_DIR=~/mne_data/MNE-sample-data/subjects" >> $BASH_ENV
+              echo "export SUBJECTS_DIR=~/mne_data/HF_SEF/subjects" >> $BASH_ENV
+              echo "export DISPLAY=:99" >> $BASH_ENV
+              echo "export OPENBLAS_NUM_THREADS=4" >> $BASH_ENV
+              echo "export MNE_ROOT=${PWD}/minimal_cmds" >> $BASH_ENV
+              echo "export MNE_3D_BACKEND=pyvista" >> $BASH_ENV
+              echo "BASH_ENV:"
+              cat $BASH_ENV
+
+        - run:
+            name: Merge with upstream
+            command: |
+              echo $(git log -1 --pretty=%B) | tee gitlog.txt
+              echo ${CI_PULL_REQUEST//*pull\//} | tee merge.txt
+              if [[ $(cat merge.txt) != "" ]]; then
+                echo "Merging $(cat merge.txt)";
+                git remote add upstream git://github.com/hichamjanati/groupmne.git;
+                git pull --ff-only upstream "refs/pull/$(cat merge.txt)/merge";
+                git fetch upstream master;
+              fi
+
+        # Load our data
+        - restore_cache:
+            keys:
+              - data-cache-0
+              - pip-cache
+
+        - run:
+            name: Spin up Xvfb
+            command: |
+              /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset;
+
+        # https://github.com/ContinuumIO/anaconda-issues/issues/9190#issuecomment-386508136
+        # https://github.com/golemfactory/golem/issues/1019
+        - run:
+            name: Install PyQt5 dependencies
+            command: |
+              sudo apt-get install libxkbcommon-x11-0
+
+        - run:
+            name: Get Python running
+            command: |
+              python -m pip install --user --upgrade --progress-bar off pip numpy vtk setuptools
+              wget https://raw.githubusercontent.com/mne-tools/mne-python/master/requirements.txt
+              python -m pip install --user --upgrade --progress-bar off -r requirements.txt
+              python -m pip install --user --upgrade --progress-bar off ipython sphinx_fontawesome sphinx_bootstrap_theme "https://api.github.com/repos/sphinx-gallery/sphinx-gallery/zipball/master" memory_profiler "https://api.github.com/repos/nipy/PySurfer/zipball/master"
+              python -m pip install --user --upgrade --progress-bar off Cython mutar
+              python -m pip install --user -e .
+
+        - save_cache:
+            key: pip-cache
+            paths:
+              - ~/.cache/pip
+
+        # Look at what we have and fail early if there is some library conflict
+        - run:
+            name: Check installation
+            command: |
+               which python
+               QT_DEBUG_PLUGINS=1 mne sys_info
+               LIBGL_DEBUG=verbose python -c "from mayavi import mlab; import matplotlib.pyplot as plt; mlab.figure(); plt.figure()"
+               python -c "import mne; mne.set_config('MNE_USE_CUDA', 'false')"  # this is needed for the config tutorial
+               python -c "import mne; mne.set_config('MNE_LOGGING_LEVEL', 'info')"
+               python -c "import mne; level = mne.get_config('MNE_LOGGING_LEVEL'); assert level.lower() == 'info', repr(level)"
+
+        # Figure out if we should run a full, pattern, or noplot version
+        - run:
+            name: Get data
+            command: |
+              python setup.py develop --user
+              if ! git remote -v | grep upstream ; then git remote add upstream git://github.com/hichamjanati/groupmne.git; fi
+              git fetch upstream
+              git branch -a
+              mkdir -p ~/mne_data
+              python -c "import mne; print(mne.datasets.hf_sef.data_path(update_path=True))";
+              python -c "import mne; print(mne.datasets.fetch_fsaverage(verbose=True))";
+
+        # Build docs
+        - run:
+            name: make html
+            command: |
+              cd doc;
+              make html;
+
+        # Save the JUnit file
+        - store_test_results:
+            path: doc/_build/test-results
+        - store_artifacts:
+            path: doc/_build/test-results
+            destination: test-results
+        # Save the outputs
+        - store_artifacts:
+            path: doc/_build/html/
+            destination: dev
+        - persist_to_workspace:
+            root: doc/_build
+            paths:
+              - html
+
+        # Keep these separate, maybe better in terms of size limitations (?)
+        - save_cache:
+            key: data-cache-0
+            paths:
+              - ~/.mne
+              - ~/mne_data/HF_SEF
+
+    deploy:
+      docker:
+        - image: circleci/python:3.6-jessie
+      steps:
+        - attach_workspace:
+            at: /tmp/build
+        - restore_cache:
+            keys:
+              - website-cache
+        - run:
+            name: Fetch docs
+            command: |
+              set -e
+              mkdir -p ~/.ssh
+              echo -e "Host *\nStrictHostKeyChecking no" > ~/.ssh/config
+              chmod og= ~/.ssh/config
+              if [ ! -d ~/groupmne_doc ]; then
+                git clone git@github.com:/hichamjanati/groupmne.git ~/groupmne_doc --depth=1
+              fi
+        - run:
+            name: Deploy docs
+            command: |
+              set -e;
+              if [ "${CIRCLE_BRANCH}" == "master" ] ]; then
+                git config --global user.email "circle@mne.com";
+                git config --global user.name "Circle CI";
+                cd ~/groupmne_doc;
+                git checkout gh-pages
+                git remote -v
+                git fetch origin
+                git reset --hard origin/gh-pages
+                git clean -xdf
+                echo "Deploying dev docs for ${CIRCLE_BRANCH}.";
+                cp -a /tmp/build/html/* .;
+                touch .nojekyll;
+                git add -A;
+                git commit -m "CircleCI update of dev docs (${CIRCLE_BUILD_NUM}).";
+                git push origin gh-pages;
+              else
+                echo "No deployment (build: ${CIRCLE_BRANCH}).";
+              fi
+
+workflows:
+  version: 2
+
+  default:
+    jobs:
+      - build_docs
+      - deploy:
+          requires:
+            - build_docs
+          filters:
+            branches:
+              only:
+                - master
