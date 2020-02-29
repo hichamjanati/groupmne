@@ -340,16 +340,35 @@ examples_dirs = ['../examples']
 gallery_dirs = ['auto_examples']
 import mne
 
+scrapers = ('matplotlib',)
 try:
     mlab = mne.utils._import_mlab()
     # Do not pop up any mayavi windows while running the
     # examples. These are very annoying since they steal the focus.
     mlab.options.offscreen = True
+    # hack to initialize the Mayavi Engine
+    mlab.test_plot3d()
+    mlab.close()
 except Exception:
-    scrapers = ('matplotlib',)
-    report_scraper = None
+    pass
 else:
-    scrapers = ('matplotlib', 'mayavi')
+    scrapers += ('mayavi',)
+try:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        import pyvista
+    pyvista.OFF_SCREEN = False
+except Exception:
+    pass
+else:
+    scrapers += ('pyvista',)
+if any(x in scrapers for x in ('pyvista', 'mayavi')):
+    from traits.api import push_exception_handler
+    push_exception_handler(reraise_exceptions=True)
+    report_scraper = mne.report._ReportScraper()
+    scrapers += (report_scraper,)
+else:
+    report_scraper = None
 
 sphinx_gallery_conf = {
     'doc_module': 'groupmne',

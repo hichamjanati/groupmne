@@ -151,9 +151,8 @@ stcs = compute_group_inverse(fwds, evokeds, noise_covs,
 
 t = 0.02
 plot_kwargs = dict(
-    background="white", foreground="black",
     hemi='lh', subjects_dir=subjects_dir, views="lateral",
-    initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+    initial_time=t, time_unit='s', size=(800, 800),
     smoothing_steps=5, cortex=("gray", -1, 6, True))
 
 t_idx = stcs[0].time_as_index(t)
