@@ -157,7 +157,7 @@ plot_kwargs = dict(
 
 t_idx = stcs[0].time_as_index(t)
 
-for stc, subject in zip(stcs, subjects[:1]):
+for stc, subject in zip(stcs, subjects):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
