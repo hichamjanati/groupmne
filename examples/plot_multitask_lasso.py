@@ -75,11 +75,7 @@ evokeds = [ep.average() for ep in epochs_s]
 noise_covs = []
 for subj, ep in zip(["a", "b"], epochs_s):
     cov_fname = meg_path + f"subject_{subj}/sef-cov.fif"
-    if os.path.exists(cov_fname):
-        cov = mne.read_cov(cov_fname)
-    else:
-        cov = mne.compute_covariance(ep, tmin=None, tmax=0.)
-        mne.write_cov(cov_fname, cov)
+    cov = mne.compute_covariance(ep[:100], tmin=None, tmax=0.)
     noise_covs.append(cov)
 
 
@@ -89,6 +85,8 @@ for ax, ev, nc, ll in zip(axes.ravel(), evokeds, noise_covs, ["a", "b"]):
     ev.plot(picks=picks, axes=ax, noise_cov=nc, show=False)
     ax.set_title("Subject %s" % ll, fontsize=15)
 plt.show()
+
+del epochs_s
 
 #########################################################
 # Source and forward modeling
@@ -103,7 +101,6 @@ src_ref = mne.setup_source_space(subject="fsaverage",
                                  subjects_dir=subjects_dir,
                                  add_dist=False)
 
-
 ######################################################
 # Compute forward models with a reference source space
 # ----------------------------------------------------
@@ -116,15 +113,15 @@ subjects = ["subject_a", "subject_b"]
 trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
-n_jobs = 2
+n_jobs = 1
 parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
+
 
 fwds_ = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
                  for s, info, trans, bem in zip(subjects, raw_name_s,
                                                 trans_fname_s, bem_fname_s))
 
-fwds = prepare_fwds(fwds_, src_ref)
-
+fwds = prepare_fwds(fwds_, src_ref, copy=False)
 
 ##################################################
 # Solve the inverse problems with Multi-task Lasso
@@ -138,8 +135,7 @@ fwds = prepare_fwds(fwds_, src_ref)
 
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
-evokeds = [ev.crop(0.015, 0.025).copy()
-           for ev in evokeds]
+evokeds = [ev.crop(0.015, 0.025) for ev in evokeds]
 
 stcs = compute_group_inverse(fwds, evokeds, noise_covs,
                              method='multitasklasso',
@@ -155,14 +151,13 @@ stcs = compute_group_inverse(fwds, evokeds, noise_covs,
 
 t = 0.02
 plot_kwargs = dict(
-    background="white", foreground="black",
     hemi='lh', subjects_dir=subjects_dir, views="lateral",
-    initial_time=t * 1e3, time_unit='ms', size=(500, 500),
+    initial_time=t, time_unit='s', size=(800, 800),
     smoothing_steps=5, cortex=("gray", -1, 6, True))
 
 t_idx = stcs[0].time_as_index(t)
 
-for stc, subject in zip(stcs, subjects[:1]):
+for stc, subject in zip(stcs, subjects):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]

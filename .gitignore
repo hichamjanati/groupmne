@@ -1,8 +1,8 @@
-docsrc/auto_examples
-docsrc/generated
-docsrc/_images
-docsrc/_static
-docsrc/_templates
+doc/auto_examples
+doc/generated
+doc/_images
+doc/_static
+doc/_templates
 .makedoc
 
 .zip

@@ -6,6 +6,8 @@ source locations across subjects. This is done through morphing a reference
 head model (fsaverage by default) to the surface of each subject.
 """
 
+from copy import deepcopy
+
 import mne
 
 import numpy as np
@@ -15,7 +17,7 @@ from . import utils
 
 def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
                 meg=True, eeg=True, mindist=2, subjects_dir=None,
-                n_jobs=1, verbose=False):
+                n_jobs=1, verbose=None):
     """Morph the source space of fsaverage to a subject.
 
     Parameters
@@ -30,12 +32,19 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
         Path to the trans file of the subject.
     bem_fname : str
         Path to the bem solution of the subject.
+    meg : bool
+        Include MEG channels or not.
+    eeg : bool
+        Include EEG channels or not.
     mindist : float
         Safety distance from the outer skull. Sources below `mindist` will be
         discarded in the forward operator.
     subjects_dir : str
         Path to the freesurfer `subjects` directory.
-
+    n_jobs : int
+        The number jobs to run in parallel.
+    verbose : None | bool
+        Use verbose mode. If None use MNE default.
     """
     print("Processing subject %s" % subject)
 
@@ -50,7 +59,7 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
     return fwd
 
 
-def prepare_fwds(fwds, src_ref):
+def prepare_fwds(fwds, src_ref, copy=True):
     """Compute the group alignement of the forward operators.
 
     Parameters
@@ -60,18 +69,22 @@ def prepare_fwds(fwds, src_ref):
         space `src_ref`.
     src_ref : instance of SourceSpace instance
         Reference source model.
+    copy : bool
+        If copy is False the fwds are modified inplace.
 
     Returns
     -------
     fwds : list of `mne.Forward`
         Prepared forward operators.
-
     """
     n_sources = [src_ref[i]["nuse"] for i in [0, 1]]
     vertices = [], []
     positions = [], []
     gains = []
     group_info = dict(subjects=[])
+
+    if copy:
+        fwds = [deepcopy(fwd) for fwd in fwds]
 
     # compute gain matrices
     for fwd in fwds:
