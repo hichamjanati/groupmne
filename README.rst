@@ -1,11 +1,14 @@
 
-|Travis|_ |AppVeyor|_ |Codecov|_
+|Travis|_ |AppVeyor|_ |Circle|_ |Codecov|_
 
 .. |Travis| image:: https://travis-ci.com/hichamjanati/groupmne.svg?branch=master
 .. _Travis: https://travis-ci.com/hichamjanati/groupmne
 
 .. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/l7g6vywwwuyha49l?svg=true
 .. _AppVeyor: https://ci.appveyor.com/project/hichamjanati/groupmne
+
+.. |Circle| image:: https://circleci.com/gh/hichamjanati/groupmne.svg?style=svg
+.. _Circle: https://circleci.com/gh/hichamjanati/groupmne
 
 .. |Codecov| image:: https://codecov.io/gh/hichamjanati/groupmne/branch/master/graph/badge.svg
 .. _Codecov: https://codecov.io/gh/hichamjanati/groupmne
