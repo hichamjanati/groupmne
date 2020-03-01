@@ -124,6 +124,9 @@ jobs:
       docker:
         - image: circleci/python:3.6-jessie
       steps:
+        - add_ssh_keys:
+            fingerprints:
+              - "c7:52:9f:98:e2:c9:5f:5c:46:4b:30:64:72:45:f6:0e"
         - attach_workspace:
             at: /tmp/build
         - restore_cache:
@@ -137,30 +140,29 @@ jobs:
               echo -e "Host *\nStrictHostKeyChecking no" > ~/.ssh/config
               chmod og= ~/.ssh/config
               if [ ! -d ~/groupmne_doc ]; then
-                git clone git@github.com:/hichamjanati/groupmne.git ~/groupmne_doc --depth=1
+                git clone git@github.com:/hichamjanati/groupmne.git ~/groupmne_doc --depth=1 -b gh-pages
               fi
         - run:
             name: Deploy docs
             command: |
               set -e;
-              if [ "${CIRCLE_BRANCH}" == "master" ]; then
-                git config --global user.email "circle@mne.com";
-                git config --global user.name "Circle CI";
-                cd ~/groupmne_doc;
-                git checkout gh-pages
-                git remote -v
-                git fetch origin
-                git reset --hard origin/gh-pages
-                git clean -xdf
-                echo "Deploying dev docs for ${CIRCLE_BRANCH}.";
-                cp -a /tmp/build/html/* .;
-                touch .nojekyll;
-                git add -A;
-                git commit -m "CircleCI update of dev docs (${CIRCLE_BUILD_NUM}).";
-                git push origin gh-pages;
-              else
-                echo "No deployment (build: ${CIRCLE_BRANCH}).";
-              fi
+              # if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              git config --global user.email "circle@mne.com";
+              git config --global user.name "Circle CI";
+              cd ~/groupmne_doc;
+              git remote -v
+              git fetch origin
+              git reset --hard origin/gh-pages
+              git clean -xdf
+              echo "Deploying dev docs for ${CIRCLE_BRANCH}.";
+              cp -a /tmp/build/html/* .;
+              touch .nojekyll;
+              git add -A;
+              git commit -m "CircleCI update of dev docs (${CIRCLE_BUILD_NUM}).";
+              git push origin gh-pages;
+              # else
+              #   echo "No deployment (build: ${CIRCLE_BRANCH}).";
+              # fi
 
 workflows:
   version: 2
@@ -175,3 +177,4 @@ workflows:
             branches:
               only:
                 - master
+                - doc_deploy
