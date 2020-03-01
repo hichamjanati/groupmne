@@ -174,3 +174,4 @@ workflows:
             branches:
               only:
                 - master
+                - doc_deploy
