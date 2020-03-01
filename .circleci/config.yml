@@ -124,6 +124,9 @@ jobs:
       docker:
         - image: circleci/python:3.6-jessie
       steps:
+        - add_ssh_keys:
+            fingerprints:
+              - "c7:52:9f:98:e2:c9:5f:5c:46:4b:30:64:72:45:f6:0e"
         - attach_workspace:
             at: /tmp/build
         - restore_cache:
