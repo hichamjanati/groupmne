@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi-subject joint source localization with multi-task models. &#8212; groupmne 0.0.1dev documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Examples Gallery" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          groupmne</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.0.1dev</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="index.html">Examples</a></li>
+                <li><a href="../api.html">API</a></li>
+                <li><a href="https://github.com/hichamjanati/groupmne">GitHub</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API Documentation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorial - Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples Gallery</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Multi-subject joint source localization with multi-task models.</a><ul>
+<li><a class="reference internal" href="#download-and-process-meg-data">Download and process MEG data</a></li>
+<li><a class="reference internal" href="#source-and-forward-modeling">Source and forward modeling</a></li>
+<li><a class="reference internal" href="#compute-forward-models-with-a-reference-source-space">Compute forward models with a reference source space</a></li>
+<li><a class="reference internal" href="#solve-the-inverse-problems-with-multi-task-lasso">Solve the inverse problems with Multi-task Lasso</a></li>
+<li><a class="reference internal" href="#group-mne-leads-to-better-accuracy">Group MNE leads to better accuracy</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/auto_examples/plot_multitask_lasso.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-plot-multitask-lasso-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="multi-subject-joint-source-localization-with-multi-task-models">
+<span id="sphx-glr-auto-examples-plot-multitask-lasso-py"></span><h1>Multi-subject joint source localization with multi-task models.<a class="headerlink" href="#multi-subject-joint-source-localization-with-multi-task-models" title="Permalink to this headline">¶</a></h1>
+<p>The aim of this tutorial is to show how to leverage functional similarity
+across subjects to improve source localization. For that purpose we use the
+the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
+MEG and MRI data for two subjects.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Author: Hicham Janati (hicham.janati@inria.fr)</span>
+<span class="c1">#</span>
+<span class="c1"># License: BSD (3-clause)</span>
+
+<span class="kn">import</span> <span class="nn">mne</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
+<span class="kn">from</span> <span class="nn">mne.parallel</span> <span class="kn">import</span> <span class="n">parallel_func</span>
+<span class="kn">from</span> <span class="nn">mne.datasets</span> <span class="kn">import</span> <span class="n">hf_sef</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="kn">from</span> <span class="nn">groupmne</span> <span class="kn">import</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="groupmne.compute_group_inverse" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">compute_group_inverse</span></a><span class="p">,</span> <a href="../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds" title="groupmne.prepare_fwds" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">prepare_fwds</span></a><span class="p">,</span> <a href="../generated/groupmne.compute_fwd.html#groupmne.compute_fwd" title="groupmne.compute_fwd" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">compute_fwd</span></a>
+</pre></div>
+</div>
+<div class="section" id="download-and-process-meg-data">
+<h2>Download and process MEG data<a class="headerlink" href="#download-and-process-meg-data" title="Permalink to this headline">¶</a></h2>
+<p>For this example, we use the HF somatosensory dataset [2].
+We need the raw data to estimate the noise covariance
+since only average MEG data (and MRI) are provided in “evoked”.
+The data will be downloaded in the same location</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">_</span></a> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a><span class="p">(</span><span class="s2">&quot;raw&quot;</span><span class="p">)</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">=</span> <span class="n">hf_sef</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a><span class="p">(</span><span class="s2">&quot;evoked&quot;</span><span class="p">)</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">meg_path</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">+</span> <span class="s2">&quot;/MEG/&quot;</span>
+
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/os.path.html#os.path.expanduser" title="os.path.expanduser" class="sphx-glr-backref-module-os-path sphx-glr-backref-type-py-function"><span class="n">op</span><span class="o">.</span><span class="n">expanduser</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a><span class="p">)</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">+</span> <span class="s2">&quot;/subjects/&quot;</span>
+<a href="https://docs.python.org/3/library/os.html#os.environ" title="os.environ" class="sphx-glr-backref-module-os sphx-glr-backref-type-py-data"><span class="n">os</span><span class="o">.</span><span class="n">environ</span></a><span class="p">[</span><span class="s1">&#39;SUBJECTS_DIR&#39;</span><span class="p">]</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a>
+
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_name_s</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">meg_path</span></a> <span class="o">+</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;subject_a/sef_right_raw.fif&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;subject_b/hf_sef_15min_raw.fif&quot;</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">process_meg</span><span class="p">(</span><span class="n">raw_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract epochs from a raw fif file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raw_name: str.</span>
+<span class="sd">        path to the raw fif file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    epochs: Epochs instance</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span><span class="p">(</span><span class="n">raw_name</span><span class="p">)</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">find_events</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+
+    <span class="n">event_id</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hf</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># event trigger and conditions</span>
+    <span class="n">tmin</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.05</span>  <span class="c1"># start of each epoch (50ms before the trigger)</span>
+    <span class="n">tmax</span> <span class="o">=</span> <span class="mf">0.3</span>  <span class="c1"># end of each epoch (300ms after the trigger)</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># means from the first instant to t = 0</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">Epochs</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">events</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">proj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">baseline</span><span class="o">=</span><span class="n">baseline</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">epochs</span>
+
+
+<span class="n">epochs_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">process_meg</span><span class="p">(</span><span class="n">raw_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">raw_name</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_name_s</span></a><span class="p">]</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a> <span class="o">=</span> <span class="p">[</span><span class="n">ep</span><span class="o">.</span><span class="n">average</span><span class="p">()</span> <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">epochs_s</span><span class="p">]</span>
+
+<span class="c1"># compute noise covariance (takes a few minutes)</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_covs</span></a> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subj</span></a><span class="p">,</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="n">epochs_s</span><span class="p">):</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cov_fname</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">meg_path</span></a> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;subject_</span><span class="si">{subj}</span><span class="s2">/sef-cov.fif&quot;</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">compute_covariance</span><span class="p">(</span><span class="n">ep</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span> <span class="n">tmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_covs</span></a><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+
+
+<a href="https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure" title="matplotlib.figure.Figure" class="sphx-glr-backref-module-matplotlib-figure sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">f</span></a><span class="p">,</span> <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a> <span class="o">=</span> <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="matplotlib.pyplot.subplots" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">nc</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ll</span></a> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_covs</span></a><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]):</span>
+    <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">picks</span></a> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">pick_types</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">info</span><span class="p">,</span> <span class="n">meg</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">)</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">picks</span></a><span class="o">=</span><a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">picks</span></a><span class="p">,</span> <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">axes</span></a><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">noise_cov</span><span class="o">=</span><span class="n">nc</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <a href="https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.set_title.html#matplotlib.axes.Axes.set_title" title="matplotlib.axes.Axes.set_title" class="sphx-glr-backref-module-matplotlib-axes sphx-glr-backref-type-py-method"><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span></a><span class="p">(</span><span class="s2">&quot;Subject </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ll</span></a><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+
+<span class="k">del</span> <span class="n">epochs_s</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_plot_multitask_lasso_001.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_multitask_lasso_001.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_a/sef_right_raw.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 26000 ... 1735999 =      8.667 ...   578.666 secs
+Ready.
+Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_a/sef_right_raw-1.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 1736000 ... 2482999 =    578.667 ...   827.666 secs
+Ready.
+Current compensation grade : 0
+2527 events found
+Event IDs: [1]
+2527 matching events found
+Applying baseline correction (mode: mean)
+Not setting metadata
+Created an SSP operator (subspace dimension = 8)
+8 projection items activated
+Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 169000 ... 1878999 =     56.333 ...   626.333 secs
+Ready.
+Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw-1.fif...
+    Read a total of 8 projection items:
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+        generated with autossp-1.0.1 (1 x 306)  idle
+    Range : 1879000 ... 2892999 =    626.333 ...   964.333 secs
+Ready.
+Current compensation grade : 0
+2792 events found
+Event IDs: [1]
+2792 matching events found
+Applying baseline correction (mode: mean)
+Not setting metadata
+Created an SSP operator (subspace dimension = 8)
+8 projection items activated
+Loading data for 100 events and 1051 original time points ...
+0 bad epochs dropped
+Computing rank from data with rank=None
+    Using tolerance 6.1e-09 (2.2e-16 eps * 306 dim * 8.9e+04  max singular value)
+    Estimated rank (mag + grad): 298
+    MEG: rank 298 computed from 306 data channels with 8 projectors
+    Created an SSP operator (subspace dimension = 8)
+    Setting small MEG eigenvalues to zero (without PCA)
+Reducing data rank from 306 -&gt; 298
+Estimating covariance using EMPIRICAL
+Done.
+Number of samples used : 15100
+[done]
+Loading data for 100 events and 1051 original time points ...
+0 bad epochs dropped
+Computing rank from data with rank=None
+    Using tolerance 5.3e-09 (2.2e-16 eps * 306 dim * 7.8e+04  max singular value)
+    Estimated rank (mag + grad): 298
+    MEG: rank 298 computed from 306 data channels with 8 projectors
+    Created an SSP operator (subspace dimension = 8)
+    Setting small MEG eigenvalues to zero (without PCA)
+Reducing data rank from 306 -&gt; 298
+Estimating covariance using EMPIRICAL
+Done.
+Number of samples used : 15100
+[done]
+Computing rank from covariance with rank=None
+    Using tolerance 1.9e-13 (2.2e-16 eps * 204 dim * 4.1  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing rank from covariance with rank=None
+    Using tolerance 1.2e-14 (2.2e-16 eps * 102 dim * 0.52  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
+Computing rank from covariance with rank=None
+    Using tolerance 3.3e-13 (2.2e-16 eps * 204 dim * 7.4  max singular value)
+    Estimated rank (grad): 201
+    GRAD: rank 201 computed from 204 data channels with 3 projectors
+Computing rank from covariance with rank=None
+    Using tolerance 8e-15 (2.2e-16 eps * 102 dim * 0.35  max singular value)
+    Estimated rank (mag): 97
+    MAG: rank 97 computed from 102 data channels with 5 projectors
+/home/circleci/project/examples/plot_multitask_lasso.py:87: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+  plt.show()
+</pre></div>
+</div>
+</div>
+<div class="section" id="source-and-forward-modeling">
+<h2>Source and forward modeling<a class="headerlink" href="#source-and-forward-modeling" title="Permalink to this headline">¶</a></h2>
+<p>To guarantee an alignment across subjects, we start by
+computing the source space of <cite>fsaverage</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">resolution</span></a> <span class="o">=</span> <span class="mi">4</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">spacing</span></a> <span class="o">=</span> <span class="s2">&quot;ico</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">resolution</span></a>
+<span class="n">src_ref</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">setup_source_space</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a><span class="o">=</span><span class="s2">&quot;fsaverage&quot;</span><span class="p">,</span>
+                                 <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">spacing</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">spacing</span></a><span class="p">,</span>
+                                 <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="p">,</span>
+                                 <span class="n">add_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Setting up the source space with the following parameters:
+
+SUBJECTS_DIR = /home/circleci/mne_data/HF_SEF/subjects/
+Subject      = fsaverage
+Surface      = white
+Icosahedron subdivision grade 4
+
+&gt;&gt;&gt; 1. Creating the source space...
+
+Doing the icosahedral vertex picking...
+Loading /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/lh.white...
+Mapping lh fsaverage -&gt; ico (4) ...
+    Warning: zero size triangles: [3 4]
+    Triangle neighbors and vertex normals...
+Loading geometry from /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/lh.sphere...
+Setting up the triangulation for the decimated surface...
+loaded lh.white 2562/163842 selected to source space (ico = 4)
+
+Loading /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/rh.white...
+Mapping rh fsaverage -&gt; ico (4) ...
+    Warning: zero size triangles: [3 4]
+    Triangle neighbors and vertex normals...
+Loading geometry from /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/rh.sphere...
+Setting up the triangulation for the decimated surface...
+loaded rh.white 2562/163842 selected to source space (ico = 4)
+
+You are now one step closer to computing the gain matrix
+</pre></div>
+</div>
+</div>
+<div class="section" id="compute-forward-models-with-a-reference-source-space">
+<h2>Compute forward models with a reference source space<a class="headerlink" href="#compute-forward-models-with-a-reference-source-space" title="Permalink to this headline">¶</a></h2>
+<p>the function <cite>compute_fwd</cite> morphs the source space src_ref to the
+surface of each subject by mapping the sulci and gyri patterns
+and computes their forward operators. Next we prepare the forward operators
+to be aligned across subjects</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;subject_a&quot;</span><span class="p">,</span> <span class="s2">&quot;subject_b&quot;</span><span class="p">]</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">trans_fname_s</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">meg_path</span></a> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/sef-trans.fif&quot;</span> <span class="o">%</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a><span class="p">]</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">bem_fname_s</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/bem/</span><span class="si">%s</span><span class="s2">-5120-bem-sol.fif&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a><span class="p">]</span>
+<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_jobs</span></a> <span class="o">=</span> <span class="mi">1</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class"><span class="n">parallel</span></a><span class="p">,</span> <span class="n">run_func</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">_</span></a> <span class="o">=</span> <span class="n">parallel_func</span><span class="p">(</span><a href="../generated/groupmne.compute_fwd.html#groupmne.compute_fwd" title="groupmne.compute_fwd" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">compute_fwd</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_jobs</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_jobs</span></a><span class="p">)</span>
+
+
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwds_</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class"><span class="n">parallel</span></a><span class="p">(</span><span class="n">run_func</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">bem</span><span class="p">,</span>  <span class="n">mindist</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">bem</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">raw_name_s</span></a><span class="p">,</span>
+                                                <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">trans_fname_s</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">bem_fname_s</span></a><span class="p">))</span>
+
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwds</span></a> <span class="o">=</span> <a href="../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds" title="groupmne.prepare_fwds" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">prepare_fwds</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwds_</span></a><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Processing subject subject_a
+Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_a/surf/lh.white
+    Triangle neighbors and vertex normals...
+Mapping lh fsaverage -&gt; subject_a (nearest neighbor)...
+[done]
+
+Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_a/surf/rh.white
+    Triangle neighbors and vertex normals...
+Mapping rh fsaverage -&gt; subject_a (nearest neighbor)...
+[done]
+
+Loading surfaces...
+Homogeneous model surface loaded.
+
+Loading the solution matrix...
+
+Loaded linear_collocation BEM solution from /home/circleci/mne_data/HF_SEF/subjects/subject_a/bem/subject_a-5120-bem-sol.fif
+Source space          : &lt;SourceSpaces: [&lt;surface (lh), n_vertices=178080, n_used=2562&gt;, &lt;surface (rh), n_vertices=163411, n_used=2562&gt;] MRI (surface RAS) coords, subject &#39;subject_a&#39;&gt;
+MRI -&gt; head transform : /home/circleci/mne_data/HF_SEF/MEG/subject_a/sef-trans.fif
+Measurement data      : sef_right_raw.fif
+Conductor model   : instance of ConductorModel
+Accurate field computations
+Do computations in head coordinates
+Free source orientations
+
+Read 2 source spaces a total of 5124 active source locations
+
+Coordinate transformation: MRI (surface RAS) -&gt; head
+     0.994477 -0.033381 -0.099512       2.49 mm
+     0.071558  0.909221  0.410118      21.97 mm
+     0.076788 -0.414973  0.906588      33.87 mm
+     0.000000  0.000000  0.000000       1.00
+
+Read 306 MEG channels from info
+99 coil definitions read
+Coordinate transformation: MEG device -&gt; head
+     0.996297 -0.076615  0.039017      -1.48 mm
+     0.069384  0.984448  0.161392       3.66 mm
+    -0.050776 -0.158087  0.986119      77.69 mm
+     0.000000  0.000000  0.000000       1.00
+MEG coil definitions created in head coordinates.
+Source spaces are now in head coordinates.
+
+Employing the head-&gt;MRI coordinate transform with the BEM model.
+BEM model instance of ConductorModel is now set up
+
+Source spaces are in head coordinates.
+Checking that the sources are inside the surface and at least    3.0 mm away (will take a few...)
+    Skipping interior check for 873 sources that fit inside a sphere of radius   50.7 mm
+    Skipping solid angle check for 0 points using Qhull
+    Skipping interior check for 888 sources that fit inside a sphere of radius   50.7 mm
+    Skipping solid angle check for 0 points using Qhull
+
+Setting up compensation data...
+    No compensation set. Nothing more to do.
+
+Composing the field computation matrix...
+Computing MEG at 5124 source locations (free orientations)...
+
+Finished.
+Processing subject subject_b
+Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_b/surf/lh.white
+    Triangle neighbors and vertex normals...
+Mapping lh fsaverage -&gt; subject_b (nearest neighbor)...
+[done]
+
+Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_b/surf/rh.white
+    Triangle neighbors and vertex normals...
+Mapping rh fsaverage -&gt; subject_b (nearest neighbor)...
+[done]
+
+Loading surfaces...
+Homogeneous model surface loaded.
+
+Loading the solution matrix...
+
+Loaded linear_collocation BEM solution from /home/circleci/mne_data/HF_SEF/subjects/subject_b/bem/subject_b-5120-bem-sol.fif
+Source space          : &lt;SourceSpaces: [&lt;surface (lh), n_vertices=198441, n_used=2562&gt;, &lt;surface (rh), n_vertices=198539, n_used=2562&gt;] MRI (surface RAS) coords, subject &#39;subject_b&#39;&gt;
+MRI -&gt; head transform : /home/circleci/mne_data/HF_SEF/MEG/subject_b/sef-trans.fif
+Measurement data      : hf_sef_15min_raw.fif
+Conductor model   : instance of ConductorModel
+Accurate field computations
+Do computations in head coordinates
+Free source orientations
+
+Read 2 source spaces a total of 5124 active source locations
+
+Coordinate transformation: MRI (surface RAS) -&gt; head
+     0.997633 -0.026698 -0.063374      -0.86 mm
+     0.045043  0.950051  0.308828       7.15 mm
+     0.051963 -0.310952  0.949004      35.47 mm
+     0.000000  0.000000  0.000000       1.00
+
+Read 306 MEG channels from info
+99 coil definitions read
+Coordinate transformation: MEG device -&gt; head
+     0.994555  0.102411  0.019282      -2.88 mm
+    -0.100756  0.992229 -0.072998      -4.46 mm
+    -0.026608  0.070658  0.997145      60.28 mm
+     0.000000  0.000000  0.000000       1.00
+MEG coil definitions created in head coordinates.
+Source spaces are now in head coordinates.
+
+Employing the head-&gt;MRI coordinate transform with the BEM model.
+BEM model instance of ConductorModel is now set up
+
+Source spaces are in head coordinates.
+Checking that the sources are inside the surface and at least    3.0 mm away (will take a few...)
+    Skipping interior check for 746 sources that fit inside a sphere of radius   52.9 mm
+    Skipping solid angle check for 0 points using Qhull
+    Skipping interior check for 752 sources that fit inside a sphere of radius   52.9 mm
+    Skipping solid angle check for 0 points using Qhull
+
+Setting up compensation data...
+    No compensation set. Nothing more to do.
+
+Composing the field computation matrix...
+Computing MEG at 5124 source locations (free orientations)...
+
+Finished.
+Mapping lh fsaverage -&gt; subject_a (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_a (nearest neighbor)...
+Mapping lh fsaverage -&gt; subject_b (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_b (nearest neighbor)...
+</pre></div>
+</div>
+</div>
+<div class="section" id="solve-the-inverse-problems-with-multi-task-lasso">
+<h2>Solve the inverse problems with Multi-task Lasso<a class="headerlink" href="#solve-the-inverse-problems-with-multi-task-lasso" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The Multi-task Lasso assumes the source locations are the same across</span>
+<span class="c1"># subjects for all instants i.e if a source is zero for one subject, it will</span>
+<span class="c1"># be zero for all subjects. &quot;alpha&quot; is a hyperparameter that controls this</span>
+<span class="c1"># structured sparsity prior. it must be set as a positive number between 0</span>
+<span class="c1"># and 1. With alpha = 1, all the sources are 0.</span>
+
+<span class="c1"># We restric the time points around 20ms in order to reconstruct the sources of</span>
+<span class="c1"># the N20 response.</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a> <span class="o">=</span> <span class="p">[</span><span class="n">ev</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)</span> <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a><span class="p">]</span>
+
+<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stcs</span></a> <span class="o">=</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="groupmne.compute_group_inverse" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">compute_group_inverse</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwds</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_covs</span></a><span class="p">,</span>
+                             <span class="n">method</span><span class="o">=</span><span class="s1">&#39;multitasklasso&#39;</span><span class="p">,</span>
+                             <span class="n">spatiotemporal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s visualize the N20 response. The stimulus was applied on the right
+hand, thus we only show the left hemisphere. The activation is exactly in
+the primary somatosensory cortex. We highlight the borders of the post
+central gyrus.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t</span></a> <span class="o">=</span> <span class="mf">0.02</span>
+<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">plot_kwargs</span></a> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">hemi</span><span class="o">=</span><span class="s1">&#39;lh&#39;</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="s2">&quot;lateral&quot;</span><span class="p">,</span>
+    <span class="n">initial_time</span><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t</span></a><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">800</span><span class="p">),</span>
+    <span class="n">smoothing_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">cortex</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+<a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_idx</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stcs</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_as_index</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t</span></a><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">stc</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stcs</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a><span class="p">):</span>
+    <span class="n">g_post_central</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_labels_from_annot</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a><span class="p">,</span> <span class="s2">&quot;aparc.a2009s&quot;</span><span class="p">,</span>
+                                                <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="p">,</span>
+                                                <span class="n">regexp</span><span class="o">=</span><span class="s2">&quot;G_postcentral-lh&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_sources</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stc</span><span class="o">.</span><span class="n">vertices</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stc</span><span class="o">.</span><span class="n">vertices</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_sources</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_idx</span></a><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">plot_kwargs</span></a><span class="p">[</span><span class="s2">&quot;clim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain" title="surfer.Brain" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">brain</span></a> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">plot_kwargs</span></a><span class="p">)</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain.add_text" title="surfer.Brain.add_text" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-method"><span class="n">brain</span><span class="o">.</span><span class="n">add_text</span></a><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a> <span class="o">+</span> <span class="s2">&quot;_groupmne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain.add_label" title="surfer.Brain.add_label" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-method"><span class="n">brain</span><span class="o">.</span><span class="n">add_label</span></a><span class="p">(</span><span class="n">g_post_central</span><span class="p">,</span> <span class="n">borders</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_plot_multitask_lasso_002.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_multitask_lasso_002.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Reading labels from parcellation...
+   read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
+   read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
+Using mayavi 3d backend.
+
+Reading labels from parcellation...
+   read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
+   read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
+</pre></div>
+</div>
+</div>
+<div class="section" id="group-mne-leads-to-better-accuracy">
+<h2>Group MNE leads to better accuracy<a class="headerlink" href="#group-mne-leads-to-better-accuracy" title="Permalink to this headline">¶</a></h2>
+<p>To evaluate the effect of the joint inverse solution, we compute the
+individual solutions independently for each subject</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a><span class="p">,</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">evoked</span><span class="p">,</span> <span class="n">cov</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwds_</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">evokeds</span></a><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">noise_covs</span></a><span class="p">):</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwd_</span></a> <span class="o">=</span> <a href="../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds" title="groupmne.prepare_fwds" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">prepare_fwds</span></a><span class="p">([</span><span class="n">fwd</span><span class="p">],</span> <span class="n">src_ref</span><span class="p">)</span>
+    <span class="n">stc</span> <span class="o">=</span> <a href="../generated/groupmne.compute_group_inverse.html#groupmne.compute_group_inverse" title="groupmne.compute_group_inverse" class="sphx-glr-backref-module-groupmne sphx-glr-backref-type-py-function"><span class="n">compute_group_inverse</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">fwd_</span></a><span class="p">,</span> <span class="p">[</span><span class="n">ev</span><span class="p">],</span> <span class="p">[</span><span class="n">cov</span><span class="p">],</span>
+                                <span class="n">method</span><span class="o">=</span><span class="s1">&#39;multitasklasso&#39;</span><span class="p">,</span>
+                                <span class="n">spatiotemporal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stc</span><span class="o">.</span><span class="n">subject</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a>
+    <span class="n">g_post_central</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_labels_from_annot</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a><span class="p">,</span> <span class="s2">&quot;aparc.a2009s&quot;</span><span class="p">,</span>
+                                                <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subjects_dir</span></a><span class="p">,</span>
+                                                <span class="n">regexp</span><span class="o">=</span><span class="s2">&quot;G_postcentral-lh&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_sources</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stc</span><span class="o">.</span><span class="n">vertices</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">stc</span><span class="o">.</span><span class="n">vertices</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stc</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_sources</span></a><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">t_idx</span></a><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">plot_kwargs</span></a><span class="p">[</span><span class="s2">&quot;clim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">pos_lims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">])</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain" title="surfer.Brain" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">brain</span></a> <span class="o">=</span> <span class="n">stc</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">plot_kwargs</span></a><span class="p">)</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain.add_text" title="surfer.Brain.add_text" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-method"><span class="n">brain</span><span class="o">.</span><span class="n">add_text</span></a><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">subject</span></a> <span class="o">+</span> <span class="s2">&quot;_mxne&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">)</span>
+    <a href="https://pysurfer.github.io/generated/surfer.Brain.html#surfer.Brain.add_label" title="surfer.Brain.add_label" class="sphx-glr-backref-module-surfer sphx-glr-backref-type-py-method"><span class="n">brain</span><span class="o">.</span><span class="n">add_label</span></a><span class="p">(</span><span class="n">g_post_central</span><span class="p">,</span> <span class="n">borders</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_plot_multitask_lasso_003.png" class="sphx-glr-single-img" src="../_images/sphx_glr_plot_multitask_lasso_003.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Mapping lh fsaverage -&gt; subject_a (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_a (nearest neighbor)...
+Reading labels from parcellation...
+   read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
+   read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
+Mapping lh fsaverage -&gt; subject_b (nearest neighbor)...
+Mapping rh fsaverage -&gt; subject_b (nearest neighbor)...
+Reading labels from parcellation...
+   read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
+   read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>[1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
+Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
+PLOS ONE, 2017</p>
+<p>[2] Jussi Nurminen, Hilla Paananen, &amp; Jyrki Mäkelä. (2017). High frequency
+somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
+Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.889235">http://doi.org/10.5281/zenodo.889235</a></p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 4 minutes  41.852 seconds)</p>
+<p><strong>Estimated memory usage:</strong>  2139 MB</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-plot-multitask-lasso-py">
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/45146276276cf3fc190712a4bb65965f/plot_multitask_lasso.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_multitask_lasso.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/fa2151c993682b82f9a966d005733b37/plot_multitask_lasso.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_multitask_lasso.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Hicham Janati.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

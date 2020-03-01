@@ -7,21 +7,23 @@
     <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
-    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../_static/bootstrap-sphinx.js "></script>
 
   </head><body>
 
@@ -61,7 +63,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial - Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../auto_examples/index.html">General examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../auto_examples/index.html">Examples Gallery</a></li>
 </ul>
 </ul>
 </li>
@@ -102,7 +104,7 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-12 content">
+    <div class="body col-md-12 content" role="main">
       
   <h1>Source code for groupmne.group_model</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
@@ -113,68 +115,18 @@
 <span class="sd">head model (fsaverage by default) to the surface of each subject.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
 <span class="kn">import</span> <span class="nn">mne</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
-
-
-<span class="k">def</span> <span class="nf">get_src_reference</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="s2">&quot;fsaverage&quot;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="s2">&quot;ico4&quot;</span><span class="p">,</span>
-                      <span class="n">subjects_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fetch_fsaverage</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute source space of the reference subject.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    subject : str</span>
-<span class="sd">        Name of the reference subject.</span>
-<span class="sd">    spacing : str</span>
-<span class="sd">        The spacing to use. Can be ``&#39;ico#&#39;`` for a recursively</span>
-<span class="sd">        subdivided icosahedron, ``&#39;oct#&#39;`` for a recursively subdivided</span>
-<span class="sd">        octahedron, ``&#39;all&#39;`` for all points, or an integer to use</span>
-<span class="sd">        appoximate distance-based spacing (in mm).</span>
-<span class="sd">    fetch_fsaverage : bool</span>
-<span class="sd">        If `True` and `subject` is fsaverage the data of fsaverage is fetched</span>
-<span class="sd">        if not found.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    src : SourceSpaces</span>
-<span class="sd">        The source space for each hemisphere.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">subjects_dir</span> <span class="o">=</span> \
-        <span class="n">mne</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_subjects_dir</span><span class="p">(</span><span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">fname_src</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subjects_dir</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="s1">&#39;bem&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">-src.fif&#39;</span>
-                        <span class="o">%</span> <span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">spacing</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname_src</span><span class="p">):</span>
-        <span class="n">src_ref</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_source_spaces</span><span class="p">(</span><span class="n">fname_src</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subjects_dir</span><span class="p">,</span> <span class="n">subject</span><span class="p">)):</span>
-        <span class="n">src_ref</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">setup_source_space</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span>
-                                         <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span>
-                                         <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
-                                         <span class="n">add_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">subject</span> <span class="o">==</span> <span class="s2">&quot;fsaverage&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">fetch_fsaverage</span><span class="p">:</span>
-            <span class="n">mne</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">fetch_fsaverage</span><span class="p">(</span><span class="n">subjects_dir</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;The fsaverage data could not be found.&quot;</span> <span class="o">+</span>
-                                    <span class="s2">&quot;To download the fsaverage data, set &quot;</span> <span class="o">+</span>
-                                    <span class="s2">&quot;`fetch_fsaverage` to True&quot;</span><span class="p">)</span>
-        <span class="n">src_ref</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">setup_source_space</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span>
-                                         <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span>
-                                         <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">,</span>
-                                         <span class="n">add_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;The data of </span><span class="si">%s</span><span class="s2"> could not be found&quot;</span> <span class="o">%</span> <span class="n">subject</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">src_ref</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
 
 
 <div class="viewcode-block" id="compute_fwd"><a class="viewcode-back" href="../../generated/groupmne.compute_fwd.html#groupmne.compute_fwd">[docs]</a><span class="k">def</span> <span class="nf">compute_fwd</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">trans_fname</span><span class="p">,</span> <span class="n">bem_fname</span><span class="p">,</span>
                 <span class="n">meg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eeg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mindist</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Morph the source space of fsaverage to a subject.</span>
 
 <span class="sd">    Parameters</span>
@@ -189,49 +141,76 @@
 <span class="sd">        Path to the trans file of the subject.</span>
 <span class="sd">    bem_fname : str</span>
 <span class="sd">        Path to the bem solution of the subject.</span>
+<span class="sd">    meg : bool</span>
+<span class="sd">        Include MEG channels or not.</span>
+<span class="sd">    eeg : bool</span>
+<span class="sd">        Include EEG channels or not.</span>
 <span class="sd">    mindist : float</span>
 <span class="sd">        Safety distance from the outer skull. Sources below `mindist` will be</span>
 <span class="sd">        discarded in the forward operator.</span>
 <span class="sd">    subjects_dir : str</span>
 <span class="sd">        Path to the freesurfer `subjects` directory.</span>
-
+<span class="sd">    n_jobs : int</span>
+<span class="sd">        The number jobs to run in parallel.</span>
+<span class="sd">    verbose : None | bool</span>
+<span class="sd">        Use verbose mode. If None use MNE default.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Processing subject </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">subject</span><span class="p">)</span>
 
     <span class="n">src</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">morph_source_spaces</span><span class="p">(</span><span class="n">src_ref</span><span class="p">,</span> <span class="n">subject_to</span><span class="o">=</span><span class="n">subject</span><span class="p">,</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
                                   <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">)</span>
-    <span class="n">bem</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_bem_solution</span><span class="p">(</span><span class="n">bem_fname</span><span class="p">)</span>
+    <span class="n">bem</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">read_bem_solution</span><span class="p">(</span><span class="n">bem_fname</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">fwd</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">make_forward_solution</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="n">trans_fname</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span>
                                     <span class="n">bem</span><span class="o">=</span><span class="n">bem</span><span class="p">,</span> <span class="n">meg</span><span class="o">=</span><span class="n">meg</span><span class="p">,</span> <span class="n">eeg</span><span class="o">=</span><span class="n">eeg</span><span class="p">,</span>
-                                    <span class="n">mindist</span><span class="o">=</span><span class="n">mindist</span><span class="p">,</span>
+                                    <span class="n">mindist</span><span class="o">=</span><span class="n">mindist</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
                                     <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fwd</span></div>
 
 
-<span class="k">def</span> <span class="nf">_group_filtering</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">noise_covs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get common vertices across subjects.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="prepare_fwds"><a class="viewcode-back" href="../../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds">[docs]</a><span class="k">def</span> <span class="nf">prepare_fwds</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the group alignement of the forward operators.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fwds : list of `mne.Forward`</span>
+<span class="sd">        The forward operators computed on the morphed source</span>
+<span class="sd">        space `src_ref`.</span>
+<span class="sd">    src_ref : instance of SourceSpace instance</span>
+<span class="sd">        Reference source model.</span>
+<span class="sd">    copy : bool</span>
+<span class="sd">        If copy is False the fwds are modified inplace.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fwds : list of `mne.Forward`</span>
+<span class="sd">        Prepared forward operators.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">n_sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">src_ref</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;nuse&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
     <span class="n">vertices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
     <span class="n">positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
     <span class="n">gains</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ch_names</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">group_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">subjects</span><span class="o">=</span><span class="p">[])</span>
-    <span class="k">if</span> <span class="n">noise_covs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">noise_covs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fwds</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+        <span class="n">fwds</span> <span class="o">=</span> <span class="p">[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">fwd</span><span class="p">)</span> <span class="k">for</span> <span class="n">fwd</span> <span class="ow">in</span> <span class="n">fwds</span><span class="p">]</span>
+
     <span class="c1"># compute gain matrices</span>
-    <span class="k">for</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">cov</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">noise_covs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">fwd</span> <span class="ow">in</span> <span class="n">fwds</span><span class="p">:</span>
         <span class="n">fwd</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">convert_forward_solution</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="n">surf_ori</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                            <span class="n">force_fixed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                           <span class="n">use_cps</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                           <span class="n">use_cps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">src</span> <span class="o">=</span> <span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span>
         <span class="n">subject</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;subject_his_id&quot;</span><span class="p">]</span>
         <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;subjects&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subject</span><span class="p">)</span>
-        <span class="n">ch_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">_get_channels</span><span class="p">(</span><span class="n">fwd</span><span class="p">,</span> <span class="n">cov</span><span class="p">))</span>
 
         <span class="c1"># find mapping between src_ref and new src space of fwd</span>
+        <span class="c1"># src may have less sources than src_ref if they are</span>
+        <span class="c1"># outside the inner skull</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_morph_src_mapping</span><span class="p">(</span><span class="n">src_ref</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
 
-        <span class="c1"># create a gain with the &quot;large&quot; src_ref resolution</span>
+        <span class="c1"># create a gain with the full src_ref resolution</span>
         <span class="n">gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;nchan&quot;</span><span class="p">],</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n_sources</span><span class="p">)))</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
             <span class="c1"># pos contains the reference sources of src_ref</span>
@@ -271,131 +250,16 @@
         <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="n">common_pos</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">common</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertno_ref</span><span class="p">):</span>
             <span class="n">vertices</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">common</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span>
-    <span class="n">gains</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="n">ch_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ch_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">ch_names</span><span class="p">)</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ch_names</span><span class="p">)</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_lh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_rh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_ref&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertno_ref</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_filter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">common_pos_lh</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_pos_rh</span><span class="p">)]</span>
 
-    <span class="k">return</span> <span class="n">gains</span><span class="p">,</span> <span class="n">group_info</span>
-
-
-<span class="k">def</span> <span class="nf">compute_gains</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">ch_type</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">hemi</span><span class="o">=</span><span class="s2">&quot;lh&quot;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute aligned gain matrices of the group of subjects.</span>
-
-<span class="sd">    Computation is done with respect to a reference source space.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    fwds : list</span>
-<span class="sd">        The forward operators computed on the morphed source</span>
-<span class="sd">        space `src_ref`.</span>
-<span class="sd">    src_ref : instance of SourceSpace instance</span>
-<span class="sd">        Reference source model.</span>
-<span class="sd">    ch_type : str</span>
-<span class="sd">        Type of channels used for source reconstruction. Can be one</span>
-<span class="sd">        of (&quot;mag&quot;, &quot;grad&quot;, &quot;eeg&quot;). Using more than one type of channels is not</span>
-<span class="sd">        yet supported.</span>
-<span class="sd">    hemi : str</span>
-<span class="sd">        Hemisphere, &quot;lh&quot;, &quot;rh&quot; or &quot;both&quot;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    gains: ndarray, shape (n_subjects, n_channels, n_sources)</span>
-<span class="sd">        The gain matrices.</span>
-<span class="sd">    group_info: dict</span>
-<span class="sd">        Group information (channels, alignments maps across subjects)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">gains</span><span class="p">,</span> <span class="n">group_info</span> <span class="o">=</span> <span class="n">_group_filtering</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">noise_covs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">n_lh</span> <span class="o">=</span> <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">hemi</span> <span class="o">==</span> <span class="s2">&quot;lh&quot;</span><span class="p">:</span>
-        <span class="n">col0</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">col1</span> <span class="o">=</span> <span class="n">n_lh</span>
-    <span class="k">elif</span> <span class="n">hemi</span> <span class="o">==</span> <span class="s2">&quot;rh&quot;</span><span class="p">:</span>
-        <span class="n">col0</span> <span class="o">=</span> <span class="n">n_lh</span>
-        <span class="n">col1</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">elif</span> <span class="n">hemi</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">:</span>
-        <span class="n">col0</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">col1</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hemi must be in (&#39;lh&#39;, &#39;rh&#39;, &#39;both&#39;)&quot;</span><span class="p">)</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">fwds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span>
-    <span class="n">ch_names</span> <span class="o">=</span> <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_names&quot;</span><span class="p">]</span>
-    <span class="n">sel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_filter_channels</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">ch_names</span><span class="p">,</span> <span class="n">ch_type</span><span class="p">)</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_filter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;sel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sel</span>
-    <span class="n">gains</span> <span class="o">=</span> <span class="n">gains</span><span class="p">[:,</span> <span class="n">sel</span><span class="p">,</span> <span class="p">:]</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;hemi&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hemi</span>
-    <span class="k">return</span> <span class="n">gains</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">col0</span><span class="p">:</span><span class="n">col1</span><span class="p">],</span> <span class="n">group_info</span>
-
-
-<div class="viewcode-block" id="compute_inv_data"><a class="viewcode-back" href="../../generated/groupmne.compute_inv_data.html#groupmne.compute_inv_data">[docs]</a><span class="k">def</span> <span class="nf">compute_inv_data</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">evokeds</span><span class="p">,</span> <span class="n">noise_cov_s</span><span class="p">,</span> <span class="n">ch_type</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span>
-                     <span class="n">tmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tmax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Compute aligned gain matrices and M-EEG data of the group of subjects.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    fwds : list</span>
-<span class="sd">        The forward operators computed on the morphed source</span>
-<span class="sd">        space `src_ref`.</span>
-<span class="sd">    src_ref : instance of SourceSpace instance</span>
-<span class="sd">        Reference source model.</span>
-<span class="sd">    evokeds : list</span>
-<span class="sd">        The Evoked instances, one element for each subject.</span>
-<span class="sd">    noise_cov_s : list of instances of Covariance</span>
-<span class="sd">        The noise covariances, one element for each subject.</span>
-<span class="sd">    ch_type : str (default &quot;grad&quot;)</span>
-<span class="sd">        Type of channels used for source reconstruction. Can be one</span>
-<span class="sd">        of (&quot;mag&quot;, &quot;grad&quot;, &quot;eeg&quot;). Using more than one type of channels is not</span>
-<span class="sd">        yet supported.</span>
-<span class="sd">    tmin: float (default None)</span>
-<span class="sd">        initial time point.</span>
-<span class="sd">    tmax: float (default None)</span>
-<span class="sd">        final time point.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    gains: ndarray, shape (n_subjects, n_channels, n_sources)</span>
-<span class="sd">        The gain matrices.</span>
-<span class="sd">    M: ndarray, shape (n_subjects, n_channels, n_times)</span>
-<span class="sd">        M-EEG data.</span>
-<span class="sd">    group_info: dict</span>
-<span class="sd">        Group information (channels, alignments maps across subjects)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fwds</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">noise_cov_s</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;The length of `fwds` and `noise_cov_s`</span>
-<span class="s2">                         do not match.&quot;&quot;&quot;</span><span class="p">)</span>
-    <span class="n">gains</span><span class="p">,</span> <span class="n">group_info</span> <span class="o">=</span> <span class="n">_group_filtering</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">noise_covs</span><span class="o">=</span><span class="n">noise_cov_s</span><span class="p">)</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">fwds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;info&quot;</span><span class="p">]</span>
-    <span class="n">ch_names</span> <span class="o">=</span> <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_names&quot;</span><span class="p">]</span>
-    <span class="n">sel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">_filter_channels</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">ch_names</span><span class="p">,</span> <span class="n">ch_type</span><span class="p">)</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;ch_filter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;sel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sel</span>
-    <span class="n">gains</span> <span class="o">=</span> <span class="n">gains</span><span class="p">[:,</span> <span class="n">sel</span><span class="p">,</span> <span class="p">:]</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">noise_cov</span><span class="p">,</span> <span class="n">evoked</span><span class="p">,</span> <span class="n">gain</span><span class="p">)</span> \
-            <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">noise_cov_s</span><span class="p">,</span> <span class="n">evokeds</span><span class="p">,</span> <span class="n">gains</span><span class="p">)):</span>
-        <span class="n">ev</span> <span class="o">=</span> <span class="n">evoked</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">ev</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">)</span>
-        <span class="n">whitener</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">cov</span><span class="o">.</span><span class="n">compute_whitener</span><span class="p">(</span><span class="n">noise_cov</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">info</span><span class="p">,</span>
-                                               <span class="n">sel</span><span class="p">,</span> <span class="n">pca</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">nave</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">whitener</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">gain</span><span class="p">)</span>
-        <span class="n">M</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ev</span><span class="o">.</span><span class="n">nave</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">whitener</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">sel</span><span class="p">]))</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmin</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">tstep</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ev</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">tstep</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;tstep&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tstep</span>
-    <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;hemi&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;both&quot;</span>
-    <span class="k">return</span> <span class="n">gains</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">group_info</span></div>
+    <span class="k">for</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">gain</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">gains</span><span class="p">):</span>
+        <span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol_group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span> <span class="n">group_info</span><span class="o">=</span><span class="n">group_info</span><span class="p">,</span>
+                                <span class="n">src_ref</span><span class="o">=</span><span class="n">src_ref</span><span class="p">,</span> <span class="n">n_subjects</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">fwds</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fwds</span></div>
 </pre></div>
 
     </div>
@@ -410,7 +274,7 @@
     </p>
     <p>
         &copy; Copyright 2019, Hicham Janati.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.<br/>
     </p>
   </div>
 </footer>

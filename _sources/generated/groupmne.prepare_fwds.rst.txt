@@ -1,0 +1,6 @@
+groupmne.prepare\_fwds
+======================
+
+.. currentmodule:: groupmne
+
+.. autofunction:: prepare_fwds

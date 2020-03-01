@@ -7,23 +7,25 @@
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="General examples" href="../auto_examples/index.html" />
-    <link rel="prev" title="groupmne.compute_inv_data" href="groupmne.compute_inv_data.html" />
+    <link rel="next" title="Examples Gallery" href="../auto_examples/index.html" />
+    <link rel="prev" title="groupmne.prepare_fwds" href="groupmne.prepare_fwds.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
 
   </head><body>
 
@@ -63,7 +65,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Tutorial - Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">General examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/index.html">Examples Gallery</a></li>
 </ul>
 </ul>
 </li>
@@ -111,50 +113,40 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-12 content">
+    <div class="body col-md-12 content" role="main">
       
   <div class="section" id="groupmne-compute-group-inverse">
 <h1>groupmne.compute_group_inverse<a class="headerlink" href="#groupmne-compute-group-inverse" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="groupmne.compute_group_inverse">
-<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_group_inverse</code><span class="sig-paren">(</span><em class="sig-param">gains</em>, <em class="sig-param">M</em>, <em class="sig-param">group_info</em>, <em class="sig-param">method='grouplasso'</em>, <em class="sig-param">depth=0.9</em>, <em class="sig-param">alpha=0.1</em>, <em class="sig-param">return_stc=True</em>, <em class="sig-param">n_jobs=1</em>, <em class="sig-param">time_independent=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/inverse.html#compute_group_inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_group_inverse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Solves the joint inverse problem for source localization.</p>
+<code class="sig-prename descclassname">groupmne.</code><code class="sig-name descname">compute_group_inverse</code><span class="sig-paren">(</span><em class="sig-param">fwds</em>, <em class="sig-param">evokeds</em>, <em class="sig-param">noise_covs</em>, <em class="sig-param">method='multitasklasso'</em>, <em class="sig-param">depth=0.8</em>, <em class="sig-param">spatiotemporal=False</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">**solver_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/groupmne/inverse.html#compute_group_inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#groupmne.compute_group_inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute inverse solution for a group of subjects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>gains: ndarray, shape (n_subjects, n_channels, n_sources).</strong></dt><dd><p>Forward data, returned by
-<cite>group_model.compute_gains</cite> or <cite>group_model.compute_inv_data</cite>.</p>
+<dt><strong>fwds: list of `mne.Forward`.</strong></dt><dd><p>Forward soluton of each subject.</p>
 </dd>
-<dt><strong>M</strong><span class="classifier">ndarray, shape (n_subjects, n_channels, n_times)</span></dt><dd><p>M-EEG data</p>
+<dt><strong>evokeds: list of `mne.Evokeds`</strong></dt><dd><p>Evoked object of each subject.</p>
 </dd>
-<dt><strong>group_info</strong><span class="classifier">dict</span></dt><dd><p>The measurement info.</p>
+<dt><strong>noise_covs: list of `mne.Covariance`</strong></dt><dd><p>Noise covariance of each subject.</p>
 </dd>
-<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p>Inverse problem model to use. For now, only “grouplasso” is
-supported. The group-lasso solver promotes source estimates with
-overlapping active vertices across subjects. Each time point is
-treated independently.</p>
+<dt><strong>method: str</strong></dt><dd><p>Model used for the joint prior. Must be one of (‘lasso’, ‘relasso’,
+‘multitasklasso’, ‘dirty’, ‘mtw’, ‘remtw’).</p>
 </dd>
-<dt><strong>depth</strong><span class="classifier">float in (0, 1)</span></dt><dd><p>Depth weighting. If 1, no normalization is done.</p>
+<dt><strong>depth: float.</strong></dt><dd><p>How to weight (or normalize) the forward using a depth prior.
+If float (default 0.8), it acts as the depth weighting exponent (exp)
+to use, which must be between 0 and 1. None is equivalent to 0,
+meaning no depth weighting is performed.</p>
 </dd>
-<dt><strong>alpha</strong><span class="classifier">float in (0, 1)</span></dt><dd><p>Regularization hyperparameter set as a fraction of
-alpha_max for which all sources are 0.</p>
+<dt><strong>spatiotemporal: boolean.</strong></dt><dd><p>If True, apply a spatiotemporal prior on the source estimates.
+Only for method = <cite>multitasklasso</cite>.</p>
 </dd>
-<dt><strong>return_stc</strong><span class="classifier">bool, (optional, default True)</span></dt><dd><p>If true, source estimates are returned as stc objects, array otherwise.</p>
-</dd>
-<dt><strong>time_independent</strong><span class="classifier">bool, (optional, default false)</span></dt><dd><p>If True, each time point is solved independently. By default,
-the group lasso is applied on the time and subjects axes.</p>
-</dd>
-<dt><strong>n_jobs</strong><span class="classifier">int (default 1)</span></dt><dd><p>The number of CPUs to use in parallel.</p>
-</dd>
-<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p>additional arguments passed to the solver.</p>
-</dd>
+<dt><strong>solvers_kwargs: additional keyword arguments passed to the solver.</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>estimates: instance of SourceEstimates | array</strong></dt><dd><p>The estimated sources as an array if <cite>return_stc</cite> is False.</p>
-</dd>
-<dt><strong>log</strong><span class="classifier">dict</span></dt><dd><p>Some info about the convergence.</p>
+<dt>stcs: list of <cite>mne.SourceEstimates</cite>.</dt><dd><p>Source estimates.</p>
 </dd>
 </dl>
 </dd>
@@ -176,7 +168,7 @@ the group lasso is applied on the time and subjects axes.</p>
     </p>
     <p>
         &copy; Copyright 2019, Hicham Janati.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.<br/>
     </p>
   </div>
 </footer>
