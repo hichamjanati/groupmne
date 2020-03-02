@@ -511,14 +511,35 @@ central gyrus.
         m = abs(stc.data[:n_sources[0], t_idx]).max()
         plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
         brain = stc.plot(**plot_kwargs)
-        brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
+        brain.add_text(0.1, 0.9, "multi-subject-grouplasso (%s)" % subject,
+                       "title")
         brain.add_label(g_post_central, borders=True, color="green")
 
 
 
 
-.. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_002.png
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_002.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_003.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_004.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_005.png
+            :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -530,7 +551,7 @@ central gyrus.
     Reading labels from parcellation...
        read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
        read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
-    Using mayavi 3d backend.
+    Using pyvista 3d backend.
 
     Reading labels from parcellation...
        read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
@@ -563,15 +584,36 @@ individual solutions independently for each subject
         m = abs(stc.data[:n_sources[0], t_idx]).max()
         plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
         brain = stc.plot(**plot_kwargs)
-        brain.add_text(0.1, 0.9, subject + "_mxne", "title")
+        brain.add_text(0.1, 0.9, "single-subject-grouplasso (%s)" % subject,
+                       "title")
         brain.add_label(g_post_central, borders=True, color="green")
 
 
 
 
 
-.. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_003.png
-    :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_006.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_007.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_008.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_009.png
+            :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -607,9 +649,9 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  49.698 seconds)
+   **Total running time of the script:** ( 4 minutes  2.859 seconds)
 
-**Estimated memory usage:**  2146 MB
+**Estimated memory usage:**  2139 MB
 
 
 .. _sphx_glr_download_auto_examples_plot_multitask_lasso.py:

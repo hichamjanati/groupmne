@@ -165,7 +165,8 @@ for stc, subject in zip(stcs, subjects):
     m = abs(stc.data[:n_sources[0], t_idx]).max()
     plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
     brain = stc.plot(**plot_kwargs)
-    brain.add_text(0.1, 0.9, subject + "_groupmne", "title")
+    brain.add_text(0.1, 0.9, "multi-subject-grouplasso (%s)" % subject,
+                   "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
 #####################################
@@ -189,7 +190,8 @@ for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
     m = abs(stc.data[:n_sources[0], t_idx]).max()
     plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
     brain = stc.plot(**plot_kwargs)
-    brain.add_text(0.1, 0.9, subject + "_mxne", "title")
+    brain.add_text(0.1, 0.9, "single-subject-grouplasso (%s)" % subject,
+                   "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
 
