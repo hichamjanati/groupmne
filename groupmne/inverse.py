@@ -160,8 +160,10 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
             raise ValueError("The ground metric M must be non-negative"
                              "got M.min() = %s"
                              % M.min())
+        M /= np.median(M)
+        solver_kwargs["M"] = M
         if "gamma" not in solver_kwargs.keys():
-            gamma = solver_kwargs["M"].max()
+            gamma = solver_kwargs["M"].max() / 4
             solver_kwargs["gamma"] = gamma
         if "epsilon" not in solver_kwargs.keys():
             epsilon = 10. / n_features
@@ -279,7 +281,10 @@ def compute_group_inverse(fwds, evokeds, noise_covs, method="multitasklasso",
     # re-scale coefs and change units to nAm
     stc_data = np.array(stc_data) * 1e9 / weights.T[None, :, :]
     tmin = evokeds[0].times[0]
-    tstep = evokeds[0].times[1] - tmin
+    if len(evokeds[0].times) > 1:
+        tstep = evokeds[0].times[1] - tmin
+    else:
+        tstep = 0.01
     stcs = _coefs_to_stcs(stc_data, fwds[0]["sol_group"]["group_info"],
                           tmin=tmin, tstep=tstep)
     return stcs
