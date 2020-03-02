@@ -3,6 +3,7 @@ doc/generated
 doc/_images
 doc/_static
 doc/_templates
+doc/_build
 .makedoc
 
 .zip

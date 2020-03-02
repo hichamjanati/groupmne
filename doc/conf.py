@@ -354,6 +354,7 @@ except Exception:
 else:
     scrapers += ('mayavi',)
 try:
+    import warnings
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         import pyvista
@@ -374,8 +375,7 @@ sphinx_gallery_conf = {
     'doc_module': 'groupmne',
     'reference_url': dict(groupmne=None),
     'examples_dirs': examples_dirs,
-    'subsection_order': ExplicitOrder(['../examples/plot_process_meg.py',
-                                       '../examples/plot_group_lasso.py']),
+    'subsection_order': ExplicitOrder(['../examples/plot_multitask_lasso.py']),
     'gallery_dirs': gallery_dirs,
     'plot_gallery': 'True',  # Avoid annoying Unicode/bool default warning
     'thumbnail_size': (160, 112),
