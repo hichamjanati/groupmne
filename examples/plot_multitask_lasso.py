@@ -98,6 +98,10 @@ del epochs_s
 
 resolution = 4
 spacing = "ico%d" % resolution
+
+fsaverage_fname = op.join(subjects_dir, "fsaverage")
+if not op.exists(fsaverage_fname):
+    mne.datasets.fetch_fsaverage(subjects_dir)
 src_ref = mne.setup_source_space(subject="fsaverage",
                                  spacing=spacing,
                                  subjects_dir=subjects_dir,
@@ -115,7 +119,22 @@ subjects = ["subject_a", "subject_b"]
 trans_fname_s = [meg_path + "%s/sef-trans.fif" % s for s in subjects]
 bem_fname_s = [subjects_dir + "%s/bem/%s-5120-bem-sol.fif" % (s, s)
                for s in subjects]
-n_jobs = 1
+
+####################################################################
+# Before computing the forward operators, we make sure the coordinate
+# transformation of the trans file provides a reasonable alignement between the
+# different coordinate systems MEG <-> HEAD
+
+for raw_fname, trans, subject in zip(raw_name_s, trans_fname_s, subjects):
+    raw = raw = mne.io.read_raw_fif(raw_fname)
+    fig = mne.viz.plot_alignment(raw.info, trans=trans, subject=subject,
+                                 subjects_dir=subjects_dir,
+                                 surfaces='head-dense',
+                                 show_axes=True, dig=True, eeg=[],
+                                 meg='sensors',
+                                 coord_frame='meg')
+
+n_jobs = 2
 parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
 
@@ -137,7 +156,7 @@ fwds = prepare_fwds(fwds_, src_ref, copy=False)
 
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
-evokeds = [ev.crop(0.015, 0.025) for ev in evokeds]
+evokeds_ = [ev.crop(0.019, 0.021) for ev in evokeds]
 
 stcs = compute_group_inverse(fwds, evokeds, noise_covs,
                              method='multitasklasso',
@@ -178,7 +197,7 @@ for stc, subject in zip(stcs, subjects):
 # individual solutions independently for each subject
 
 
-for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
+for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds_, noise_covs):
     fwd_ = prepare_fwds([fwd], src_ref)
     stc = compute_group_inverse(fwd_, [ev], [cov],
                                 method='multitasklasso',
