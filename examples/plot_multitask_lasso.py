@@ -156,7 +156,7 @@ fwds = prepare_fwds(fwds_, src_ref, copy=False)
 
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
-evokeds_ = [ev.crop(0.019, 0.021) for ev in evokeds]
+evokeds = [ev.crop(0.019, 0.021) for ev in evokeds]
 
 stcs = compute_group_inverse(fwds, evokeds, noise_covs,
                              method='multitasklasso',
@@ -197,7 +197,7 @@ for stc, subject in zip(stcs, subjects):
 # individual solutions independently for each subject
 
 
-for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds_, noise_covs):
+for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
     fwd_ = prepare_fwds([fwd], src_ref)
     stc = compute_group_inverse(fwd_, [ev], [cov],
                                 method='multitasklasso',
