@@ -144,6 +144,8 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
             solver_kwargs["beta"] = 0.2
     # ground metric and ot hyperparameters for ot models
     if method in ["mtw", "remtw"]:
+        if "concomitant" not in solver_kwargs.keys():
+            solver_kwargs["concomitant"] = True
         if "M" not in solver_kwargs.keys():
             print("Computing OT ground metric ...")
             src_ref = fwds[0]["sol_group"]["src_ref"]
@@ -163,7 +165,7 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
         M /= np.median(M)
         solver_kwargs["M"] = M
         if "gamma" not in solver_kwargs.keys():
-            gamma = solver_kwargs["M"].max() / 2
+            gamma = solver_kwargs["M"].max()
             solver_kwargs["gamma"] = gamma
         if "epsilon" not in solver_kwargs.keys():
             epsilon = 100. / n_features
@@ -184,8 +186,6 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
             solver_kwargs["alpha"] *= alpha_
         else:
             solver_kwargs["beta"] *= betamax
-        if "comcomitant" not in solver_kwargs.keys():
-            solver_kwargs["concomitant"] = True
     return solver_kwargs
 
 

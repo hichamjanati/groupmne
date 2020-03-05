@@ -35,16 +35,13 @@ def test_inverse(src_fwds, method):
     ev = ev.crop(tmin=0.1, tmax=0.12)
     evokeds = [ev, ev]
     fwds = prepare_fwds(fwds, src_ref)
-    epsilon = 1.
-    gamma = 0.01
     beta = 0.1
     alpha_ot = 0.01
     alpha = 0.2
 
     n_sources = fwds[0]["sol_group"]["data"].shape[1]
     n_times = ev.times.size
-    ot_dict = dict(alpha=alpha_ot, beta=beta, epsilon=epsilon,
-                   gamma=gamma, tol=100.)
+    ot_dict = dict(alpha=alpha_ot, beta=beta, tol=100.)
     lasso_dict = dict(alpha=alpha, tol=100.)
     solver_params = dict(lasso=lasso_dict,
                          relasso=lasso_dict,

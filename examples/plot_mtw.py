@@ -164,7 +164,7 @@ evokeds = [ev.crop(0.02, 0.02) for ev in evokeds]
 stcs_mtw = compute_group_inverse(fwds, evokeds, noise_covs,
                                  method='remtw',
                                  spatiotemporal=False,
-                                 alpha=0.3,
+                                 alpha=1.,
                                  beta=0.05,
                                  n_jobs=2)
 
