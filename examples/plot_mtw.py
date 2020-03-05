@@ -160,12 +160,13 @@ fwds = prepare_fwds(fwds_, src_ref, copy=False)
 # We restric the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 
-evokeds = [ev.crop(0.019, 0.021) for ev in evokeds]
+evokeds = [ev.crop(0.02, 0.02) for ev in evokeds]
 stcs_mtw = compute_group_inverse(fwds, evokeds, noise_covs,
-                                 method='mtw',
+                                 method='remtw',
                                  spatiotemporal=False,
-                                 alpha=0.,
-                                 beta=0.1)
+                                 alpha=0.3,
+                                 beta=0.05,
+                                 n_jobs=2)
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
@@ -202,9 +203,9 @@ for stc, subject in zip(stcs_mtw, subjects):
 
 
 stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                             method='lasso',
+                             method='relasso',
                              spatiotemporal=False,
-                             alpha=0.1)
+                             alpha=0.05)
 
 for stc, subject in zip(stcs, subjects):
     stc.subject = subject

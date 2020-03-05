@@ -163,10 +163,10 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
         M /= np.median(M)
         solver_kwargs["M"] = M
         if "gamma" not in solver_kwargs.keys():
-            gamma = solver_kwargs["M"].max() / 4
+            gamma = solver_kwargs["M"].max() / 2
             solver_kwargs["gamma"] = gamma
         if "epsilon" not in solver_kwargs.keys():
-            epsilon = 10. / n_features
+            epsilon = 100. / n_features
             solver_kwargs["epsilon"] = epsilon
 
     xty = np.array([g.T.dot(m) for g, m in zip(gains_scaled, meeg)])
@@ -184,6 +184,8 @@ def _check_solver_params(fwds, method, solver_kwargs, gains_scaled, meeg,
             solver_kwargs["alpha"] *= alpha_
         else:
             solver_kwargs["beta"] *= betamax
+        if "comcomitant" not in solver_kwargs.keys():
+            solver_kwargs["concomitant"] = True
     return solver_kwargs
 
 
