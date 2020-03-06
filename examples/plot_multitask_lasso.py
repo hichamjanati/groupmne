@@ -154,7 +154,7 @@ fwds = prepare_fwds(fwds_, src_ref, copy=False)
 # structured sparsity prior. it must be set as a positive number between 0
 # and 1. With alpha = 1, all the sources are 0.
 
-# We restric the time points around 20ms in order to reconstruct the sources of
+# We restrict the time points around 20ms in order to reconstruct the sources of
 # the N20 response.
 evokeds = [ev.crop(0.019, 0.021) for ev in evokeds]
 
