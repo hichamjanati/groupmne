@@ -1,25 +1,28 @@
 """
-Multi-subject joint source localization with multi-task lasso
-=============================================================
+Multi-subject joint source localization with MTW
+================================================
 
 The aim of this tutorial is to show how to leverage functional similarity
-across subjects to improve source localization with multi-task Lasso.
-Multi-task Lasso assumes that the exact same sources are active for
-all subjects at all times. This example illustrates this on the
-the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
-MEG and MRI data for two subjects.
+across subjects to improve source localization with a spatial prior using
+Optimal transport (Janati et al, 2019). Unlike multi-task Lasso which assumes
+that the exact same sources are active for all subjects, MTW promotes a soft
+spatial proximity prior of sources across subjects. This example illustrates
+this on the the high frequency SEF MEG dataset of (Nurminen et al., 2017)
+which provides MEG and MRI data for two subjects.
 """
 
 # Author: Hicham Janati (hicham.janati@inria.fr)
 #
 # License: BSD (3-clause)
 
-import mne
 import os
 import os.path as op
+
+from matplotlib import pyplot as plt
+
+import mne
 from mne.parallel import parallel_func
 from mne.datasets import hf_sef
-from matplotlib import pyplot as plt
 
 from groupmne import compute_group_inverse, prepare_fwds, compute_fwd
 
@@ -50,7 +53,7 @@ def process_meg(raw_name):
 
     Parameters
     ----------
-    raw_name: str.
+    raw_name: str
         path to the raw fif file.
 
     Returns
@@ -102,6 +105,7 @@ spacing = "ico%d" % resolution
 fsaverage_fname = op.join(subjects_dir, "fsaverage")
 if not op.exists(fsaverage_fname):
     mne.datasets.fetch_fsaverage(subjects_dir)
+
 src_ref = mne.setup_source_space(subject="fsaverage",
                                  spacing=spacing,
                                  subjects_dir=subjects_dir,
@@ -134,7 +138,7 @@ for raw_fname, trans, subject in zip(raw_name_s, trans_fname_s, subjects):
                                  meg='sensors',
                                  coord_frame='meg')
 
-n_jobs = 2
+n_jobs = 1
 parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
 
@@ -145,23 +149,25 @@ fwds_ = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
 fwds = prepare_fwds(fwds_, src_ref, copy=False)
 
 ##################################################
-# Solve the inverse problems with Multi-task Lasso
-# ------------------------------------------------
+# Solve the inverse problems with Multi-task Wasserstein (MTW)
+# ------------------------------------------------------------
 
-# The Multi-task Lasso assumes the source locations are the same across
-# subjects for all instants i.e if a source is zero for one subject, it will
-# be zero for all subjects. "alpha" is a hyperparameter that controls this
-# structured sparsity prior. it must be set as a positive number between 0
-# and 1. With alpha = 1, all the sources are 0.
+# The Multi-task Wasserstein promotes sparse source estimates are spatially
+# close across subjects for each time point. `alpha` is a hyperparameter that
+# controls the spatial prior; `beta` the sparsity prior. `alpha` must be
+# non-negative, `beta` must be set as a positive number between 0
+# and 1. With `beta` = 1, all the sources are 0.
 
-# We restric the time points around 20ms in order to reconstruct the sources of
+# We restric the time points to 20ms in order to reconstruct the sources of
 # the N20 response.
-evokeds = [ev.crop(0.019, 0.021) for ev in evokeds]
 
-stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                             method='multitasklasso',
-                             spatiotemporal=True,
-                             alpha=0.8)
+evokeds = [ev.crop(0.02, 0.02) for ev in evokeds]
+stcs_mtw = compute_group_inverse(fwds, evokeds, noise_covs,
+                                 method='remtw',
+                                 spatiotemporal=False,
+                                 alpha=1.,
+                                 beta=0.05,
+                                 n_jobs=2)
 
 ############################################
 # Let's visualize the N20 response. The stimulus was applied on the right
@@ -176,9 +182,9 @@ plot_kwargs = dict(
     initial_time=t, time_unit='s', size=(800, 800),
     smoothing_steps=5, cortex=("gray", -1, 6, True))
 
-t_idx = stcs[0].time_as_index(t)
+t_idx = stcs_mtw[0].time_as_index(t)
 
-for stc, subject in zip(stcs, subjects):
+for stc, subject in zip(stcs_mtw, subjects):
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
                                                 regexp="G_postcentral-lh")[0]
@@ -186,23 +192,23 @@ for stc, subject in zip(stcs, subjects):
     m = abs(stc.data[:n_sources[0], t_idx]).max()
     plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
     brain = stc.plot(**plot_kwargs)
-    brain.add_text(0.1, 0.9, "multi-subject-grouplasso (%s)" % subject,
+    brain.add_text(0.1, 0.9, "multi-subject-mtw (%s)" % subject,
                    "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
-#####################################
-# Group MNE leads to better accuracy
-# ----------------------------------
-# To evaluate the effect of the joint inverse solution, we compute the
-# individual solutions independently for each subject
+#################################################
+# Comparison with Single subject Lasso
+# -----------------------------------------------
+# To evaluate the effect of the MTW prior, we compute the independent Lasso
+# solution
 
 
-for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
-    fwd_ = prepare_fwds([fwd], src_ref)
-    stc = compute_group_inverse(fwd_, [ev], [cov],
-                                method='multitasklasso',
-                                spatiotemporal=True,
-                                alpha=0.8)[0]
+stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                             method='relasso',
+                             spatiotemporal=False,
+                             alpha=0.05)
+
+for stc, subject in zip(stcs, subjects):
     stc.subject = subject
     g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                 subjects_dir=subjects_dir,
@@ -211,7 +217,7 @@ for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
     m = abs(stc.data[:n_sources[0], t_idx]).max()
     plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
     brain = stc.plot(**plot_kwargs)
-    brain.add_text(0.1, 0.9, "single-subject-grouplasso (%s)" % subject,
+    brain.add_text(0.1, 0.9, "single-subject-lasso (%s)" % subject,
                    "title")
     brain.add_label(g_post_central, borders=True, color="green")
 
@@ -219,10 +225,12 @@ for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
 ###########################################
 # References
 # ----------
-# [1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
-# Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
-# PLOS ONE, 2017
+# [1] Hicham Janati, Thomas Bazeille, Bertrand Thirion, Marco Cuturi,
+# Alexandre Gramfort. Group level MEG/EEG source imaging via optimal transport:
+# minimum Wasserstein estimates (IPMI 2019)
+#
 #
 # [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 # somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
 # Zenodo. http://doi.org/10.5281/zenodo.889235
+#
