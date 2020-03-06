@@ -4,7 +4,7 @@ Multi-subject joint source localization with MTW
 
 The aim of this tutorial is to show how to leverage functional similarity
 across subjects to improve source localization with a spatial prior using
-Optimal transport [Janati et al, 2019]. Unlike multi-task Lasso which assumes
+Optimal transport (Janati et al, 2019). Unlike multi-task Lasso which assumes
 that the exact same sources are active for all subjects, MTW promotes a soft
 spatial proximity prior of sources across subjects. This example illustrates
 this on the the high frequency SEF MEG dataset of (Nurminen et al., 2017)
