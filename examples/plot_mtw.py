@@ -4,23 +4,25 @@ Multi-subject joint source localization with MTW
 
 The aim of this tutorial is to show how to leverage functional similarity
 across subjects to improve source localization with a spatial prior using
-Optimal transport. Unlike multi-task Lasso which assumes that the exact same
-sources are active for all subjects, MTW promotes a soft spatial proximity
-prior of sources across subjects. This example illustrates this on the
-the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
-MEG and MRI data for two subjects.
+Optimal transport [Janati et al, 2019]. Unlike multi-task Lasso which assumes
+that the exact same sources are active for all subjects, MTW promotes a soft
+spatial proximity prior of sources across subjects. This example illustrates
+this on the the high frequency SEF MEG dataset of (Nurminen et al., 2017)
+which provides MEG and MRI data for two subjects.
 """
 
 # Author: Hicham Janati (hicham.janati@inria.fr)
 #
 # License: BSD (3-clause)
 
-import mne
 import os
 import os.path as op
+
+from matplotlib import pyplot as plt
+
+import mne
 from mne.parallel import parallel_func
 from mne.datasets import hf_sef
-from matplotlib import pyplot as plt
 
 from groupmne import compute_group_inverse, prepare_fwds, compute_fwd
 
@@ -51,7 +53,7 @@ def process_meg(raw_name):
 
     Parameters
     ----------
-    raw_name: str.
+    raw_name: str
         path to the raw fif file.
 
     Returns
@@ -104,7 +106,6 @@ fsaverage_fname = op.join(subjects_dir, "fsaverage")
 if not op.exists(fsaverage_fname):
     mne.datasets.fetch_fsaverage(subjects_dir)
 
-
 src_ref = mne.setup_source_space(subject="fsaverage",
                                  spacing=spacing,
                                  subjects_dir=subjects_dir,
@@ -148,16 +149,16 @@ fwds_ = parallel(run_func(s, src_ref, info, trans, bem,  mindist=3)
 fwds = prepare_fwds(fwds_, src_ref, copy=False)
 
 ##################################################
-# Solve the inverse problems with Multi-task Lasso
-# ------------------------------------------------
+# Solve the inverse problems with Multi-task Wasserstein (MTW)
+# ------------------------------------------------------------
 
-# The Multi-task Lasso assumes the source locations are the same across
-# subjects for all instants i.e if a source is zero for one subject, it will
-# be zero for all subjects. "alpha" is a hyperparameter that controls this
-# structured sparsity prior. it must be set as a positive number between 0
-# and 1. With alpha = 1, all the sources are 0.
+# The Multi-task Wasserstein promotes sparse source estimates are spatially
+# close across subjects for each time point. `alpha` is a hyperparameter that
+# controls the spatial prior; `beta` the sparsity prior. `alpha` must be
+# non-negative, `beta` must be set as a positive number between 0
+# and 1. With `beta` = 1, all the sources are 0.
 
-# We restric the time points around 20ms in order to reconstruct the sources of
+# We restric the time points to 20ms in order to reconstruct the sources of
 # the N20 response.
 
 evokeds = [ev.crop(0.02, 0.02) for ev in evokeds]
@@ -224,14 +225,12 @@ for stc, subject in zip(stcs, subjects):
 ###########################################
 # References
 # ----------
-# [1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
-# Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
-# PLOS ONE, 2017
+# [1] Hicham Janati, Thomas Bazeille, Bertrand Thirion, Marco Cuturi,
+# Alexandre Gramfort. Group level MEG/EEG source imaging via optimal transport:
+# minimum Wasserstein estimates (IPMI 2019)
+#
 #
 # [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 # somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
 # Zenodo. http://doi.org/10.5281/zenodo.889235
 #
-# [3] Hicham Janati, Thomas Bazeille, Bertrand Thirion, Marco Cuturi,
-# Alexandre Gramfort. Group level MEG/EEG source imaging via optimal transport:
-# minimum Wasserstein estimates (IPMI 2019)
