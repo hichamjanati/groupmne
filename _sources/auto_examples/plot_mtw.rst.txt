@@ -3,21 +3,22 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_auto_examples_plot_multitask_lasso.py>`     to download the full example code
+        Click :ref:`here <sphx_glr_download_auto_examples_plot_mtw.py>`     to download the full example code
     .. rst-class:: sphx-glr-example-title
 
-    .. _sphx_glr_auto_examples_plot_multitask_lasso.py:
+    .. _sphx_glr_auto_examples_plot_mtw.py:
 
 
-Multi-subject joint source localization with multi-task lasso
-=============================================================
+Multi-subject joint source localization with MTW
+================================================
 
 The aim of this tutorial is to show how to leverage functional similarity
-across subjects to improve source localization with multi-task Lasso.
-Multi-task Lasso assumes that the exact same sources are active for
-all subjects at all times. This example illustrates this on the
-the high frequency SEF MEG dataset of (Nurminen et al., 2017) which provides
-MEG and MRI data for two subjects.
+across subjects to improve source localization with a spatial prior using
+Optimal transport (Janati et al, 2019). Unlike multi-task Lasso which assumes
+that the exact same sources are active for all subjects, MTW promotes a soft
+spatial proximity prior of sources across subjects. This example illustrates
+this on the the high frequency SEF MEG dataset of (Nurminen et al., 2017)
+which provides MEG and MRI data for two subjects.
 
 
 .. code-block:: default
@@ -27,12 +28,14 @@ MEG and MRI data for two subjects.
     #
     # License: BSD (3-clause)
 
-    import mne
     import os
     import os.path as op
+
+    from matplotlib import pyplot as plt
+
+    import mne
     from mne.parallel import parallel_func
     from mne.datasets import hf_sef
-    from matplotlib import pyplot as plt
 
     from groupmne import compute_group_inverse, prepare_fwds, compute_fwd
 
@@ -73,7 +76,7 @@ The data will be downloaded in the same location
 
         Parameters
         ----------
-        raw_name: str.
+        raw_name: str
             path to the raw fif file.
 
         Returns
@@ -116,7 +119,7 @@ The data will be downloaded in the same location
 
 
 
-.. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_001.png
+.. image:: /auto_examples/images/sphx_glr_plot_mtw_001.png
     :class: sphx-glr-single-img
 
 
@@ -232,7 +235,7 @@ The data will be downloaded in the same location
         Using tolerance 8e-15 (2.2e-16 eps * 102 dim * 0.35  max singular value)
         Estimated rank (mag): 97
         MAG: rank 97 computed from 102 data channels with 5 projectors
-    /home/circleci/project/examples/plot_multitask_lasso.py:89: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+    /home/circleci/project/examples/plot_mtw.py:92: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
       plt.show()
 
 
@@ -253,6 +256,7 @@ computing the source space of `fsaverage`
     fsaverage_fname = op.join(subjects_dir, "fsaverage")
     if not op.exists(fsaverage_fname):
         mne.datasets.fetch_fsaverage(subjects_dir)
+
     src_ref = mne.setup_source_space(subject="fsaverage",
                                      spacing=spacing,
                                      subjects_dir=subjects_dir,
@@ -339,7 +343,7 @@ different coordinate systems MEG <-> HEAD
                                      meg='sensors',
                                      coord_frame='meg')
 
-    n_jobs = 2
+    n_jobs = 1
     parallel, run_func, _ = parallel_func(compute_fwd, n_jobs=n_jobs)
 
 
@@ -357,22 +361,22 @@ different coordinate systems MEG <-> HEAD
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_002.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_002.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_003.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_003.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_004.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_004.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_005.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_005.png
             :class: sphx-glr-multi-img
 
 
@@ -412,6 +416,8 @@ different coordinate systems MEG <-> HEAD
         Reading a surface...
     [done]
         1 BEM surfaces read
+    Using pyvista 3d backend.
+
     Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw.fif...
         Read a total of 8 projection items:
             generated with autossp-1.0.1 (1 x 306)  idle
@@ -442,9 +448,126 @@ different coordinate systems MEG <-> HEAD
         Reading a surface...
     [done]
         1 BEM surfaces read
-    [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
-    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   12.3s remaining:    0.0s
-    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   12.3s finished
+    Processing subject subject_a
+    Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_a/surf/lh.white
+        Triangle neighbors and vertex normals...
+    Mapping lh fsaverage -> subject_a (nearest neighbor)...
+    [done]
+
+    Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_a/surf/rh.white
+        Triangle neighbors and vertex normals...
+    Mapping rh fsaverage -> subject_a (nearest neighbor)...
+    [done]
+
+    Loading surfaces...
+    Homogeneous model surface loaded.
+
+    Loading the solution matrix...
+
+    Loaded linear_collocation BEM solution from /home/circleci/mne_data/HF_SEF/subjects/subject_a/bem/subject_a-5120-bem-sol.fif
+    Source space          : <SourceSpaces: [<surface (lh), n_vertices=178080, n_used=2562>, <surface (rh), n_vertices=163411, n_used=2562>] MRI (surface RAS) coords, subject 'subject_a'>
+    MRI -> head transform : /home/circleci/mne_data/HF_SEF/MEG/subject_a/sef-trans.fif
+    Measurement data      : sef_right_raw.fif
+    Conductor model   : instance of ConductorModel
+    Accurate field computations
+    Do computations in head coordinates
+    Free source orientations
+
+    Read 2 source spaces a total of 5124 active source locations
+
+    Coordinate transformation: MRI (surface RAS) -> head
+         0.994477 -0.033381 -0.099512       2.49 mm
+         0.071558  0.909221  0.410118      21.97 mm
+         0.076788 -0.414973  0.906588      33.87 mm
+         0.000000  0.000000  0.000000       1.00
+
+    Read 306 MEG channels from info
+    99 coil definitions read
+    Coordinate transformation: MEG device -> head
+         0.996297 -0.076615  0.039017      -1.48 mm
+         0.069384  0.984448  0.161392       3.66 mm
+        -0.050776 -0.158087  0.986119      77.69 mm
+         0.000000  0.000000  0.000000       1.00
+    MEG coil definitions created in head coordinates.
+    Source spaces are now in head coordinates.
+
+    Employing the head->MRI coordinate transform with the BEM model.
+    BEM model instance of ConductorModel is now set up
+
+    Source spaces are in head coordinates.
+    Checking that the sources are inside the surface and at least    3.0 mm away (will take a few...)
+        Skipping interior check for 873 sources that fit inside a sphere of radius   50.7 mm
+        Skipping solid angle check for 0 points using Qhull
+        Skipping interior check for 888 sources that fit inside a sphere of radius   50.7 mm
+        Skipping solid angle check for 0 points using Qhull
+
+    Setting up compensation data...
+        No compensation set. Nothing more to do.
+
+    Composing the field computation matrix...
+    Computing MEG at 5124 source locations (free orientations)...
+
+    Finished.
+    Processing subject subject_b
+    Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_b/surf/lh.white
+        Triangle neighbors and vertex normals...
+    Mapping lh fsaverage -> subject_b (nearest neighbor)...
+    [done]
+
+    Reading destination surface /home/circleci/mne_data/HF_SEF/subjects/subject_b/surf/rh.white
+        Triangle neighbors and vertex normals...
+    Mapping rh fsaverage -> subject_b (nearest neighbor)...
+    [done]
+
+    Loading surfaces...
+    Homogeneous model surface loaded.
+
+    Loading the solution matrix...
+
+    Loaded linear_collocation BEM solution from /home/circleci/mne_data/HF_SEF/subjects/subject_b/bem/subject_b-5120-bem-sol.fif
+    Source space          : <SourceSpaces: [<surface (lh), n_vertices=198441, n_used=2562>, <surface (rh), n_vertices=198539, n_used=2562>] MRI (surface RAS) coords, subject 'subject_b'>
+    MRI -> head transform : /home/circleci/mne_data/HF_SEF/MEG/subject_b/sef-trans.fif
+    Measurement data      : hf_sef_15min_raw.fif
+    Conductor model   : instance of ConductorModel
+    Accurate field computations
+    Do computations in head coordinates
+    Free source orientations
+
+    Read 2 source spaces a total of 5124 active source locations
+
+    Coordinate transformation: MRI (surface RAS) -> head
+         0.997633 -0.026698 -0.063374      -0.86 mm
+         0.045043  0.950051  0.308828       7.15 mm
+         0.051963 -0.310952  0.949004      35.47 mm
+         0.000000  0.000000  0.000000       1.00
+
+    Read 306 MEG channels from info
+    99 coil definitions read
+    Coordinate transformation: MEG device -> head
+         0.994555  0.102411  0.019282      -2.88 mm
+        -0.100756  0.992229 -0.072998      -4.46 mm
+        -0.026608  0.070658  0.997145      60.28 mm
+         0.000000  0.000000  0.000000       1.00
+    MEG coil definitions created in head coordinates.
+    Source spaces are now in head coordinates.
+
+    Employing the head->MRI coordinate transform with the BEM model.
+    BEM model instance of ConductorModel is now set up
+
+    Source spaces are in head coordinates.
+    Checking that the sources are inside the surface and at least    3.0 mm away (will take a few...)
+        Skipping interior check for 746 sources that fit inside a sphere of radius   52.9 mm
+        Skipping solid angle check for 0 points using Qhull
+        Skipping interior check for 752 sources that fit inside a sphere of radius   52.9 mm
+        Skipping solid angle check for 0 points using Qhull
+
+    Setting up compensation data...
+        No compensation set. Nothing more to do.
+
+    Composing the field computation matrix...
+    Computing MEG at 5124 source locations (free orientations)...
+
+    Finished.
     Mapping lh fsaverage -> subject_a (nearest neighbor)...
     Mapping rh fsaverage -> subject_a (nearest neighbor)...
     Mapping lh fsaverage -> subject_b (nearest neighbor)...
@@ -453,31 +576,42 @@ different coordinate systems MEG <-> HEAD
 
 
 
-Solve the inverse problems with Multi-task Lasso
-------------------------------------------------
+Solve the inverse problems with Multi-task Wasserstein (MTW)
+------------------------------------------------------------
 
 
 .. code-block:: default
 
 
-    # The Multi-task Lasso assumes the source locations are the same across
-    # subjects for all instants i.e if a source is zero for one subject, it will
-    # be zero for all subjects. "alpha" is a hyperparameter that controls this
-    # structured sparsity prior. it must be set as a positive number between 0
-    # and 1. With alpha = 1, all the sources are 0.
+    # The Multi-task Wasserstein promotes sparse source estimates are spatially
+    # close across subjects for each time point. `alpha` is a hyperparameter that
+    # controls the spatial prior; `beta` the sparsity prior. `alpha` must be
+    # non-negative, `beta` must be set as a positive number between 0
+    # and 1. With `beta` = 1, all the sources are 0.
 
-    # We restric the time points around 20ms in order to reconstruct the sources of
+    # We restric the time points to 20ms in order to reconstruct the sources of
     # the N20 response.
-    evokeds = [ev.crop(0.019, 0.021) for ev in evokeds]
 
-    stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                                 method='multitasklasso',
-                                 spatiotemporal=True,
-                                 alpha=0.8)
+    evokeds = [ev.crop(0.02, 0.02) for ev in evokeds]
+    stcs_mtw = compute_group_inverse(fwds, evokeds, noise_covs,
+                                     method='remtw',
+                                     spatiotemporal=False,
+                                     alpha=1.,
+                                     beta=0.05,
+                                     n_jobs=2)
 
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Computing OT ground metric ...
+    Solving for time point 1 / 1
 
 
 
@@ -498,9 +632,9 @@ central gyrus.
         initial_time=t, time_unit='s', size=(800, 800),
         smoothing_steps=5, cortex=("gray", -1, 6, True))
 
-    t_idx = stcs[0].time_as_index(t)
+    t_idx = stcs_mtw[0].time_as_index(t)
 
-    for stc, subject in zip(stcs, subjects):
+    for stc, subject in zip(stcs_mtw, subjects):
         g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                     subjects_dir=subjects_dir,
                                                     regexp="G_postcentral-lh")[0]
@@ -508,7 +642,7 @@ central gyrus.
         m = abs(stc.data[:n_sources[0], t_idx]).max()
         plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
         brain = stc.plot(**plot_kwargs)
-        brain.add_text(0.1, 0.9, "multi-subject-grouplasso (%s)" % subject,
+        brain.add_text(0.1, 0.9, "multi-subject-mtw (%s)" % subject,
                        "title")
         brain.add_label(g_post_central, borders=True, color="green")
 
@@ -520,22 +654,22 @@ central gyrus.
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_006.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_006.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_007.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_007.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_008.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_008.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_009.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_009.png
             :class: sphx-glr-multi-img
 
 
@@ -555,22 +689,22 @@ central gyrus.
 
 
 
-Group MNE leads to better accuracy
-----------------------------------
-To evaluate the effect of the joint inverse solution, we compute the
-individual solutions independently for each subject
+Comparison with Single subject Lasso
+-----------------------------------------------
+To evaluate the effect of the MTW prior, we compute the independent Lasso
+solution
 
 
 .. code-block:: default
 
 
 
-    for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
-        fwd_ = prepare_fwds([fwd], src_ref)
-        stc = compute_group_inverse(fwd_, [ev], [cov],
-                                    method='multitasklasso',
-                                    spatiotemporal=True,
-                                    alpha=0.8)[0]
+    stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                                 method='relasso',
+                                 spatiotemporal=False,
+                                 alpha=0.05)
+
+    for stc, subject in zip(stcs, subjects):
         stc.subject = subject
         g_post_central = mne.read_labels_from_annot(subject, "aparc.a2009s",
                                                     subjects_dir=subjects_dir,
@@ -579,7 +713,7 @@ individual solutions independently for each subject
         m = abs(stc.data[:n_sources[0], t_idx]).max()
         plot_kwargs["clim"] = dict(kind='value', pos_lims=[0., 0.2 * m, m])
         brain = stc.plot(**plot_kwargs)
-        brain.add_text(0.1, 0.9, "single-subject-grouplasso (%s)" % subject,
+        brain.add_text(0.1, 0.9, "single-subject-lasso (%s)" % subject,
                        "title")
         brain.add_label(g_post_central, borders=True, color="green")
 
@@ -592,22 +726,22 @@ individual solutions independently for each subject
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_010.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_010.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_011.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_011.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_012.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_012.png
             :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_013.png
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_013.png
             :class: sphx-glr-multi-img
 
 
@@ -617,13 +751,10 @@ individual solutions independently for each subject
 
  .. code-block:: none
 
-    Mapping lh fsaverage -> subject_a (nearest neighbor)...
-    Mapping rh fsaverage -> subject_a (nearest neighbor)...
+    Solving for time point 1 / 1
     Reading labels from parcellation...
        read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/lh.aparc.a2009s.annot
        read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_a/label/rh.aparc.a2009s.annot
-    Mapping lh fsaverage -> subject_b (nearest neighbor)...
-    Mapping rh fsaverage -> subject_b (nearest neighbor)...
     Reading labels from parcellation...
        read 1 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/lh.aparc.a2009s.annot
        read 0 labels from /home/circleci/mne_data/HF_SEF/subjects/subject_b/label/rh.aparc.a2009s.annot
@@ -633,23 +764,25 @@ individual solutions independently for each subject
 
 References
 ----------
-[1] Michael Lim, Justin M. Ales, Benoit R. Cottereau, Trevor Hastie,
-Anthony M. Norcia. Sparse EEG/MEG source estimation via a group lasso,
-PLOS ONE, 2017
+[1] Hicham Janati, Thomas Bazeille, Bertrand Thirion, Marco Cuturi,
+Alexandre Gramfort. Group level MEG/EEG source imaging via optimal transport:
+minimum Wasserstein estimates (IPMI 2019)
+
 
 [2] Jussi Nurminen, Hilla Paananen, & Jyrki Mäkelä. (2017). High frequency
 somatosensory MEG: evoked responses, FreeSurfer reconstruction [Data set].
 Zenodo. http://doi.org/10.5281/zenodo.889235
 
 
+
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  59.545 seconds)
+   **Total running time of the script:** ( 9 minutes  35.304 seconds)
 
-**Estimated memory usage:**  690 MB
+**Estimated memory usage:**  1565 MB
 
 
-.. _sphx_glr_download_auto_examples_plot_multitask_lasso.py:
+.. _sphx_glr_download_auto_examples_plot_mtw.py:
 
 
 .. only :: html
@@ -661,13 +794,13 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
   .. container:: sphx-glr-download
 
-     :download:`Download Python source code: plot_multitask_lasso.py <plot_multitask_lasso.py>`
+     :download:`Download Python source code: plot_mtw.py <plot_mtw.py>`
 
 
 
   .. container:: sphx-glr-download
 
-     :download:`Download Jupyter notebook: plot_multitask_lasso.ipynb <plot_multitask_lasso.ipynb>`
+     :download:`Download Jupyter notebook: plot_mtw.ipynb <plot_mtw.ipynb>`
 
 
 .. only:: html
