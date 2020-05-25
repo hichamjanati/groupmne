@@ -12,7 +12,7 @@ addons:
       - libdbus-1-3
 cache:
   apt: true
-  pip: true
+  # pip: true
 env:
     # TRAVIS_PYTHON_VERSION is only needed for neo's setup.py
     # OPENBLAS_NUM_THREADS=1 avoid slowdowns:
@@ -46,8 +46,8 @@ before_install:
   - conda env update --file $CONDA_ENV;
   - pip install -U Cython
   - pip install -U mutar
-  - pip install flake8 check-manifest pydocstyle
-  - pip install codecov
+  - pip install -U flake8 check-manifest pydocstyle
+  - pip install -U codecov
 
 install:
   - python setup.py build_ext --inplace
