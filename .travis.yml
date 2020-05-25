@@ -1,6 +1,15 @@
-language: c
-dist: xenial
+language: generic
+dist: bionic
 sudo: false
+addons:
+  apt:
+    packages:
+      - libxkbcommon-x11-0
+      - libosmesa6
+      - libglx-mesa0
+      - libopengl0
+      - libglx0
+      - libdbus-1-3
 cache:
   apt: true
   pip: true
@@ -17,13 +26,13 @@ matrix:
         # Linux
         - os: linux
           env: CONDA_ENV="environment.yml"
-               PYTHON_VERSION=3.6
+               PYTHON_VERSION=3.7
 
 
         # OSX conda
         - os: osx
           env: CONDA_ENV="environment.yml"
-               PYTHON_VERSION=3.6
+               PYTHON_VERSION=3.7
 
 
 before_install:
