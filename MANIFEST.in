@@ -26,3 +26,4 @@ recursive-exclude doc *.rst
 exclude .circleci
 recursive-exclude .circleci *
 exclude doc
+recursive-exclude doc *
