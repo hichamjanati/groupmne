@@ -243,9 +243,9 @@ def _compute_ground_metric(src, group_info):
         points = src[i]["rr"][vertno]
 
         vert_used_idx = common_order[i]
-
         # if vertno are not 0 to n_points, change the numbering
         if np.max(tris) > len(np.unique(tris)):
+            tris = tris.copy()
             for ii, v in enumerate(vertno):
                 tris[tris == v] = ii
 
