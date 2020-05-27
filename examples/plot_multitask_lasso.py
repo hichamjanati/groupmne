@@ -174,7 +174,7 @@ t = 0.02
 plot_kwargs = dict(
     hemi='lh', subjects_dir=subjects_dir, views="lateral",
     initial_time=t, time_unit='s', size=(800, 800),
-    smoothing_steps=5, cortex=("gray", -1, 6, True))
+    smoothing_steps=5)
 
 t_idx = stcs[0].time_as_index(t)
 
