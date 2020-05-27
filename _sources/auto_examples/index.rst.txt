@@ -18,27 +18,8 @@ usage of the package.
 
 .. only:: html
 
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_mtw_thumb.png
-
-     :ref:`sphx_glr_auto_examples_plot_mtw.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/plot_mtw
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="The aim of this tutorial is to show how to leverage functional similarity across subjects to im...">
-
-.. only:: html
-
  .. figure:: /auto_examples/images/thumb/sphx_glr_plot_multitask_lasso_thumb.png
+     :alt: Multi-subject joint source localization with multi-task lasso
 
      :ref:`sphx_glr_auto_examples_plot_multitask_lasso.py`
 
@@ -51,6 +32,27 @@ usage of the package.
    :hidden:
 
    /auto_examples/plot_multitask_lasso
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The aim of this tutorial is to show how to leverage functional similarity across subjects to im...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_mtw_thumb.png
+     :alt: Multi-subject joint source localization with MTW
+
+     :ref:`sphx_glr_auto_examples_plot_mtw.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_mtw
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
@@ -63,13 +65,13 @@ usage of the package.
     :class: sphx-glr-footer-gallery
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
     :download:`Download all examples in Python source code: auto_examples_python.zip <//home/circleci/project/doc/auto_examples/auto_examples_python.zip>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
     :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/circleci/project/doc/auto_examples/auto_examples_jupyter.zip>`
 

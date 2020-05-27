@@ -120,6 +120,7 @@ The data will be downloaded in the same location
 
 
 .. image:: /auto_examples/images/sphx_glr_plot_mtw_001.png
+    :alt: Subject a, Subject b
     :class: sphx-glr-single-img
 
 
@@ -235,8 +236,6 @@ The data will be downloaded in the same location
         Using tolerance 8e-15 (2.2e-16 eps * 102 dim * 0.35  max singular value)
         Estimated rank (mag): 97
         MAG: rank 97 computed from 102 data channels with 5 projectors
-    /home/circleci/project/examples/plot_mtw.py:92: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      plt.show()
 
 
 
@@ -362,22 +361,14 @@ different coordinate systems MEG <-> HEAD
     *
 
       .. image:: /auto_examples/images/sphx_glr_plot_mtw_002.png
-            :class: sphx-glr-multi-img
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
     *
 
       .. image:: /auto_examples/images/sphx_glr_plot_mtw_003.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_004.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_005.png
-            :class: sphx-glr-multi-img
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -416,8 +407,6 @@ different coordinate systems MEG <-> HEAD
         Reading a surface...
     [done]
         1 BEM surfaces read
-    Using pyvista 3d backend.
-
     Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw.fif...
         Read a total of 8 projection items:
             generated with autossp-1.0.1 (1 x 306)  idle
@@ -654,23 +643,15 @@ central gyrus.
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_006.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_004.png
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_007.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_008.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_009.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_005.png
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -726,23 +707,15 @@ solution
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_010.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_006.png
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_011.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_012.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_mtw_013.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_mtw_007.png
+          :alt: plot mtw
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -777,9 +750,9 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 9 minutes  35.304 seconds)
+   **Total running time of the script:** ( 8 minutes  22.255 seconds)
 
-**Estimated memory usage:**  1565 MB
+**Estimated memory usage:**  998 MB
 
 
 .. _sphx_glr_download_auto_examples_plot_mtw.py:
@@ -792,13 +765,13 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: plot_mtw.py <plot_mtw.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: plot_mtw.ipynb <plot_mtw.ipynb>`
 

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>groupmne.group_model &#8212; groupmne 0.0.1dev documentation</title>
@@ -154,6 +154,7 @@
 <span class="sd">        The number jobs to run in parallel.</span>
 <span class="sd">    verbose : None | bool</span>
 <span class="sd">        Use verbose mode. If None use MNE default.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Processing subject </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">subject</span><span class="p">)</span>
 
@@ -168,7 +169,7 @@
     <span class="k">return</span> <span class="n">fwd</span></div>
 
 
-<div class="viewcode-block" id="prepare_fwds"><a class="viewcode-back" href="../../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds">[docs]</a><span class="k">def</span> <span class="nf">prepare_fwds</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="prepare_fwds"><a class="viewcode-back" href="../../generated/groupmne.prepare_fwds.html#groupmne.prepare_fwds">[docs]</a><span class="k">def</span> <span class="nf">prepare_fwds</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">src_ref</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">subjects_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute the group alignement of the forward operators.</span>
 
 <span class="sd">    Parameters</span>
@@ -185,8 +186,10 @@
 <span class="sd">    -------</span>
 <span class="sd">    fwds : list of `mne.Forward`</span>
 <span class="sd">        Prepared forward operators.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">n_sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">src_ref</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;nuse&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+    <span class="n">n_sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">src</span><span class="p">[</span><span class="s2">&quot;nuse&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">src_ref</span><span class="p">]</span>
+    <span class="n">vertno_ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">src</span><span class="p">[</span><span class="s2">&quot;vertno&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">src_ref</span><span class="p">]</span>
     <span class="n">vertices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
     <span class="n">positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
     <span class="n">gains</span> <span class="o">=</span> <span class="p">[]</span>
@@ -208,13 +211,16 @@
         <span class="c1"># find mapping between src_ref and new src space of fwd</span>
         <span class="c1"># src may have less sources than src_ref if they are</span>
         <span class="c1"># outside the inner skull</span>
-        <span class="n">mapping</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_morph_src_mapping</span><span class="p">(</span><span class="n">src_ref</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_morph_src_mapping</span><span class="p">(</span><span class="n">src_ref</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span>
+                                              <span class="n">subjects_dir</span><span class="o">=</span><span class="n">subjects_dir</span><span class="p">)</span>
 
         <span class="c1"># create a gain with the full src_ref resolution</span>
         <span class="n">gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;nchan&quot;</span><span class="p">],</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n_sources</span><span class="p">)))</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
-            <span class="c1"># pos contains the reference sources of src_ref</span>
-            <span class="n">pos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># pos contains the reference alignment sources of src_ref</span>
+            <span class="c1"># if no source is elliminated, it is given by np.arange(n_sources)</span>
+            <span class="n">vertno_ref_kept_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">vertno_ref</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertno_ref_kept_</span><span class="p">]</span>
             <span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
             <span class="n">vertno</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_sources</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
             <span class="c1"># re-order columns of the gain matrices</span>
@@ -237,24 +243,28 @@
         <span class="n">gains</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gain</span><span class="p">)</span>
 
     <span class="c1"># Now we can compute the intersection of all common vertices</span>
-    <span class="n">common_pos_lh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span>
+    <span class="n">common_order_lh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span>
         <span class="nb">set</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
-    <span class="n">common_pos_rh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span>
+    <span class="n">common_order_rh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span>
         <span class="nb">set</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">positions</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
 
-    <span class="n">common_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">common_pos_lh</span><span class="p">,</span> <span class="n">common_pos_rh</span> <span class="o">+</span> <span class="n">n_sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="n">vertno_ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">common_pos_lh</span><span class="p">,</span> <span class="n">common_pos_rh</span><span class="p">]</span>
+    <span class="n">common_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">common_order_lh</span><span class="p">,</span> <span class="n">common_order_rh</span><span class="p">]</span>
+    <span class="n">vertno_ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertno_ref</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="n">common_order_lh</span><span class="p">],</span>
+                  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertno_ref</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="n">common_order_rh</span><span class="p">]]</span>
 
     <span class="c1"># Compute the final filtered gains</span>
+    <span class="n">gain_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">common_order_lh</span><span class="p">,</span> <span class="n">common_order_rh</span> <span class="o">+</span> <span class="n">n_sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fwds</span><span class="p">)):</span>
-        <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="n">common_pos</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">common</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertno_ref</span><span class="p">):</span>
+        <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gains</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="n">gain_filter</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">common</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">common_order</span><span class="p">):</span>
             <span class="n">vertices</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">common</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span>
 
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_lh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_rh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;vertno_ref&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vertno_ref</span>
-    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">common_pos_lh</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_pos_rh</span><span class="p">)]</span>
+    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;common_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">common_order</span>
+    <span class="n">group_info</span><span class="p">[</span><span class="s2">&quot;n_sources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">common_order_lh</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_order_rh</span><span class="p">)]</span>
 
     <span class="k">for</span> <span class="n">fwd</span><span class="p">,</span> <span class="n">gain</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fwds</span><span class="p">,</span> <span class="n">gains</span><span class="p">):</span>
         <span class="n">fwd</span><span class="p">[</span><span class="s2">&quot;sol_group&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span> <span class="n">group_info</span><span class="o">=</span><span class="n">group_info</span><span class="p">,</span>
@@ -274,7 +284,7 @@
     </p>
     <p>
         &copy; Copyright 2019, Hicham Janati.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.<br/>
     </p>
   </div>
 </footer>

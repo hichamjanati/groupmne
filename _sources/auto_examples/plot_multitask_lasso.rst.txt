@@ -117,6 +117,7 @@ The data will be downloaded in the same location
 
 
 .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_001.png
+    :alt: Subject a, Subject b
     :class: sphx-glr-single-img
 
 
@@ -232,8 +233,6 @@ The data will be downloaded in the same location
         Using tolerance 8e-15 (2.2e-16 eps * 102 dim * 0.35  max singular value)
         Estimated rank (mag): 97
         MAG: rank 97 computed from 102 data channels with 5 projectors
-    /home/circleci/project/examples/plot_multitask_lasso.py:89: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      plt.show()
 
 
 
@@ -247,8 +246,8 @@ computing the source space of `fsaverage`
 .. code-block:: default
 
 
-    resolution = 4
-    spacing = "ico%d" % resolution
+    resolution = 5
+    spacing = "oct%d" % resolution
 
     fsaverage_fname = op.join(subjects_dir, "fsaverage")
     if not op.exists(fsaverage_fname):
@@ -273,26 +272,26 @@ computing the source space of `fsaverage`
     SUBJECTS_DIR = /home/circleci/mne_data/HF_SEF/subjects/
     Subject      = fsaverage
     Surface      = white
-    Icosahedron subdivision grade 4
+    Octahedron subdivision grade 5
 
     >>> 1. Creating the source space...
 
-    Doing the icosahedral vertex picking...
+    Doing the octahedral vertex picking...
     Loading /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/lh.white...
-    Mapping lh fsaverage -> ico (4) ...
+    Mapping lh fsaverage -> oct (5) ...
         Warning: zero size triangles: [3 4]
         Triangle neighbors and vertex normals...
     Loading geometry from /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/lh.sphere...
     Setting up the triangulation for the decimated surface...
-    loaded lh.white 2562/163842 selected to source space (ico = 4)
+    loaded lh.white 1026/163842 selected to source space (oct = 5)
 
     Loading /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/rh.white...
-    Mapping rh fsaverage -> ico (4) ...
+    Mapping rh fsaverage -> oct (5) ...
         Warning: zero size triangles: [3 4]
         Triangle neighbors and vertex normals...
     Loading geometry from /home/circleci/mne_data/HF_SEF/subjects/fsaverage/surf/rh.sphere...
     Setting up the triangulation for the decimated surface...
-    loaded rh.white 2562/163842 selected to source space (ico = 4)
+    loaded rh.white 1026/163842 selected to source space (oct = 5)
 
     You are now one step closer to computing the gain matrix
 
@@ -358,22 +357,14 @@ different coordinate systems MEG <-> HEAD
     *
 
       .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_002.png
-            :class: sphx-glr-multi-img
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
     *
 
       .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_003.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_004.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_005.png
-            :class: sphx-glr-multi-img
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -412,6 +403,8 @@ different coordinate systems MEG <-> HEAD
         Reading a surface...
     [done]
         1 BEM surfaces read
+    Using pyvista 3d backend.
+
     Opening raw data file /home/circleci/mne_data/HF_SEF/MEG/subject_b/hf_sef_15min_raw.fif...
         Read a total of 8 projection items:
             generated with autossp-1.0.1 (1 x 306)  idle
@@ -443,8 +436,8 @@ different coordinate systems MEG <-> HEAD
     [done]
         1 BEM surfaces read
     [Parallel(n_jobs=2)]: Using backend LokyBackend with 2 concurrent workers.
-    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   12.3s remaining:    0.0s
-    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   12.3s finished
+    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   33.9s remaining:    0.0s
+    [Parallel(n_jobs=2)]: Done   2 out of   2 | elapsed:   33.9s finished
     Mapping lh fsaverage -> subject_a (nearest neighbor)...
     Mapping rh fsaverage -> subject_a (nearest neighbor)...
     Mapping lh fsaverage -> subject_b (nearest neighbor)...
@@ -496,7 +489,7 @@ central gyrus.
     plot_kwargs = dict(
         hemi='lh', subjects_dir=subjects_dir, views="lateral",
         initial_time=t, time_unit='s', size=(800, 800),
-        smoothing_steps=5, cortex=("gray", -1, 6, True))
+        smoothing_steps=5)
 
     t_idx = stcs[0].time_as_index(t)
 
@@ -520,23 +513,15 @@ central gyrus.
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_006.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_004.png
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_007.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_008.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_009.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_005.png
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -567,7 +552,7 @@ individual solutions independently for each subject
 
     for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
         fwd_ = prepare_fwds([fwd], src_ref)
-        stc = compute_group_inverse(fwd_, [ev], [cov],
+        stc = compute_group_inverse(fwd_, [evoked], [cov],
                                     method='multitasklasso',
                                     spatiotemporal=True,
                                     alpha=0.8)[0]
@@ -592,23 +577,15 @@ individual solutions independently for each subject
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_010.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_006.png
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
     *
 
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_011.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_012.png
-            :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_013.png
-            :class: sphx-glr-multi-img
+      .. image:: /auto_examples/images/sphx_glr_plot_multitask_lasso_007.png
+          :alt: plot multitask lasso
+          :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
@@ -644,9 +621,9 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  59.545 seconds)
+   **Total running time of the script:** ( 3 minutes  17.695 seconds)
 
-**Estimated memory usage:**  690 MB
+**Estimated memory usage:**  1021 MB
 
 
 .. _sphx_glr_download_auto_examples_plot_multitask_lasso.py:
@@ -659,13 +636,13 @@ Zenodo. http://doi.org/10.5281/zenodo.889235
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: plot_multitask_lasso.py <plot_multitask_lasso.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: plot_multitask_lasso.ipynb <plot_multitask_lasso.ipynb>`
 
