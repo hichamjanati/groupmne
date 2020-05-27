@@ -33,29 +33,33 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 
 
 @testing.requires_testing_data
-def test_different_gains(src_fwds):
-    src_ref, fwds = src_fwds
-    fwds = prepare_fwds(fwds, src_ref)
-    gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds])
-    group_info = fwds[0]["sol_group"]["group_info"]
-    n_ch = fwds[0]["nchan"]
-    n_s = sum(group_info["n_sources"])
-    assert gains.shape == (2, n_ch, n_s)
-    with pytest.raises(AssertionError):
-        gains /= abs(gains).max()
-        np.testing.assert_allclose(gains[0], gains[1])
+def test_different_gains(fsaverage_ref_data, sample_ref_data):
+    srcs1, fwds1 = fsaverage_ref_data
+    srcs2, fwds2 = sample_ref_data
+    for srcs, fwds, idx in zip([srcs1, srcs2], [fwds1, fwds2], [1, 0]):
+        fwds = prepare_fwds(fwds, srcs[idx])
+        gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds])
+        group_info = fwds[0]["sol_group"]["group_info"]
+        n_ch = fwds[0]["nchan"]
+        n_s = sum(group_info["n_sources"])
+        assert gains.shape == (2, n_ch, n_s)
+        with pytest.raises(AssertionError):
+            gains /= abs(gains).max()
+            np.testing.assert_allclose(gains[0], gains[1])
 
 
 @testing.requires_testing_data
-def test_filtering_fsaverage(src_fwds):
-    src_ref, (fwd0, fwd1) = src_fwds
-    fwds = [fwd1, fwd1]
-    fwds_prep = prepare_fwds(fwds, src_ref)
-    gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds_prep])
+def test_filtering_same_subject(fsaverage_ref_data, sample_ref_data):
+    srcs1, fwds1 = fsaverage_ref_data
+    srcs2, fwds2 = sample_ref_data
+    for srcs, fwds, idx in zip([srcs1, srcs2], [fwds1, fwds2], [1, 0]):
+        fwds_ = [fwds[idx], fwds[idx]]
+        fwds_prep = prepare_fwds(fwds_, srcs[idx])
+        gains = np.stack([fwd_["sol_group"]["data"] for fwd_ in fwds_prep])
 
-    for fwd, gain in zip(fwds, gains):
-        fwd = mne.convert_forward_solution(fwd, surf_ori=True,
-                                           force_fixed=True,
-                                           use_cps=True)
-        fwd_gain = fwd["sol"]["data"]
-        np.testing.assert_allclose(gain, fwd_gain)
+        for fwd_, gain in zip(fwds_, gains):
+            fwd_ = mne.convert_forward_solution(fwd_, surf_ori=True,
+                                                force_fixed=True,
+                                                use_cps=True)
+            fwd_gain = fwd_["sol"]["data"]
+            np.testing.assert_allclose(gain, fwd_gain)
