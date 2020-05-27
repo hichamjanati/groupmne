@@ -27,8 +27,9 @@ os.environ['SUBJECTS_DIR'] = subjects_dir
 @pytest.mark.filterwarnings("ignore:Objective did not converge")
 @pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
                                     "dirty", "mtw", "remtw"])
-def test_inverse(src_fwds, method):
-    src_ref, fwds = src_fwds
+def test_inverse(fsaverage_ref_data, method):
+    srcs1, fwds = fsaverage_ref_data
+    src_ref = srcs1[1]
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
@@ -57,35 +58,39 @@ def test_inverse(src_fwds, method):
         assert (stc.data.shape == (n_sources, n_times))
 
 
-def test_spatiotemporal_multitasklasso(src_fwds):
-    src_ref, fwds = src_fwds
-    cov = mne.read_cov(cov_fname, verbose=False)
-    noise_covs = [cov, cov]
-    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
-    ev = ev.crop(tmin=0.1, tmax=0.12)
-    evokeds = [ev, ev]
-    fwds = prepare_fwds(fwds, src_ref)
-    alpha = 0.2
+def test_spatiotemporal_multitasklasso(fsaverage_ref_data, sample_ref_data):
+    srcs1, fwds1 = fsaverage_ref_data
+    srcs2, fwds2 = sample_ref_data
 
-    lasso_dict = dict(alpha=alpha)
+    for src_ref, fwds in zip([srcs1[1], srcs2[0]], [fwds1, fwds2]):
+        cov = mne.read_cov(cov_fname, verbose=False)
+        noise_covs = [cov, cov]
+        ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+        ev = ev.crop(tmin=0.1, tmax=0.12)
+        evokeds = [ev, ev]
+        fwds = prepare_fwds(fwds, src_ref)
+        alpha = 0.2
 
-    stcs = compute_group_inverse(fwds, evokeds, noise_covs,
-                                 method='multitasklasso',
-                                 spatiotemporal=True,
-                                 **lasso_dict)
+        lasso_dict = dict(alpha=alpha)
 
-    # check group l21 norm works as expected
-    for stc in stcs:
-        data = stc.data
-        positive_any = (data != 0).any(1)
-        positive_all = (data != 0).all(1)
-        assert (positive_any == positive_all).all()
+        stcs = compute_group_inverse(fwds, evokeds, noise_covs,
+                                     method='multitasklasso',
+                                     spatiotemporal=True,
+                                     **lasso_dict)
+
+        # check group l21 norm works as expected
+        for stc in stcs:
+            data = stc.data
+            positive_any = (data != 0).any(1)
+            positive_all = (data != 0).all(1)
+            assert (positive_any == positive_all).all()
 
 
 @pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
                                     "dirty"])
-def test_hyperparam_max(src_fwds, method):
-    src_ref, fwds = src_fwds
+def test_hyperparam_max(fsaverage_ref_data, method):
+    srcs1, fwds = fsaverage_ref_data
+    src_ref = srcs1[1]
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
@@ -105,8 +110,9 @@ def test_hyperparam_max(src_fwds, method):
         assert abs(stc.data).max() == 0.
 
 
-def test_implemented_models(src_fwds):
-    src_ref, fwds = src_fwds
+def test_implemented_models(fsaverage_ref_data):
+    srcs1, fwds = fsaverage_ref_data
+    src_ref = srcs1[1]
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]
@@ -136,35 +142,39 @@ def test_implemented_models(src_fwds):
 
 
 @pytest.mark.parametrize("method", ["mtw", "remtw"])
-def test_ot_groundmetric(src_fwds, method):
-    src_ref, fwds = src_fwds
-    cov = mne.read_cov(cov_fname, verbose=False)
-    noise_covs = [cov, cov]
-    ev = mne.read_evokeds(ave_fname, verbose=False)[0]
-    ev = ev.crop(tmin=0.1, tmax=0.12)
-    evokeds = [ev, ev]
-    fwds = prepare_fwds(fwds, src_ref)
+def test_ot_groundmetric(fsaverage_ref_data, sample_ref_data, method):
+    srcs1, fwds1 = fsaverage_ref_data
+    srcs2, fwds2 = sample_ref_data
 
-    # Test ground metric with a wrong shape
-    M_wrong_shape = np.ones((2, 3))
-    ot_dict = dict(M=M_wrong_shape, tol=100.)
-    with pytest.raises(ValueError, match="M must be an array"):
-        compute_group_inverse(fwds, evokeds, noise_covs, method=method,
-                              spatiotemporal=False, **ot_dict)
+    for src_ref, fwds in zip([srcs1[1], srcs2[0]], [fwds1, fwds2]):
+        cov = mne.read_cov(cov_fname, verbose=False)
+        noise_covs = [cov, cov]
+        ev = mne.read_evokeds(ave_fname, verbose=False)[0]
+        ev = ev.crop(tmin=0.1, tmax=0.12)
+        evokeds = [ev, ev]
+        fwds = prepare_fwds(fwds, src_ref)
 
-    # Test negative ground metric
-    n_features = fwds[0]["sol_group"]["data"].shape[1]
-    M_negative = - np.ones((n_features, n_features))
-    ot_dict = dict(M=M_negative, tol=100.)
-    with pytest.raises(ValueError, match="M must be non-negative"):
-        compute_group_inverse(fwds, evokeds, noise_covs, method=method,
-                              spatiotemporal=False, **ot_dict)
+        # Test ground metric with a wrong shape
+        M_wrong_shape = np.ones((2, 3))
+        ot_dict = dict(M=M_wrong_shape, tol=100.)
+        with pytest.raises(ValueError, match="M must be an array"):
+            compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                                  spatiotemporal=False, **ot_dict)
+
+        # Test negative ground metric
+        n_features = fwds[0]["sol_group"]["data"].shape[1]
+        M_negative = - np.ones((n_features, n_features))
+        ot_dict = dict(M=M_negative, tol=100.)
+        with pytest.raises(ValueError, match="M must be non-negative"):
+            compute_group_inverse(fwds, evokeds, noise_covs, method=method,
+                                  spatiotemporal=False, **ot_dict)
 
 
 @pytest.mark.parametrize("method", ["lasso", "relasso", "multitasklasso",
                                     "dirty", "mtw", "remtw"])
-def test_evokeds(src_fwds, method):
-    src_ref, fwds = src_fwds
+def test_evokeds(fsaverage_ref_data, method):
+    srcs1, fwds = fsaverage_ref_data
+    src_ref = srcs1[1]
     cov = mne.read_cov(cov_fname, verbose=False)
     noise_covs = [cov, cov]
     ev = mne.read_evokeds(ave_fname, verbose=False)[0]

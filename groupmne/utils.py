@@ -234,7 +234,7 @@ def _floyd_warshall(dist):
 
 def _compute_ground_metric(src, group_info):
     """Compute geodesic distance matrix on the triangulated mesh of src."""
-    vertnos_filtered = group_info["vertno_ref"]
+    common_order = group_info["common_order"]
     hemis = ["lh", "rh"]
     Ds_f, Ds = [], []
     for i, h in enumerate(hemis):
@@ -242,10 +242,15 @@ def _compute_ground_metric(src, group_info):
         vertno = src[i]["vertno"]
         points = src[i]["rr"][vertno]
 
-        vert_used = vertnos_filtered[i]
+        vert_used_idx = common_order[i]
+        # if vertno are not 0 to n_points, change the numbering
+        if np.max(tris) > len(np.unique(tris)):
+            tris = tris.copy()
+            for ii, v in enumerate(vertno):
+                tris[tris == v] = ii
 
         D = _mesh_all_distances(points, tris)
-        D_filtered = D[vert_used][:, vert_used]
+        D_filtered = D[vert_used_idx][:, vert_used_idx]
 
         Ds_f.append(D_filtered)
         Ds.append(D)
