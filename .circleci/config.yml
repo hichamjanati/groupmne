@@ -133,7 +133,7 @@ jobs:
 
     deploy:
       docker:
-        - image: circleci/python:3.6-jessie
+        - image: circleci/python:3.8.1-buster
       steps:
         - add_ssh_keys:
             fingerprints:
