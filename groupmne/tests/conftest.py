@@ -11,7 +11,7 @@ from groupmne import compute_fwd
 
 @pytest.fixture(scope='session', autouse=True)
 def fsaverage_ref_data(request):
-    """Compute source space and forward operators with fsaverage as ref"""
+    """Compute source space and forward operators with fsaverage as ref."""
     data_path = testing.data_path()
     subjects_dir = op.join(data_path, 'subjects')
 
@@ -51,7 +51,7 @@ def fsaverage_ref_data(request):
 
 @pytest.fixture(scope='session', autouse=True)
 def sample_ref_data(request):
-    """Compute source space and forward operators with sample as ref"""
+    """Compute source space and forward operators with sample as ref."""
     data_path = testing.data_path()
     subjects_dir = op.join(data_path, 'subjects')
 

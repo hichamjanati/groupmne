@@ -45,6 +45,7 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
         The number jobs to run in parallel.
     verbose : None | bool
         Use verbose mode. If None use MNE default.
+
     """
     print("Processing subject %s" % subject)
 
@@ -76,6 +77,7 @@ def prepare_fwds(fwds, src_ref, copy=True, subjects_dir=None):
     -------
     fwds : list of `mne.Forward`
         Prepared forward operators.
+
     """
     n_sources = [src["nuse"] for src in src_ref]
     vertno_ref = [src["vertno"].tolist() for src in src_ref]
