@@ -44,4 +44,7 @@ def src_fwds(request):
     assert len(fwd3["sol"]["data"]) < len(fwd0["sol"]["data"])
 
     src_fwds = src_ref, [fwd0, fwd1]
+    src_fname = op.join(data_path, "subjects", "fsaverage", "bem",
+                        "fsaverage-ico-3-src.fif")
+    mne.write_source_spaces(src_fname, src_ref, overwrite=True)
     return src_fwds
