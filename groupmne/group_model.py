@@ -105,7 +105,7 @@ def prepare_fwds(fwds, src_ref, copy=True):
         gain = np.ones((fwd["nchan"], sum(n_sources)))
         for i in range(2):
             # pos contains the reference sources of src_ref
-            pos = list(mapping[0][i].keys())
+            pos = np.array(list(mapping[0][i].keys()))
             positions[i].append(pos)
             vertno = - np.ones(n_sources[i]).astype(int)
             # re-order columns of the gain matrices
