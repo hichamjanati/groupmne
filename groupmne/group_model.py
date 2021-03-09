@@ -45,6 +45,7 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
         The number jobs to run in parallel.
     verbose : None | bool
         Use verbose mode. If None use MNE default.
+
     """
     print("Processing subject %s" % subject)
 
@@ -59,7 +60,7 @@ def compute_fwd(subject, src_ref, info, trans_fname, bem_fname,
     return fwd
 
 
-def prepare_fwds(fwds, src_ref, copy=True):
+def prepare_fwds(fwds, src_ref, copy=True, subjects_dir=None):
     """Compute the group alignement of the forward operators.
 
     Parameters
@@ -76,8 +77,10 @@ def prepare_fwds(fwds, src_ref, copy=True):
     -------
     fwds : list of `mne.Forward`
         Prepared forward operators.
+
     """
-    n_sources = [src_ref[i]["nuse"] for i in [0, 1]]
+    n_sources = [src["nuse"] for src in src_ref]
+    vertno_ref = [src["vertno"].tolist() for src in src_ref]
     vertices = [], []
     positions = [], []
     gains = []
@@ -99,13 +102,17 @@ def prepare_fwds(fwds, src_ref, copy=True):
         # find mapping between src_ref and new src space of fwd
         # src may have less sources than src_ref if they are
         # outside the inner skull
-        mapping = utils.get_morph_src_mapping(src_ref, src)
+        mapping = utils.get_morph_src_mapping(src_ref, src,
+                                              subjects_dir=subjects_dir)
 
         # create a gain with the full src_ref resolution
         gain = np.ones((fwd["nchan"], sum(n_sources)))
         for i in range(2):
-            # pos contains the reference sources of src_ref
-            pos = np.array(list(mapping[0][i].keys()))
+            # pos contains the reference alignment sources of src_ref
+            # if no source is elliminated, it is given by np.arange(n_sources)
+            vertno_ref_kept_ = list(mapping[0][i].keys())
+            pos = [vertno_ref[i].index(v) for v in vertno_ref_kept_]
+            pos = np.array(pos)
             positions[i].append(pos)
             vertno = - np.ones(n_sources[i]).astype(int)
             # re-order columns of the gain matrices
@@ -128,24 +135,28 @@ def prepare_fwds(fwds, src_ref, copy=True):
         gains.append(gain)
 
     # Now we can compute the intersection of all common vertices
-    common_pos_lh = np.array(list(
+    common_order_lh = np.array(list(
         set(positions[0][0]).intersection(*positions[0])))
-    common_pos_rh = np.array(list(
+    common_order_rh = np.array(list(
         set(positions[1][0]).intersection(*positions[1])))
 
-    common_pos = np.r_[common_pos_lh, common_pos_rh + n_sources[0]]
-    vertno_ref = [common_pos_lh, common_pos_rh]
+    common_order = [common_order_lh, common_order_rh]
+    vertno_ref = [np.array(vertno_ref)[0][common_order_lh],
+                  np.array(vertno_ref)[1][common_order_rh]]
 
     # Compute the final filtered gains
+    gain_filter = np.r_[common_order_lh, common_order_rh + n_sources[0]]
+
     for i in range(len(fwds)):
-        gains[i] = gains[i][:, common_pos]
-        for j, common in enumerate(vertno_ref):
+        gains[i] = gains[i][:, gain_filter]
+        for j, common in enumerate(common_order):
             vertices[j][i] = vertices[j][i][common.astype(int)]
 
     group_info["vertno_lh"] = vertices[0]
     group_info["vertno_rh"] = vertices[1]
     group_info["vertno_ref"] = vertno_ref
-    group_info["n_sources"] = [len(common_pos_lh), len(common_pos_rh)]
+    group_info["common_order"] = common_order
+    group_info["n_sources"] = [len(common_order_lh), len(common_order_rh)]
 
     for fwd, gain in zip(fwds, gains):
         fwd["sol_group"] = dict(data=gain, group_info=group_info,

@@ -96,8 +96,8 @@ del epochs_s
 # To guarantee an alignment across subjects, we start by
 # computing the source space of `fsaverage`
 
-resolution = 4
-spacing = "ico%d" % resolution
+resolution = 5
+spacing = "oct%d" % resolution
 
 fsaverage_fname = op.join(subjects_dir, "fsaverage")
 if not op.exists(fsaverage_fname):
@@ -174,7 +174,7 @@ t = 0.02
 plot_kwargs = dict(
     hemi='lh', subjects_dir=subjects_dir, views="lateral",
     initial_time=t, time_unit='s', size=(800, 800),
-    smoothing_steps=5, cortex=("gray", -1, 6, True))
+    smoothing_steps=5)
 
 t_idx = stcs[0].time_as_index(t)
 
@@ -199,7 +199,7 @@ for stc, subject in zip(stcs, subjects):
 
 for subject, fwd, evoked, cov in zip(subjects, fwds_, evokeds, noise_covs):
     fwd_ = prepare_fwds([fwd], src_ref)
-    stc = compute_group_inverse(fwd_, [ev], [cov],
+    stc = compute_group_inverse(fwd_, [evoked], [cov],
                                 method='multitasklasso',
                                 spatiotemporal=True,
                                 alpha=0.8)[0]
