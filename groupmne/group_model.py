@@ -112,6 +112,7 @@ def prepare_fwds(fwds, src_ref, copy=True, subjects_dir=None):
             # if no source is elliminated, it is given by np.arange(n_sources)
             vertno_ref_kept_ = list(mapping[0][i].keys())
             pos = [vertno_ref[i].index(v) for v in vertno_ref_kept_]
+            pos = np.array(pos)
             positions[i].append(pos)
             vertno = - np.ones(n_sources[i]).astype(int)
             # re-order columns of the gain matrices

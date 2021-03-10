@@ -46,6 +46,9 @@ def fsaverage_ref_data(request):
     assert len(fwd3["sol"]["data"]) < len(fwd_sample["sol"]["data"])
 
     src_fwds = [src_sample, src_fs], [fwd_sample, fwd_fs]
+    src_fname = op.join(data_path, "subjects", "fsaverage", "bem",
+                        "fsaverage-ico-3-src.fif")
+    mne.write_source_spaces(src_fname, src_fs, overwrite=True)
     return src_fwds
 
 
@@ -79,4 +82,5 @@ def sample_ref_data(request):
                          bem_fname, mindist=10)
 
     src_fwds = [src_sample, src_fs], [fwd_sample, fwd_fs]
+
     return src_fwds

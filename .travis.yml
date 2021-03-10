@@ -45,6 +45,7 @@ before_install:
   - conda activate base;
   - conda env update --file $CONDA_ENV;
   - pip install -U Cython
+  - pip install -U numpy
   - pip install -U mutar
   - pip install -U flake8 check-manifest pydocstyle
   - pip install -U codecov

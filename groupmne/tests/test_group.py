@@ -16,10 +16,10 @@ subjects_dir = op.join(data_path, 'subjects')
 
 bem_fname = op.join(data_path, 'subjects', 'sample', 'bem',
                     'sample-1280-1280-1280-bem-sol.fif')
-fname_fs = op.join(subjects_dir, 'fsaverage', 'bem', 'fsaverage-ico-5-src.fif')
 trans_fname = op.join(data_path, 'MEG', 'sample',
                       'sample_audvis_trunc-trans.fif')
-
+src_fname = op.join(data_path, "subjects", "fsaverage", "bem",
+                    "fsaverage-ico-3-src.fif")
 raw_fname = op.join(data_path, 'MEG', 'sample',
                     'sample_audvis_trunc_raw.fif')
 ave_fname = op.join(data_path, 'MEG', 'sample',
@@ -63,3 +63,16 @@ def test_filtering_same_subject(fsaverage_ref_data, sample_ref_data):
                                                 use_cps=True)
             fwd_gain = fwd_["sol"]["data"]
             np.testing.assert_allclose(gain, fwd_gain)
+
+
+@testing.requires_testing_data
+def test_disk_src(fsaverage_ref_data):
+    srcs, fwds = fsaverage_ref_data
+    src_ref_disk = mne.read_source_spaces(src_fname)
+
+    fwds_prep = prepare_fwds(fwds, srcs[1])
+    gains = np.stack([fwd["sol_group"]["data"] for fwd in fwds_prep])
+
+    fwds_prep_disk = prepare_fwds(fwds, src_ref_disk)
+    gains_disk = np.stack([fwd["sol_group"]["data"] for fwd in fwds_prep_disk])
+    np.testing.assert_allclose(gains_disk, gains)
